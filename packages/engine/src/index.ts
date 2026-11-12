@@ -31,3 +31,10 @@ export { coverage } from "./coverage";
 export { dueDate } from "./due-date";
 export { statutoryInterest, MAX_PAISE } from "./statutory-interest";
 export { taxBomb } from "./tax-bomb";
+export {
+  nextEscalationStep,
+  LADDER_STEPS,
+  stepRank,
+  APPROVAL_STEPS,
+  DEFAULT_STEP_GAP_DAYS,
+} from "./escalation-ladder";
