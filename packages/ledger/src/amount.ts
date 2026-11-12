@@ -10,10 +10,11 @@ import type { Paise } from "@dues-banshee/engine";
  * Whitespace has been collapsed to single spaces before matching, and every
  * optional space sits inside the optional group it introduces, so no two
  * optional whitespace groups are ever adjacent and nothing can backtrack
- * through a run of spaces.
+ * through a run of spaces. The first group of a grouped number can't start
+ * with 0.
  */
 const AMOUNT_PATTERN =
-  /^(?:(₹|rs\.?|inr) ?)?(\d+|\d{1,2}(?:,\d{2})*,\d{3}|\d{1,3}(?:,\d{3})+)(?:\.(\d+))?(?: ?(lakhs|lakh|lacs|lac|l|crores|crore))?(?: ?(\/-))?(?: ?(dr|cr))?$/i;
+  /^(?:(₹|rs\.?|inr) ?)?(\d+|[1-9]\d?(?:,\d{2})*,\d{3}|[1-9]\d{0,2}(?:,\d{3})+)(?:\.(\d+))?(?: ?(lakhs|lakh|lacs|lac|l|crores|crore))?(?: ?(\/-))?(?: ?(dr|cr))?$/i;
 
 /** Longest trimmed cell text the parser will look at. */
 const MAX_AMOUNT_LENGTH = 64;

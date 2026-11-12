@@ -191,7 +191,7 @@ export function dedupeKey(supplierId: string, buyerName: string, invoiceNumber: 
 
 ```
 ^(?:(₹|rs\.?|inr) ?)?                                    prefix
- (\d+|\d{1,2}(?:,\d{2})*,\d{3}|\d{1,3}(?:,\d{3})+)       plain | Indian | western
+ (\d+|[1-9]\d?(?:,\d{2})*,\d{3}|[1-9]\d{0,2}(?:,\d{3})+)   plain | Indian | western
  (?:\.(\d+))?                                            fraction
  (?: ?(lakhs|lakh|lacs|lac|l|crores|crore))?             unit (longest first)
  (?: ?(\/-))?                                            "rupees only" mark
@@ -207,7 +207,7 @@ export function dedupeKey(supplierId: string, buyerName: string, invoiceNumber: 
 Steps:
 
 1. Blank after trimming → `is empty: <quoted raw>`.
-2. Longer than 64 characters after trimming → `not a recognised amount: <quoted raw>`, before any regex runs. No match → the same reason. This covers negatives, malformed grouping, `500.`, `.50`, `Rs`, repeated parts and other letters. `Cr` can't be read as a unit, because the unit alternatives contain only `crore`/`crores`. A trailing `Cr` therefore reaches the suffix group.
+2. Longer than 64 characters after trimming → `not a recognised amount: <quoted raw>`, before any regex runs. No match → the same reason. This covers negatives, malformed grouping (including a grouped number whose first group starts with 0, such as `012,000` or `0,12,000`), `500.`, `.50`, `Rs`, repeated parts and other letters. `Cr` can't be read as a unit, because the unit alternatives contain only `crore`/`crores`. A trailing `Cr` therefore reaches the suffix group.
 3. Suffix `cr` → `Credit balance (Cr) is not a receivable: <quoted raw>`.
 4. Integer arithmetic: `digits = int (commas removed) + frac`, `scaled = BigInt(digits) × multiplier`, `den = 10n ** BigInt(frac.length)`. A non-zero `scaled % den` → `more precise than one paisa: <quoted raw>`.
 5. `scaled / den > BigInt(Number.MAX_SAFE_INTEGER)` → `above the largest supported amount (9007199254740991 paise): <quoted raw>`.

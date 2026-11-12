@@ -15,6 +15,7 @@ describe("parseAmountLenient: accepted inputs (Requirement 3.6)", () => {
     ["500.5", 50_050],
     ["0.01", 1],
     ["0", 0],
+    ["0.50", 50],
     ["4,12,000", 41_200_000],
     ["412,000", 41_200_000],
     ["₹4,12,000", 41_200_000],
@@ -71,6 +72,11 @@ describe("parseAmountLenient: rejected inputs (Requirement 3.7)", () => {
     ["₹ ₹500", UNRECOGNISED],
     ["4 L crore", UNRECOGNISED],
     ["500/-/-", UNRECOGNISED],
+    // grouped numbers can't start with a zero
+    ["00,000", UNRECOGNISED],
+    ["01,000", UNRECOGNISED],
+    ["012,000", UNRECOGNISED],
+    ["0,12,000", UNRECOGNISED],
     // letters other than prefixes, units and Dr
     ["500 USD", UNRECOGNISED],
     ["abc", UNRECOGNISED],
