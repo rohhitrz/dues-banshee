@@ -99,8 +99,26 @@ describe("packages/engine purity lint rules: globalThis bypasses", () => {
     ["new globalThis.Date()", "export const v = new globalThis.Date();"],
     ["globalThis.Math.random()", "export const v = globalThis.Math.random();"],
     ["globalThis.process", "export const v = globalThis.process;"],
+    ["globalThis.parseFloat", 'export const v = globalThis.parseFloat("1");'],
   ])("reports exactly one error for %s in engine src", async (_name, code) => {
     const messages = await lintText(`${code}\n`, "packages/engine/src/__lint_fixture__.ts");
     expect(messages.map((m) => [m.severity, m.ruleId])).toEqual([[2, "no-restricted-properties"]]);
+  });
+
+  it.each([
+    ["a trailing-point literal", "export const v = 1.;"],
+    ["a trailing-point literal with an exponent", "export const v = 1.e3;"],
+  ])("reports exactly one error for %s in engine src", async (_name, code) => {
+    const messages = await lintText(`${code}\n`, "packages/engine/src/__lint_fixture__.ts");
+    expect(messages.map((m) => [m.severity, m.ruleId])).toEqual([[2, "no-restricted-syntax"]]);
+  });
+
+  it.each([
+    ["a fractional literal", "export const v = 0.5;"],
+    ["an integer literal", "export const v = 1;"],
+    ["a bare parseFloat", 'export const v = parseFloat("1");'],
+  ])("still allows %s in engine src", async (_name, code) => {
+    const messages = await lintText(`${code}\n`, "packages/engine/src/__lint_fixture__.ts");
+    expect(messages).toEqual([]);
   });
 });

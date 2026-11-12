@@ -49,7 +49,20 @@ export default tseslint.config(
     rules: {
       "no-restricted-globals": purityGlobals("packages/engine"),
       "no-restricted-imports": purityImports("packages/engine"),
-      "no-restricted-properties": ["error", mathRandom("packages/engine"), ...globalThisBans("packages/engine")],
+      "no-restricted-properties": [
+        "error",
+        mathRandom("packages/engine"),
+        // Bare `parseFloat` stays allowed in the engine, but `globalThis.parseFloat` is banned as in the ledger.
+        ...globalThisBans("packages/engine", ["parseFloat"]),
+      ],
+      "no-restricted-syntax": [
+        "error",
+        {
+          // A trailing point (`1.`, `1.e3`). Fractional literals such as `0.5` stay legal in the engine.
+          selector: "Literal[raw=/^\\d[\\d_]*\\.(?!\\d)/]",
+          message: "no trailing-point number literals in packages/engine",
+        },
+      ],
     },
   },
   {
