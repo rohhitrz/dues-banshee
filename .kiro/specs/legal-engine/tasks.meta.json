@@ -1,11 +1,150 @@
 {
-  "pbtResults": {},
+  "pbtResults": {
+    "3.3 Write property test for calendar arithmetic in `test/calendar-date.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794479934092
+    }
+  },
   "executionHistory": {
     "1.1 Commit `requirements.md`, `design.md`, `tasks.md` and `.config.kiro`": [
       {
         "executionId": "b00c2eaa-949c-4708-8777-c213b8263f4e",
         "chatSessionId": "sess_8fd39c9b-9f21-45c2-8c0d-8c354c24ecc5",
         "timestamp": 1794479298838
+      },
+      {
+        "executionId": "b00c2eaa-949c-4708-8777-c213b8263f4e",
+        "chatSessionId": "sess_8fd39c9b-9f21-45c2-8c0d-8c354c24ecc5",
+        "timestamp": 1794479327116
+      }
+    ],
+    "1.2 Commit the steering updates": [
+      {
+        "executionId": "b00c2eaa-949c-4708-8777-c213b8263f4e",
+        "chatSessionId": "sess_8fd39c9b-9f21-45c2-8c0d-8c354c24ecc5",
+        "timestamp": 1794479333515
+      },
+      {
+        "executionId": "b00c2eaa-949c-4708-8777-c213b8263f4e",
+        "chatSessionId": "sess_8fd39c9b-9f21-45c2-8c0d-8c354c24ecc5",
+        "timestamp": 1794479361454
+      }
+    ],
+    "1. Commit the legal-engine spec and steering updates": [
+      {
+        "executionId": "b00c2eaa-949c-4708-8777-c213b8263f4e",
+        "chatSessionId": "sess_8fd39c9b-9f21-45c2-8c0d-8c354c24ecc5",
+        "timestamp": 1794479361500
+      }
+    ],
+    "2.1 Create root workspace files (only those that do not exist yet)": [
+      {
+        "executionId": "f4e347b7-1acf-4e12-9b89-c93898589cad",
+        "chatSessionId": "sess_6288b051-bcbf-437c-940f-daaee922059c",
+        "timestamp": 1794479450858
+      },
+      {
+        "executionId": "f4e347b7-1acf-4e12-9b89-c93898589cad",
+        "chatSessionId": "sess_6288b051-bcbf-437c-940f-daaee922059c",
+        "timestamp": 1794479609891
+      }
+    ],
+    "2.2 Create the `packages/engine` package skeleton": [
+      {
+        "executionId": "f4e347b7-1acf-4e12-9b89-c93898589cad",
+        "chatSessionId": "sess_6288b051-bcbf-437c-940f-daaee922059c",
+        "timestamp": 1794479613265
+      },
+      {
+        "executionId": "f4e347b7-1acf-4e12-9b89-c93898589cad",
+        "chatSessionId": "sess_6288b051-bcbf-437c-940f-daaee922059c",
+        "timestamp": 1794479689151
+      }
+    ],
+    "2.3 Commit task 2": [
+      {
+        "executionId": "f4e347b7-1acf-4e12-9b89-c93898589cad",
+        "chatSessionId": "sess_6288b051-bcbf-437c-940f-daaee922059c",
+        "timestamp": 1794479692948
+      },
+      {
+        "executionId": "f4e347b7-1acf-4e12-9b89-c93898589cad",
+        "chatSessionId": "sess_6288b051-bcbf-437c-940f-daaee922059c",
+        "timestamp": 1794479722391
+      }
+    ],
+    "2. Set up the pnpm workspace and the engine package": [
+      {
+        "executionId": "f4e347b7-1acf-4e12-9b89-c93898589cad",
+        "chatSessionId": "sess_6288b051-bcbf-437c-940f-daaee922059c",
+        "timestamp": 1794479722425
+      }
+    ],
+    "3.1 Create `src/types.ts`, `src/rule-ids.ts` and `src/validation-error.ts`": [
+      {
+        "executionId": "c499e53d-55be-470e-9fef-cb45a52aa3e0",
+        "chatSessionId": "sess_1daa3f7f-20b9-4bc8-b80b-b3504cf6524e",
+        "timestamp": 1794479784851
+      },
+      {
+        "executionId": "c499e53d-55be-470e-9fef-cb45a52aa3e0",
+        "chatSessionId": "sess_1daa3f7f-20b9-4bc8-b80b-b3504cf6524e",
+        "timestamp": 1794479830421
+      }
+    ],
+    "3.2 Implement `src/calendar-date.ts`": [
+      {
+        "executionId": "c499e53d-55be-470e-9fef-cb45a52aa3e0",
+        "chatSessionId": "sess_1daa3f7f-20b9-4bc8-b80b-b3504cf6524e",
+        "timestamp": 1794479833869
+      },
+      {
+        "executionId": "c499e53d-55be-470e-9fef-cb45a52aa3e0",
+        "chatSessionId": "sess_1daa3f7f-20b9-4bc8-b80b-b3504cf6524e",
+        "timestamp": 1794479882334
+      }
+    ],
+    "3.3 Write property test for calendar arithmetic in `test/calendar-date.property.test.ts`": [
+      {
+        "executionId": "c499e53d-55be-470e-9fef-cb45a52aa3e0",
+        "chatSessionId": "sess_1daa3f7f-20b9-4bc8-b80b-b3504cf6524e",
+        "timestamp": 1794479885985
+      },
+      {
+        "executionId": "c499e53d-55be-470e-9fef-cb45a52aa3e0",
+        "chatSessionId": "sess_1daa3f7f-20b9-4bc8-b80b-b3504cf6524e",
+        "timestamp": 1794479947326
+      }
+    ],
+    "3.4 Write unit tests in `test/calendar-date.test.ts` and `test/rule-ids.test.ts`": [
+      {
+        "executionId": "c499e53d-55be-470e-9fef-cb45a52aa3e0",
+        "chatSessionId": "sess_1daa3f7f-20b9-4bc8-b80b-b3504cf6524e",
+        "timestamp": 1794479886625
+      },
+      {
+        "executionId": "c499e53d-55be-470e-9fef-cb45a52aa3e0",
+        "chatSessionId": "sess_1daa3f7f-20b9-4bc8-b80b-b3504cf6524e",
+        "timestamp": 1794479946819
+      }
+    ],
+    "3.5 Commit task 3": [
+      {
+        "executionId": "c499e53d-55be-470e-9fef-cb45a52aa3e0",
+        "chatSessionId": "sess_1daa3f7f-20b9-4bc8-b80b-b3504cf6524e",
+        "timestamp": 1794479950295
+      },
+      {
+        "executionId": "c499e53d-55be-470e-9fef-cb45a52aa3e0",
+        "chatSessionId": "sess_1daa3f7f-20b9-4bc8-b80b-b3504cf6524e",
+        "timestamp": 1794479990459
+      }
+    ],
+    "3. Add core types, rule IDs, the validation error and calendar-date helpers": [
+      {
+        "executionId": "c499e53d-55be-470e-9fef-cb45a52aa3e0",
+        "chatSessionId": "sess_1daa3f7f-20b9-4bc8-b80b-b3504cf6524e",
+        "timestamp": 1794479990506
       }
     ]
   }

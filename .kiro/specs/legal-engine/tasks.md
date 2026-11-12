@@ -13,22 +13,22 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
 
 ## Tasks
 
-- [~] 1. Commit the legal-engine spec and steering updates
-  - [-] 1.1 Commit `requirements.md`, `design.md`, `tasks.md` and `.config.kiro`
+- [x] 1. Commit the legal-engine spec and steering updates
+  - [x] 1.1 Commit `requirements.md`, `design.md`, `tasks.md` and `.config.kiro`
     - Run `git status` and confirm what is staged and unstaged
     - `git add .kiro/specs/legal-engine/` only. The steering changes are committed separately in 1.2
     - Check `git diff --staged` for secrets
     - Commit: `docs(kiro): add legal-engine spec (requirements, design, tasks)`, body `Spec: legal-engine, task 1`
     - _Requirements: 9.1, 9.3, 9.4, 9.5_
-  - [ ] 1.2 Commit the steering updates
+  - [x] 1.2 Commit the steering updates
     - Run `git status` and confirm what is staged and unstaged
     - `git add .kiro/steering/legal-rules.md .kiro/steering/product.md` only
     - Check `git diff --staged` for secrets
     - Commit: `docs(kiro): add MSMED scope, ODR portal and trader exclusion to steering`, body `Spec: legal-engine, task 1`
     - _Requirements: 9.1, 9.3, 9.4, 9.5_
 
-- [ ] 2. Set up the pnpm workspace and the engine package
-  - [ ] 2.1 Create root workspace files (only those that do not exist yet)
+- [x] 2. Set up the pnpm workspace and the engine package
+  - [x] 2.1 Create root workspace files (only those that do not exist yet)
     - `pnpm-workspace.yaml` with `packages: ["apps/*", "packages/*"]`
     - Root `package.json`: `private: true`, `packageManager: pnpm@<installed version>`, `engines.node: ">=20"`, scripts `test: pnpm -r --if-present run test`, `typecheck: pnpm -r --if-present run typecheck`, `lint: pnpm -r --if-present run lint`
     - Root dev dependencies (latest stable): `typescript`, `vitest`, `fast-check`, `eslint`, `typescript-eslint`, `@types/node`
@@ -36,7 +36,7 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
     - `eslint.config.js` (flat config, typescript-eslint) with the engine purity rules for `packages/engine/src/**`: `no-restricted-globals` (`Date`, `process`, `fetch`, `setTimeout`, `setInterval`, `performance`), `no-restricted-imports` (`node:*`, `fs`, `path`, `http`, `https`, `net`, `child_process`), `no-restricted-properties` (`Math.random`)
     - Confirm the existing `.gitignore` contains `node_modules/`, `.next/`, `dist/`, `coverage/`, `.turbo/`, `.vercel/`, `.env`, `.env.*`, `!.env.example`, `*.log`, `.DS_Store`. Add any that are missing. It must not ignore `.kiro/`
     - _Requirements: 1.1, 1.2, 1.5, 1.6, 9.5_
-  - [ ] 2.2 Create the `packages/engine` package skeleton
+  - [x] 2.2 Create the `packages/engine` package skeleton
     - `package.json`: name `@dues-banshee/engine`, `type: module`, `exports: { ".": "./src/index.ts" }`, no `dependencies`, scripts `test: vitest run`, `typecheck: tsc --noEmit`, `lint: eslint src test`
     - `tsconfig.json` extending `../../tsconfig.base.json`, `lib: ["ES2022"]` with no DOM, `types: []` for `src`, includes `src` and `test`
     - `vitest.config.ts` (`include: ["test/**/*.test.ts"]`, `setupFiles: ["test/setup.ts"]`, `environment: "node"`)
@@ -45,33 +45,33 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
     - `test/package.test.ts`: unit test that the engine `package.json` has no `dependencies` field or an empty one, so `pnpm test` has a real test to run
     - Run `pnpm install`, `pnpm test`, `pnpm typecheck`, `pnpm lint`. All must exit 0
     - _Requirements: 1.3, 1.4, 1.5, 1.7_
-  - [ ] 2.3 Commit task 2
+  - [x] 2.3 Commit task 2
     - `git add package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.base.json eslint.config.js .gitignore packages/engine` (only the files that changed)
     - Check `git diff --staged`, then commit `chore(engine): set up pnpm workspace and engine package`, body `Spec: legal-engine, task 2`
     - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-- [ ] 3. Add core types, rule IDs, the validation error and calendar-date helpers
-  - [ ] 3.1 Create `src/types.ts`, `src/rule-ids.ts` and `src/validation-error.ts`
+- [x] 3. Add core types, rule IDs, the validation error and calendar-date helpers
+  - [x] 3.1 Create `src/types.ts`, `src/rule-ids.ts` and `src/validation-error.ts`
     - `types.ts`: `CalendarDate`, `Paise`, `SupplierCategory`, `SupplierActivity`, `Invoice`, `BankRate`, `NonCoverageReason`, `Caveat`, `NonCoverageResult`, `CoverageResult`, `DueDateResult`, `InterestResult`, `TaxBombStatus`, `TaxBombResult`, `LadderStep`, `StepEvent`, `PromiseEvent` (with `kind` discriminant), `EscalationEvent`, `EscalationHistory`, `LadderConfig`, `CoveredWaitReason`, `WaitReason`, `EscalationDecision`, `InrStyle`, exactly as in the design's Data Models
     - `rule-ids.ts`: `RULE_IDS` readonly tuple (`MSMED-15`, `MSMED-16`, `MSMED-18`, `IT-43BH`, `MSMED-SCOPE`, `MSMED-ODR`) and `RuleId`
     - `validation-error.ts`: `ValidationError` with `field`, `reason`, optional `value`, message `${field}: ${reason}`
     - Re-export the types, `RULE_IDS`, `RuleId` and `ValidationError` from `src/index.ts`
     - _Requirements: 8.1, 2.1_
-  - [ ] 3.2 Implement `src/calendar-date.ts`
+  - [x] 3.2 Implement `src/calendar-date.ts`
     - `isValidCalendarDate` (`^\d{4}-\d{2}-\d{2}$`, years 1900–9999, Gregorian leap rule), `toEpochDay` / `fromEpochDay` (Hinnant `days_from_civil` / `civil_from_days`, integer-only, zero-padded output), `addDays`, `dayDifference`, `compareDates` (-1/0/1), `financialYearEnd` (month ≥ 4 → `${y+1}-03-31`, else `${y}-03-31`)
     - No use of `Date`
     - _Requirements: 1.6, 2.1, 5.1_
-  - [ ] 3.3 Write property test for calendar arithmetic in `test/calendar-date.property.test.ts`
+  - [x] 3.3 Write property test for calendar arithmetic in `test/calendar-date.property.test.ts`
     - **Property 1: Calendar arithmetic round trip**
     - `fromEpochDay(toEpochDay(d)) === d` and `dayDifference(d, addDays(d, n)) === n` for dates 1900-01-01 to 9999-12-31
     - **Validates: Requirements 2.1, 3.1, 4.4, 5.10**
-  - [ ] 3.4 Write unit tests in `test/calendar-date.test.ts` and `test/rule-ids.test.ts`
+  - [x] 3.4 Write unit tests in `test/calendar-date.test.ts` and `test/rule-ids.test.ts`
     - `dayDifference("2026-10-17", "2026-11-12") === 26`; `dayDifference("2026-11-12", "2027-03-31") === 139`; `addDays("2026-09-02", 45) === "2026-10-17"`
     - `isValidCalendarDate` rejects `2026-02-30`, `2027-02-29`, `2026-04-31`, `2026-1-5`, month `00`/`13`; accepts `2028-02-29`
     - `financialYearEnd("2026-09-02") === "2027-03-31"`, `financialYearEnd("2027-03-31") === "2027-03-31"`, `financialYearEnd("2027-04-01") === "2028-03-31"`
     - `RULE_IDS` equals exactly the six IDs in order
     - _Requirements: 2.1, 5.1, 8.1_
-  - [ ] 3.5 Commit task 3
+  - [x] 3.5 Commit task 3
     - `git add` the new `src/` and `test/` files by path, check `git diff --staged`
     - Commit `feat(engine): add core types, rule IDs and calendar date helpers`, body `Spec: legal-engine, task 3`
     - _Requirements: 9.1, 9.2, 9.3, 9.4_
