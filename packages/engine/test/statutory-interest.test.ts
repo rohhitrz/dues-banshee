@@ -83,3 +83,27 @@ describe("statutoryInterest", () => {
     }
   });
 });
+
+describe("statutoryInterest safe-integer boundary", () => {
+  it("returns a value just below Number.MAX_SAFE_INTEGER and throws a ValidationError on today just above it", () => {
+    // 78 whole rests (2340 days) at 5000 bps use the exact BigInt path (rate 3 × 5000 / 120000 = 12.5% a month).
+    // Found by bisection on the amount: 922,013,910,175 paise gives 9007199254735085 (below
+    // Number.MAX_SAFE_INTEGER = 9007199254740991) and one paise more gives 9007199254744854 (above).
+    const extremeRate = { annualBps: 5000, asOf: "2026-10-07" };
+    const today = addDays(SHARMA_DUE, 78 * 30);
+
+    const below = covered(statutoryInterest(invoiceWith({ amountPaise: 922_013_910_175 }), today, extremeRate));
+    expect(below.accrualDays).toBe(2340);
+    expect(below.interestPaise).toBe(9_007_199_254_735_085);
+    expect(below.interestPaise).toBeLessThanOrEqual(Number.MAX_SAFE_INTEGER);
+
+    let caught: unknown;
+    try {
+      statutoryInterest(invoiceWith({ amountPaise: 922_013_910_176 }), today, extremeRate);
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(ValidationError);
+    expect((caught as ValidationError).field).toBe("today");
+  });
+});
