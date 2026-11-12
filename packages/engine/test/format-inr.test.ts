@@ -261,3 +261,23 @@ describe("formatINR validation", () => {
     });
   });
 });
+
+describe("formatINR style validation", () => {
+  it.each([
+    ["an unknown string", "Full"],
+    ["an empty string", ""],
+    ["undefined", undefined],
+    ["null", null],
+    ["a number", 1],
+  ])("throws ValidationError on style for %s", (_label, style) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const error = catchValidationError(() => formatINR(41_200_000, style as any));
+    expect(error.field).toBe("style");
+  });
+
+  it("reports a bad paise before a bad style", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const error = catchValidationError(() => formatINR(-1, "nope" as any));
+    expect(error.field).toBe("paise");
+  });
+});

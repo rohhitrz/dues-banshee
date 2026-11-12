@@ -1,6 +1,8 @@
 import type { InrStyle, Paise } from "./types";
+import { assertOneOf } from "./validate";
 import { ValidationError } from "./validation-error";
 
+const INR_STYLES: readonly InrStyle[] = ["full", "short"];
 const PAISE_PER_RUPEE = 100;
 const PAISE_PER_LAKH = 1e7;
 const PAISE_PER_CRORE = 1e9;
@@ -81,6 +83,7 @@ export function formatINR(paise: Paise, style: InrStyle): string {
   if (typeof paise !== "number" || !Number.isSafeInteger(paise) || paise < 0) {
     throw new ValidationError("paise", "must be a non-negative safe integer number of paise", paise);
   }
+  assertOneOf("style", style, INR_STYLES);
   return style === "full" ? formatFull(paise) : formatShort(paise);
 }
 

@@ -161,7 +161,7 @@ The engine is consumed from source (`"exports": { ".": "./src/index.ts" }`). Nex
 | `types.ts` | `CalendarDate`, `Paise`, `Invoice`, `BankRate`, enums, all result types |
 | `rule-ids.ts` | `RULE_IDS` (readonly tuple), `RuleId` |
 | `validation-error.ts` | `ValidationError` class |
-| `validate.ts` | `validateInvoice`, `validateBankRate`, `validateHistory`, `validateLadderConfig`, `assertCalendarDate`, `assertPaise` |
+| `validate.ts` | `validateInvoice`, `validateBankRate`, `validateHistory`, `validateLadderConfig`, `assertCalendarDate`, `assertPaise`, `assertOneOf` |
 | `calendar-date.ts` | `toEpochDay`, `fromEpochDay`, `addDays`, `dayDifference`, `compareDates`, `isValidCalendarDate`, `financialYearEnd` |
 | `coverage.ts` | `coverage`, `nonCoverageResult` |
 | `due-date.ts` | `dueDate` |
@@ -338,7 +338,7 @@ export const isApprovalStep = (s: LadderStep): boolean => APPROVAL_STEP_SET.has(
 
 ### format-inr.ts
 
-`formatINR(paise, style)` validates `paise` as a non-negative safe integer (Requirement 7.5), then:
+`formatINR(paise, style)` validates `paise` as a non-negative safe integer (Requirement 7.5), then validates `style` as `"full"` or `"short"` (a `ValidationError` on `style` otherwise), then:
 
 **Full_Format** (`style: "full"`):
 - `paisePart = p % 100`, `rupees = (p - paisePart) / 100`.

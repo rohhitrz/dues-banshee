@@ -317,6 +317,27 @@ describe("format-inr properties: bad input", () => {
   });
 
   // Feature: legal-engine, Property 20: Formatter and parser reject bad input
+  it("Property 20: formatINR throws ValidationError for any style other than full or short", () => {
+    // **Validates: Requirements 7.5, 7.7**
+    const badStyle: fc.Arbitrary<unknown> = fc.oneof(
+      fc.string().filter((s) => s !== "full" && s !== "short"),
+      fc.constantFrom("Full", "SHORT", "full ", " short", "", "Full_Format", "long"),
+      fc.constantFrom(undefined, null, 0, 1, true, false, {}, ["full"]),
+    );
+    fc.assert(
+      fc.property(arbPaise, badStyle, (paise, style) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        expect(() => formatINR(paise, style as any)).toThrow(ValidationError);
+      }),
+    );
+    // The two cases from the review, spelled out.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(() => formatINR(41_200_000, "Full" as any)).toThrow(ValidationError);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(() => formatINR(41_200_000, undefined as any)).toThrow(ValidationError);
+  });
+
+  // Feature: legal-engine, Property 20: Formatter and parser reject bad input
   it("Property 20: parseINR throws ValidationError, naming the input, for mutated valid output", () => {
     // **Validates: Requirements 7.5, 7.7**
     fc.assert(

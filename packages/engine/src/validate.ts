@@ -49,7 +49,8 @@ function assertPositiveInteger(field: string, value: unknown): asserts value is 
   }
 }
 
-function assertOneOf<T extends string>(
+/** Throws unless `value` is one of the `allowed` strings. */
+export function assertOneOf<T extends string>(
   field: string,
   value: unknown,
   allowed: readonly T[],
