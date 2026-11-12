@@ -76,50 +76,50 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
     - Commit `feat(engine): add core types, rule IDs and calendar date helpers`, body `Spec: legal-engine, task 3`
     - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-- [ ] 4. Add input validation and shared test generators
-  - [ ] 4.1 Implement `src/validate.ts`
+- [x] 4. Add input validation and shared test generators
+  - [x] 4.1 Implement `src/validate.ts`
     - `assertCalendarDate(field, value)`, `assertPaise(field, value)`, `validateInvoice` (fields in declaration order: `id` non-empty, `amountPaise` integer 1..1e13, `acceptedOn`, `agreedTermDays` positive integer if present, `supplierCategory` and `supplierActivity` in their enums, `udyamRegisteredOn` valid date if present, `paidOn` valid and not before `acceptedOn`), `validateBankRate` (`annualBps` integer 0..5000, `asOf` date), `validateHistory` (indexed field paths such as `history[2].promisedDate`, valid `LadderStep`, promise `amountPaise` positive safe integer; `recordedOn ≤ promisedDate` not enforced), `validateLadderConfig` (`stepGapDays` positive integer)
     - Export `MAX_PAISE = 1_00_000_00_00_000` from a single place (the design lists it under `statutory-interest.ts`; define it here and re-export it there to avoid a cycle)
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8_
-  - [ ] 4.2 Create `test/arbitraries.ts` and `test/fixtures.ts`
+  - [x] 4.2 Create `test/arbitraries.ts` and `test/fixtures.ts`
     - `fixtures.ts`: the Sharma Traders invoice (`amountPaise` 41200000, `acceptedOn` 2026-09-02, `agreedTermDays` 45, `micro`, `manufacturing`) and `bankRate575 = { annualBps: 575, asOf: "2026-10-07" }`
     - `arbitraries.ts`: `arbCalendarDate`, `arbInvalidDateString`, `arbCoveredInvoice`, `arbNonCoveredInvoice`, `arbInvoice`, `arbBankRate`, `arbToday(inv)`, `arbHistory(inv)`, `arbLadderConfig`, plus the late-registration pairing for Property 5 and the 15 Feb–31 Mar acceptance branch for Property 11, with the ranges and biases in the design's Generators section
     - _Requirements: 1.4_
-  - [ ] 4.3 Write unit tests for validation in `test/validate.test.ts`
+  - [x] 4.3 Write unit tests for validation in `test/validate.test.ts`
     - One case per rule: `2026-02-30` names the field; `amountPaise` 0, 1.5 and 1e13 + 1 name `amountPaise`; `agreedTermDays` 0 names `agreedTermDays`; `paidOn` before `acceptedOn` names `paidOn`; `annualBps` -1 and 5001 name `annualBps`; `stepGapDays` 0 names `stepGapDays`; `supplierActivity` `"retail"` names `supplierActivity`; bad `udyamRegisteredOn` names `udyamRegisteredOn`; bad history entry reports `history[i].<field>`
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8_
-  - [ ] 4.4 Commit task 4
+  - [x] 4.4 Commit task 4
     - `git add` the touched files by path, check `git diff --staged`
     - Commit `feat(engine): add input validation and test generators`, body `Spec: legal-engine, task 4`
     - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-- [ ] 5. Implement coverage (MSMED-SCOPE) and the statutory due date (MSMED-15)
-  - [ ] 5.1 Implement `src/coverage.ts`
+- [x] 5. Implement coverage (MSMED-SCOPE) and the statutory due date (MSMED-15)
+  - [x] 5.1 Implement `src/coverage.ts`
     - `coverage(invoice)`: category `medium`/`unregistered` → `nonCoverageResult("medium_or_unregistered")` (checked first, including traders); `trading` → `nonCoverageResult("trader")`; covered with `udyamRegisteredOn` after `acceptedOn` → `caveat: "registered_after_supply"`, `ruleIds: ["MSMED-SCOPE"]`
     - `nonCoverageResult(reason)` → `{ applicable: false, reason, ruleIds: ["MSMED-SCOPE"] }`
     - Internal `withCaveat(result, cov)` that copies the caveat and adds `MSMED-SCOPE`, plus a helper that de-duplicates `ruleIds` and orders them by `RULE_IDS`
     - Re-export `coverage` from `src/index.ts`
     - _Requirements: 8.3, 8.4, 8.5, 8.6_
-  - [ ] 5.2 Implement `src/due-date.ts`
+  - [x] 5.2 Implement `src/due-date.ts`
     - Validate, return the Non_Coverage_Result (no `dueDate` field) for non-covered invoices, else `addDays(acceptedOn, agreedTermDays === undefined ? 15 : min(agreedTermDays, 45))` with `ruleIds: ["MSMED-15"]` plus caveat
     - Re-export `dueDate` from `src/index.ts`
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.8, 8.2_
-  - [ ] 5.3 Write property test for the due date in `test/due-date.property.test.ts`
+  - [x] 5.3 Write property test for the due date in `test/due-date.property.test.ts`
     - **Property 3: Due date follows MSMED-15**
     - Oracle: difference is `min(agreedTermDays, 45)` or 15, always 1..45, `ruleIds` contains `MSMED-15`
     - **Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.6, 3.7, 8.2**
-  - [ ] 5.4 Write unit tests in `test/due-date.test.ts` and `test/coverage.test.ts`
+  - [x] 5.4 Write unit tests in `test/due-date.test.ts` and `test/coverage.test.ts`
     - Sharma Traders `dueDate` → `2026-10-17`, `ruleIds` `["MSMED-15"]`
     - Term 60 → 45 days; no term → 15 days
     - Medium trader → reason `medium_or_unregistered`; micro trader → reason `trader`, `ruleIds` `["MSMED-SCOPE"]`, no `dueDate`
     - `udyamRegisteredOn` after `acceptedOn` → still covered, caveat present, `ruleIds` `["MSMED-15", "MSMED-SCOPE"]`
     - _Requirements: 3.5, 3.8, 8.4, 8.5, 8.6_
-  - [ ] 5.5 Commit task 5
+  - [x] 5.5 Commit task 5
     - `git add` the touched files by path, check `git diff --staged`
     - Commit `feat(engine): add coverage check and MSMED-15 due date`, body `Spec: legal-engine, task 5`
     - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-- [ ] 6. Checkpoint: tests, typecheck and lint pass
+- [x] 6. Checkpoint: tests, typecheck and lint pass
   - Run `pnpm test`, `pnpm typecheck` and `pnpm lint`. Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 7. Implement statutory interest (MSMED-16)

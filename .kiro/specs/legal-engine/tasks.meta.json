@@ -3,6 +3,10 @@
     "3.3 Write property test for calendar arithmetic in `test/calendar-date.property.test.ts`": {
       "status": "passed",
       "lastRunTimestamp": 1794479934092
+    },
+    "5.3 Write property test for the due date in `test/due-date.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794489071163
     }
   },
   "executionHistory": {
@@ -145,6 +149,140 @@
         "executionId": "c499e53d-55be-470e-9fef-cb45a52aa3e0",
         "chatSessionId": "sess_1daa3f7f-20b9-4bc8-b80b-b3504cf6524e",
         "timestamp": 1794479990506
+      }
+    ],
+    "4.1 Implement `src/validate.ts`": [
+      {
+        "executionId": "6f44f43d-e5bb-4441-bea5-90061fcb7e8a",
+        "chatSessionId": "sess_d805c841-61f4-4ff9-9f73-bbfd656b88cb",
+        "timestamp": 1794488479244
+      },
+      {
+        "executionId": "6f44f43d-e5bb-4441-bea5-90061fcb7e8a",
+        "chatSessionId": "sess_d805c841-61f4-4ff9-9f73-bbfd656b88cb",
+        "timestamp": 1794488663363
+      }
+    ],
+    "4.2 Create `test/arbitraries.ts` and `test/fixtures.ts`": [
+      {
+        "executionId": "6f44f43d-e5bb-4441-bea5-90061fcb7e8a",
+        "chatSessionId": "sess_d805c841-61f4-4ff9-9f73-bbfd656b88cb",
+        "timestamp": 1794488479282
+      },
+      {
+        "executionId": "6f44f43d-e5bb-4441-bea5-90061fcb7e8a",
+        "chatSessionId": "sess_d805c841-61f4-4ff9-9f73-bbfd656b88cb",
+        "timestamp": 1794488663790
+      }
+    ],
+    "4.3 Write unit tests for validation in `test/validate.test.ts`": [
+      {
+        "executionId": "6f44f43d-e5bb-4441-bea5-90061fcb7e8a",
+        "chatSessionId": "sess_d805c841-61f4-4ff9-9f73-bbfd656b88cb",
+        "timestamp": 1794488667332
+      },
+      {
+        "executionId": "6f44f43d-e5bb-4441-bea5-90061fcb7e8a",
+        "chatSessionId": "sess_d805c841-61f4-4ff9-9f73-bbfd656b88cb",
+        "timestamp": 1794488767989
+      }
+    ],
+    "4.4 Commit task 4": [
+      {
+        "executionId": "6f44f43d-e5bb-4441-bea5-90061fcb7e8a",
+        "chatSessionId": "sess_d805c841-61f4-4ff9-9f73-bbfd656b88cb",
+        "timestamp": 1794488770958
+      },
+      {
+        "executionId": "6f44f43d-e5bb-4441-bea5-90061fcb7e8a",
+        "chatSessionId": "sess_d805c841-61f4-4ff9-9f73-bbfd656b88cb",
+        "timestamp": 1794488803880
+      }
+    ],
+    "4. Add input validation and shared test generators": [
+      {
+        "executionId": "6f44f43d-e5bb-4441-bea5-90061fcb7e8a",
+        "chatSessionId": "sess_d805c841-61f4-4ff9-9f73-bbfd656b88cb",
+        "timestamp": 1794488803926
+      }
+    ],
+    "5.1 Implement `src/coverage.ts`": [
+      {
+        "executionId": "ea18879f-81a2-4287-a589-1c7b35c31810",
+        "chatSessionId": "sess_b51f04ab-828f-49bd-beb4-d8ca6e33d3cc",
+        "timestamp": 1794488901691
+      },
+      {
+        "executionId": "ea18879f-81a2-4287-a589-1c7b35c31810",
+        "chatSessionId": "sess_b51f04ab-828f-49bd-beb4-d8ca6e33d3cc",
+        "timestamp": 1794488955206
+      }
+    ],
+    "5.2 Implement `src/due-date.ts`": [
+      {
+        "executionId": "ea18879f-81a2-4287-a589-1c7b35c31810",
+        "chatSessionId": "sess_b51f04ab-828f-49bd-beb4-d8ca6e33d3cc",
+        "timestamp": 1794488958478
+      },
+      {
+        "executionId": "ea18879f-81a2-4287-a589-1c7b35c31810",
+        "chatSessionId": "sess_b51f04ab-828f-49bd-beb4-d8ca6e33d3cc",
+        "timestamp": 1794489000531
+      }
+    ],
+    "5.3 Write property test for the due date in `test/due-date.property.test.ts`": [
+      {
+        "executionId": "ea18879f-81a2-4287-a589-1c7b35c31810",
+        "chatSessionId": "sess_b51f04ab-828f-49bd-beb4-d8ca6e33d3cc",
+        "timestamp": 1794489007638
+      },
+      {
+        "executionId": "ea18879f-81a2-4287-a589-1c7b35c31810",
+        "chatSessionId": "sess_b51f04ab-828f-49bd-beb4-d8ca6e33d3cc",
+        "timestamp": 1794489092913
+      }
+    ],
+    "5.4 Write unit tests in `test/due-date.test.ts` and `test/coverage.test.ts`": [
+      {
+        "executionId": "ea18879f-81a2-4287-a589-1c7b35c31810",
+        "chatSessionId": "sess_b51f04ab-828f-49bd-beb4-d8ca6e33d3cc",
+        "timestamp": 1794489008208
+      },
+      {
+        "executionId": "ea18879f-81a2-4287-a589-1c7b35c31810",
+        "chatSessionId": "sess_b51f04ab-828f-49bd-beb4-d8ca6e33d3cc",
+        "timestamp": 1794489093568
+      }
+    ],
+    "5.5 Commit task 5": [
+      {
+        "executionId": "ea18879f-81a2-4287-a589-1c7b35c31810",
+        "chatSessionId": "sess_b51f04ab-828f-49bd-beb4-d8ca6e33d3cc",
+        "timestamp": 1794489096750
+      },
+      {
+        "executionId": "ea18879f-81a2-4287-a589-1c7b35c31810",
+        "chatSessionId": "sess_b51f04ab-828f-49bd-beb4-d8ca6e33d3cc",
+        "timestamp": 1794489134541
+      }
+    ],
+    "5. Implement coverage (MSMED-SCOPE) and the statutory due date (MSMED-15)": [
+      {
+        "executionId": "ea18879f-81a2-4287-a589-1c7b35c31810",
+        "chatSessionId": "sess_b51f04ab-828f-49bd-beb4-d8ca6e33d3cc",
+        "timestamp": 1794489134571
+      }
+    ],
+    "6. Checkpoint: tests, typecheck and lint pass": [
+      {
+        "executionId": "d6b5aea0-e83b-428f-9ce4-e0f9fbfea71a",
+        "chatSessionId": "sess_22bf6ccf-1731-4949-a7be-7abb84983dd7",
+        "timestamp": 1794489170246
+      },
+      {
+        "executionId": "d6b5aea0-e83b-428f-9ce4-e0f9fbfea71a",
+        "chatSessionId": "sess_22bf6ccf-1731-4949-a7be-7abb84983dd7",
+        "timestamp": 1794489197039
       }
     ]
   }
