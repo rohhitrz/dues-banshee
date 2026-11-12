@@ -29,6 +29,12 @@ importers:
 
   packages/engine: {}
 
+  packages/ledger:
+    dependencies:
+      '@dues-banshee/engine':
+        specifier: workspace:*
+        version: link:../engine
+
 packages:
 
   '@cacheable/memory@2.2.0':

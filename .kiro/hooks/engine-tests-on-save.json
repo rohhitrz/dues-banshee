@@ -11,6 +11,17 @@
       "description": "Runs the engine's unit and property tests whenever engine source or test files are saved.",
       "matcher": "packages/engine/(src|test)/.*\\.ts$",
       "enabled": true
+    },
+    {
+      "name": "Ledger tests on save",
+      "trigger": "PostFileSave",
+      "action": {
+        "type": "command",
+        "command": "date >> /tmp/ledger-hook.log; pnpm --filter @dues-banshee/ledger test 2>&1 | tee -a /tmp/ledger-hook.log"
+      },
+      "description": "Runs the ledger's unit and property tests whenever a file under packages/ledger is saved.",
+      "matcher": "packages/ledger/.*",
+      "enabled": true
     }
   ]
 }
