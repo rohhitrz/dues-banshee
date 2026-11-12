@@ -55,8 +55,7 @@ describe("nextEscalationStep", () => {
         rank: 5,
         requiresApproval: true,
       });
-      expect(decision.ruleIds).toContain("MSMED-18");
-      expect(decision.ruleIds).toContain("MSMED-ODR");
+      expect(decision.ruleIds).toEqual(["MSMED-15", "MSMED-18", "MSMED-ODR"]);
     });
 
     it("sets requiresApproval for voice_call, legal_notice and odr_pack only", () => {
@@ -148,6 +147,27 @@ describe("nextEscalationStep", () => {
         step: "whatsapp_paylink",
         rank: 2,
       });
+    });
+  });
+
+  describe("future-dated history events", () => {
+    it("ignores a step dated after today and a promise recorded after today", () => {
+      // Today is 2026-10-30, 13 days past the due date. Both events are dated later.
+      // If the step counted, the ladder would advance to rank 3; if the promise counted, it would wait.
+      const history: EscalationHistory = [
+        stepEvent("whatsapp_paylink", "2026-11-05"),
+        promiseEvent("2026-11-20", "2026-11-02"),
+      ];
+      const decision = nextEscalationStep(sharmaTradersInvoice, history, "2026-10-30");
+      expect(decision).toStrictEqual({
+        action: "advance",
+        applicable: true,
+        step: "whatsapp_nudge",
+        rank: 1,
+        requiresApproval: false,
+        ruleIds: ["MSMED-15"],
+      });
+      expect(decision).toStrictEqual(nextEscalationStep(sharmaTradersInvoice, [], "2026-10-30"));
     });
   });
 
@@ -250,9 +270,8 @@ describe("nextEscalationStep", () => {
       const history: EscalationHistory = [stepEvent("legal_notice", "2026-10-20")];
       const decision = nextEscalationStep(late, history, "2026-11-01");
       expect(decision).toMatchObject({ action: "advance", step: "odr_pack", caveat: "registered_after_supply" });
-      expect(decision.ruleIds).toEqual(
-        expect.arrayContaining(["MSMED-15", "MSMED-18", "MSMED-ODR", "MSMED-SCOPE"]),
-      );
+      // MSMED-SCOPE sorts between MSMED-18 and MSMED-ODR (RULE_IDS order).
+      expect(decision.ruleIds).toEqual(["MSMED-15", "MSMED-18", "MSMED-SCOPE", "MSMED-ODR"]);
     });
   });
 });

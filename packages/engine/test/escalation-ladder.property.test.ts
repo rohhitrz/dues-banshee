@@ -247,6 +247,11 @@ function checkAgainstOracle({ invoice, history, today, config }: Scenario, tally
     expect(actual.step).toBe(expected.step);
     expect(actual.rank).toBe(oracleRank(expected.step!));
     expect(actual.applicable).toBe(true);
+    // Ranks 1-4 cite MSMED-15 only (MSMED-SCOPE is added, in RULE_IDS order, by the caveat).
+    // The ODR pack (rank 5) is pinned exactly in Property 13.
+    if (actual.rank <= 4) {
+      expect(actual.ruleIds).toEqual(expected.caveat ? ["MSMED-15", "MSMED-SCOPE"] : ["MSMED-15"]);
+    }
     return;
   }
 
@@ -335,10 +340,16 @@ describe("escalation-ladder property: advance rank and approval", () => {
         // Approval is needed exactly for the call, the legal notice and the ODR pack.
         expect(decision.requiresApproval).toBe(ORACLE_APPROVAL_STEPS.includes(decision.step));
 
-        // The ODR pack cites s.18 and the portal.
+        // The ODR pack cites s.15, s.18 and the portal, in that order. A registered-after-supply
+        // invoice also cites MSMED-SCOPE, which sorts between MSMED-18 and MSMED-ODR (RULE_IDS order).
         if (decision.step === "odr_pack") {
-          expect(decision.ruleIds).toContain("MSMED-18");
-          expect(decision.ruleIds).toContain("MSMED-ODR");
+          const registeredAfterSupply =
+            invoice.udyamRegisteredOn !== undefined && daysBetween(invoice.acceptedOn, invoice.udyamRegisteredOn) > 0;
+          expect(decision.ruleIds).toEqual(
+            registeredAfterSupply
+              ? ["MSMED-15", "MSMED-18", "MSMED-SCOPE", "MSMED-ODR"]
+              : ["MSMED-15", "MSMED-18", "MSMED-ODR"],
+          );
         }
       }),
     );
