@@ -657,7 +657,7 @@ export const invoices = pgTable("invoices", {
 ]);
 ```
 
-`bigint` in number mode is safe because check constraints cap `amount_paise` at MAX_PAISE (10¹³), which is below 2⁵³, on all three tables that have such a column: `invoices` (`invoices_amount_range`), `promises` (`promises_amount_range`) and `payment_links` (`payment_links_amount_range`).
+`bigint` in number mode is safe because check constraints cap `amount_paise` at MAX_PAISE (10¹², 1,000,000,000,000), which is below 2⁵³, on all three tables that have such a column: `invoices` (`invoices_amount_range`), `promises` (`promises_amount_range`) and `payment_links` (`payment_links_amount_range`).
 
 ### Hand-check: Bansal Hardware (Requirement 11.5)
 

@@ -228,7 +228,7 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
     - Values from `pg_enum` ordered by `enumsortorder` equal `LADDER_STEPS`, `APPROVAL_STEP_LIST`, `SUPPLIER_CATEGORIES` and `SUPPLIER_ACTIVITIES` exactly, in order
     - `UDYAM-mh-00-0000000` and `UDYAM-MH-0-0000000` violate the check. `UDYAM-MH-00-0000000` is accepted
     - A raw duplicate (supplier, buyer, invoice_number_key) → unique violation. An invoice pointing at another supplier's buyer → FK violation. `amount_paise` 0 and `MAX_PAISE + 1` → check violation. `agreed_term_days` 0 → check violation
-    - A `date` column round-trips as `"2026-09-02"`. `amount_paise` 10¹³ round-trips as the number 10000000000000
+    - A `date` column round-trips as `"2026-09-02"`. `amount_paise` 10¹² round-trips as the number 1000000000000
     - _Requirements: 8.2, 8.3, 8.4, 8.5, 8.6_
   - [ ] 7.5 Commit task 7
     - `git add packages/db pnpm-lock.yaml`
