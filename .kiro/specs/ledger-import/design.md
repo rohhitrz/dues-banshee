@@ -475,7 +475,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 });
 ```
 
-`authorizeDemo` calls `getDb()` and `findSupplierIdByUdyam(DEMO_SUPPLIER.udyamNumber)`. It returns `{ id: "demo-user", name: "Demo owner", supplierId }`, or null when the demo supplier is missing. On null, the sign-in page shows "Demo data is not seeded". `signInDemo` is a server action calling `signIn("demo", { redirectTo: "/import" })`. The form has a button and no fields (12.2).
+`authorizeDemo` calls `getDb()` and `findSupplierIdByUdyam(DEMO_SUPPLIER.udyamNumber)`. It returns `{ id: "demo-user", name: "Demo owner", supplierId }`, or null when the demo supplier is missing. `signInDemo` is a server action calling `signIn("demo", { redirectTo: "/import" })`. When `authorizeDemo` returns null, Auth.js throws `CredentialsSignin`, and `signInDemo` redirects to `/signin?error=demo`, where the page shows "Demo data is not seeded". Any other `AuthError` (for example `authorize` throwing because the database is unreachable) redirects to `/signin?error=failed`. A value other than `demo` in `?error=`, including `failed` and values this app never sets, shows "Sign-in failed. Please try again.". Other exceptions are rethrown. The message mapping lives in `app/(site)/signin/messages.ts`. The form has a button and no fields (12.2).
 
 **Proxy.** It builds its own `auth` from `authConfig` and doesn't import `auth.ts`:
 

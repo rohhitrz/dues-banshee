@@ -1,4 +1,5 @@
 import { signInDemo } from "./actions";
+import { signInErrorMessage } from "./messages";
 import styles from "./signin.module.css";
 
 export const dynamic = "force-dynamic";
@@ -8,7 +9,7 @@ export default async function SignInPage({
 }: {
   searchParams: Promise<{ error?: string | string[] }>;
 }) {
-  const { error } = await searchParams;
+  const message = signInErrorMessage((await searchParams).error);
   return (
     <main className={styles.page}>
       <h1 className={styles.title}>Dues Banshee</h1>
@@ -17,11 +18,11 @@ export default async function SignInPage({
           Enter the graveyard (demo)
         </button>
       </form>
-      {error ? (
+      {message === null ? null : (
         <p role="alert" className={styles.error}>
-          Demo data is not seeded
+          {message}
         </p>
-      ) : null}
+      )}
     </main>
   );
 }
