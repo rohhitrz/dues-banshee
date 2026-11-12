@@ -22,3 +22,6 @@ export { parseCreditDays } from "./credit-days";
 export { parseCsv } from "./csv";
 export { headerKey, textKey, dedupeKey } from "./keys";
 export { HEADER_ALIASES, REQUIRED_FIELDS, detectHeader } from "./headers";
+export { mapRow } from "./map-row";
+export { buildImport } from "./build-import";
+export { compareWithStored } from "./compare";
