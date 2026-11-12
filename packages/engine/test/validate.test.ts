@@ -7,7 +7,7 @@ import {
   validateLadderConfig,
 } from "../src/validate";
 import { ValidationError } from "../src/validation-error";
-import type { EscalationHistory, Invoice } from "../src/types";
+import type { BankRate, EscalationHistory, Invoice, LadderConfig } from "../src/types";
 import { bankRate575, sharmaTradersInvoice } from "./fixtures";
 
 /** Runs `fn`, asserts it throws a ValidationError, and returns that error. */
@@ -183,5 +183,51 @@ describe("validateLadderConfig", () => {
   it.each([0, -1, 2.5])("names stepGapDays when it is %s", (stepGapDays) => {
     const error = catchValidationError(() => validateLadderConfig({ stepGapDays }));
     expect(error.field).toBe("stepGapDays");
+  });
+});
+
+describe("validation guards and field order", () => {
+  it("names supplierCategory for an unknown category", () => {
+    const invoice = invoiceWith({ supplierCategory: "large" as unknown as Invoice["supplierCategory"] });
+    expect(catchValidationError(() => validateInvoice(invoice)).field).toBe("supplierCategory");
+  });
+
+  it("names id for an empty id", () => {
+    expect(catchValidationError(() => validateInvoice(invoiceWith({ id: "" }))).field).toBe("id");
+  });
+
+  it.each([1.5, -1])("names agreedTermDays when it is %s", (agreedTermDays) => {
+    const error = catchValidationError(() => validateInvoice(invoiceWith({ agreedTermDays })));
+    expect(error.field).toBe("agreedTermDays");
+  });
+
+  it("names annualBps for a non-integer rate", () => {
+    const error = catchValidationError(() => validateBankRate({ ...bankRate575, annualBps: 575.5 }));
+    expect(error.field).toBe("annualBps");
+  });
+
+  it.each([
+    ["null", null],
+    ["undefined", undefined],
+    ["a string", "invoice"],
+    ["a number", 42],
+    ["an array", []],
+  ])("rejects %s as invoice, bankRate and config with a ValidationError", (_label, input) => {
+    expect(catchValidationError(() => validateInvoice(input as unknown as Invoice)).field).toBe("invoice");
+    expect(catchValidationError(() => validateBankRate(input as unknown as BankRate)).field).toBe("bankRate");
+    expect(catchValidationError(() => validateLadderConfig(input as unknown as LadderConfig)).field).toBe("config");
+  });
+
+  it("reports the earlier field in declaration order (amountPaise before acceptedOn)", () => {
+    const invoice = invoiceWith({ acceptedOn: "2026-02-30", amountPaise: 0 });
+    expect(catchValidationError(() => validateInvoice(invoice)).field).toBe("amountPaise");
+  });
+
+  it("reports supplierCategory before paidOn when both are invalid", () => {
+    const invoice = invoiceWith({
+      paidOn: "2026-02-30",
+      supplierCategory: "large" as unknown as Invoice["supplierCategory"],
+    });
+    expect(catchValidationError(() => validateInvoice(invoice)).field).toBe("supplierCategory");
   });
 });

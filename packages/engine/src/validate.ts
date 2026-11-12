@@ -59,8 +59,15 @@ function assertOneOf<T extends string>(
   }
 }
 
+function assertPlainObject(field: string, value: unknown): void {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new ValidationError(field, "must be an object", value);
+  }
+}
+
 /** Checks invoice fields in declaration order and throws on the first problem. */
 export function validateInvoice(invoice: Invoice): void {
+  assertPlainObject("invoice", invoice);
   if (typeof invoice.id !== "string" || invoice.id.length === 0) {
     throw new ValidationError("id", "must be a non-empty string", invoice.id);
   }
@@ -94,6 +101,7 @@ export function validateInvoice(invoice: Invoice): void {
 }
 
 export function validateBankRate(bankRate: BankRate): void {
+  assertPlainObject("bankRate", bankRate);
   if (
     typeof bankRate.annualBps !== "number" ||
     !Number.isInteger(bankRate.annualBps) ||
@@ -130,5 +138,6 @@ export function validateHistory(history: EscalationHistory): void {
 }
 
 export function validateLadderConfig(config: LadderConfig): void {
+  assertPlainObject("config", config);
   assertPositiveInteger("stepGapDays", config.stepGapDays);
 }

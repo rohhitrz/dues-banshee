@@ -280,6 +280,7 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
     - **Validates: Requirements 3.8, 4.6, 5.6, 6.2, 8.3, 8.4, 8.7**
   - [ ] 12.4 Write property test in `test/coverage.property.test.ts`
     - **Property 5: Registered-after-supply caveat**
+    - The generator must bias `udyamRegisteredOn` offsets toward −1, 0 and +1 days around `acceptedOn`
     - **Validates: Requirements 8.5, 8.6**
   - [ ] 12.5 Write unit tests in `test/purity.test.ts`
     - Call all four invoice functions for the Sharma Traders invoice under `vi.setSystemTime` at two different instants; results are identical
