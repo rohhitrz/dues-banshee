@@ -40,6 +40,30 @@ describe("apps/web proxy import ban", () => {
     },
   );
 
+  // Each construct is linted alone, so "exactly one error" means this construct and no other rule.
+  it.each([
+    ["a db subpath", 'import { createTestDb } from "@dues-banshee/db/testing";\nexport const v = createTestDb;', "no-restricted-imports"],
+    ["a relative path to lib/db", 'import { getDb } from "../web/lib/db";\nexport const v = getDb;', "no-restricted-imports"],
+    ["a relative path to auth", 'import { auth } from "../web/auth";\nexport const v = auth;', "no-restricted-imports"],
+    ["a dynamic import", 'export const v = import("./auth");', "no-restricted-syntax"],
+  ])("reports exactly one error in proxy.ts for %s", async (_name, code, ruleId) => {
+    const messages = await lintText(`${code}\n`, "apps/web/proxy.ts");
+
+    expect(messages.map((m) => [m.severity, m.ruleId])).toEqual([[2, ruleId]]);
+  });
+
+  it("reports a dynamic import in auth.config.ts too", async () => {
+    const messages = await lintText('export const v = import("./auth");\n', "apps/web/auth.config.ts");
+
+    expect(messages.map((m) => [m.severity, m.ruleId])).toEqual([[2, "no-restricted-syntax"]]);
+  });
+
+  it("still allows proxy.ts to import auth.config", async () => {
+    const messages = await lintText('import { authConfig } from "./auth.config";\nexport const v = authConfig;\n', "apps/web/proxy.ts");
+
+    expect(messages).toEqual([]);
+  });
+
   it("does not apply the ban to other files", async () => {
     const snippet = 'import { auth } from "./auth";\nexport const v = auth;\n';
     const messages = await lintText(snippet, "apps/web/lib/other.ts");

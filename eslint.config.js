@@ -87,20 +87,27 @@ export default tseslint.config(
     // JWT cookie, so they must not reach auth.ts (Credentials provider) or any database code.
     files: ["apps/web/proxy.ts", "apps/web/auth.config.ts"],
     rules: {
+      // `patterns` use gitignore-style matching, so they catch any path to these modules
+      // (`../web/lib/db`, `@/auth`) and subpaths (`@dues-banshee/db/testing`), not just exact names.
       "no-restricted-imports": [
         "error",
         {
-          paths: [
-            "./auth",
-            "@/auth",
-            "@/lib/db",
-            "./lib/db",
-            "@dues-banshee/db",
-          ].map((name) => ({
-            name,
-            message:
-              "proxy.ts and auth.config.ts must not import auth.ts or any Db code: build auth from auth.config.ts only, so the proxy bundle stays free of the provider and the database.",
-          })),
+          patterns: [
+            {
+              group: ["@dues-banshee/db", "@dues-banshee/db/*", "**/auth", "**/auth.ts", "**/auth.js", "**/lib/db*"],
+              message:
+                "proxy.ts and auth.config.ts must not import auth.ts or any Db code: build auth from auth.config.ts only, so the proxy bundle stays free of the provider and the database.",
+            },
+          ],
+        },
+      ],
+      // A dynamic `import("./auth")` would get past the static import ban above.
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "ImportExpression",
+          message:
+            "proxy.ts and auth.config.ts must not use dynamic import(): it would bypass the ban on importing auth.ts and Db code.",
         },
       ],
     },
