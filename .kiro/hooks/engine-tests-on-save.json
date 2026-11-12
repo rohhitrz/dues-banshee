@@ -6,7 +6,7 @@
       "trigger": "PostFileSave",
       "action": {
         "type": "command",
-        "command": "date >> /tmp/engine-hook.log; pnpm --filter @dues-banshee/engine test 2>&1 | tee -a /tmp/engine-hook.log"
+        "command": "pnpm --filter @dues-banshee/engine test"
       },
       "description": "Runs the engine's unit and property tests whenever engine source or test files are saved.",
       "matcher": "packages/engine/(src|test)/.*\\.ts$",
