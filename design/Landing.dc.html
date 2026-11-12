@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dues Banshee — landing page</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500&amp;family=IM+Fell+English:ital@0;1&amp;family=IM+Fell+English+SC&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#07080B}
+a{color:#7CE8C0}a:hover{color:#B5F5DC}
+@keyframes lp-drift{0%{transform:translateX(-12%)}100%{transform:translateX(12%)}}
+@keyframes lp-drift2{0%{transform:translateX(12%)}100%{transform:translateX(-12%)}}
+@keyframes lp-bat{0%,100%{transform:translate(0,0)}50%{transform:translate(26px,-14px)}}
+@keyframes lp-wisp{0%{transform:translate(-50%,0) scale(.8);opacity:0}25%{opacity:.8}100%{transform:translate(-50%,-140px) scale(1.6);opacity:0}}
+@keyframes lp-flicker{0%,100%{opacity:1}44%{opacity:.9}47%{opacity:.5}50%{opacity:.95}}
+@keyframes lp-fuse{0%,100%{box-shadow:0 0 10px 2px rgba(255,138,61,.6)}50%{box-shadow:0 0 22px 6px rgba(255,138,61,.9)}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important}}
+</style>
+</helmet>
+<div style="background: #07080B; color: #ECE7DB; font-family: Inter, system-ui, sans-serif">
+
+<section aria-label="Hero" style="position: relative; min-height: 860px; overflow: hidden; background: radial-gradient(70% 55% at 78% 18%, #2A2148 0%, #120E22 40%, #07080B 80%)">
+<div aria-hidden="true" style="position: absolute; inset: 0; background-image: radial-gradient(1px 1px at 8% 14%, #fff9, transparent), radial-gradient(1px 1px at 22% 30%, #fff6, transparent), radial-gradient(1.5px 1.5px at 36% 9%, #fff8, transparent), radial-gradient(1px 1px at 52% 24%, #fff5, transparent), radial-gradient(1px 1px at 61% 6%, #fff7, transparent), radial-gradient(1px 1px at 88% 40%, #fff6, transparent), radial-gradient(1.5px 1.5px at 94% 10%, #fff8, transparent), radial-gradient(1px 1px at 15% 46%, #fff4, transparent)"></div>
+<div aria-hidden="true" style="position: absolute; top: 110px; right: 14%; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle at 36% 36%, #FFFBEF 0%, #EDE3C6 50%, #C9BC98 100%); box-shadow: 0 0 120px 40px rgba(243,235,211,.16), 0 0 300px 120px rgba(155,140,255,.08)"></div>
+<svg aria-hidden="true" width="46" height="18" viewBox="0 0 34 14" style="position: absolute; top: 190px; right: 30%; animation: lp-bat 4.5s ease-in-out infinite"><path d="M17 8c-2-3-5-5-9-4 1 1 1 3 0 4-2-1-5-1-8 1 3 0 5 2 6 4 2-2 6-3 11-1 5-2 9-1 11 1 1-2 3-4 6-4-3-2-6-2-8-1-1-1-1-3 0-4-4-1-7 1-9 4z" fill="#05060A"/></svg>
+<svg aria-hidden="true" width="30" height="12" viewBox="0 0 34 14" style="position: absolute; top: 150px; right: 24%; animation: lp-bat 6s ease-in-out infinite reverse"><path d="M17 8c-2-3-5-5-9-4 1 1 1 3 0 4-2-1-5-1-8 1 3 0 5 2 6 4 2-2 6-3 11-1 5-2 9-1 11 1 1-2 3-4 6-4-3-2-6-2-8-1-1-1-1-3 0-4-4-1-7 1-9 4z" fill="#05060A"/></svg>
+<svg aria-hidden="true" width="22" height="9" viewBox="0 0 34 14" style="position: absolute; top: 240px; right: 9%; animation: lp-bat 5s ease-in-out infinite"><path d="M17 8c-2-3-5-5-9-4 1 1 1 3 0 4-2-1-5-1-8 1 3 0 5 2 6 4 2-2 6-3 11-1 5-2 9-1 11 1 1-2 3-4 6-4-3-2-6-2-8-1-1-1-1-3 0-4-4-1-7 1-9 4z" fill="#05060A"/></svg>
+<svg aria-hidden="true" width="340" height="520" viewBox="0 0 190 300" style="position: absolute; right: -40px; bottom: 40px"><path d="M92 300V180c-4-30-20-50-48-62 18 2 32 10 44 24-4-30-20-52-44-66 26 8 42 26 50 52 2-30-6-56-22-78 22 18 32 44 32 76 8-26 26-44 52-52-22 16-36 38-40 64 14-12 30-18 50-18-24 10-40 28-48 52-2 18-2 50-2 108z" fill="#05060A"/></svg>
+<div style="position: absolute; left: 0; right: 0; bottom: 0; height: 280px; background: linear-gradient(0deg, #0B0E0A 0%, rgba(11,14,10,0) 100%)" aria-hidden="true"></div>
+<div style="position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); display: flex; align-items: flex-end; gap: 30px" aria-hidden="true">
+<span style="width: 74px; height: 120px; border-radius: 37px 37px 4px 4px; background: linear-gradient(170deg, #3A3F4B, #15171D); transform: rotate(-4deg); transform-origin: bottom"></span>
+<span style="position: relative; display: flex; justify-content: center; padding-top: 34px; box-sizing: border-box; width: 100px; height: 200px; border-radius: 50px 50px 4px 4px; background: linear-gradient(170deg, #454B58, #191B22); box-shadow: 0 0 70px rgba(124,232,192,0.28); font-family: 'IM Fell English SC', serif; font-size: 16px; letter-spacing: .14em; color: #8E8A80">R.I.P.<span style="position: absolute; left: 50%; top: -20px; width: 48px; height: 70px; border-radius: 50%; background: radial-gradient(circle at 50% 40%, rgba(181,245,220,.7), rgba(124,232,192,0) 70%); filter: blur(4px); animation: lp-wisp 3.6s ease-out infinite"></span></span>
+<span style="width: 66px; height: 96px; border-radius: 33px 33px 4px 4px; background: linear-gradient(170deg, #3A3F4B, #15171D)"></span>
+<span style="width: 84px; height: 156px; border-radius: 42px 42px 4px 4px; background: linear-gradient(170deg, #3A3F4B, #15171D); transform: rotate(3deg); transform-origin: bottom"></span>
+<span style="width: 60px; height: 84px; border-radius: 30px 30px 4px 4px; background: linear-gradient(170deg, #3A3F4B, #15171D)"></span>
+</div>
+<div aria-hidden="true" style="position: absolute; left: -15%; right: -15%; bottom: 20px; height: 200px; background: radial-gradient(40% 55% at 25% 70%, rgba(200,196,230,.16), transparent 70%), radial-gradient(35% 50% at 70% 80%, rgba(200,196,230,.13), transparent 70%); filter: blur(12px); animation: lp-drift 20s ease-in-out infinite alternate; pointer-events: none"></div>
+<div aria-hidden="true" style="position: absolute; left: -15%; right: -15%; bottom: 0; height: 140px; background: radial-gradient(45% 60% at 55% 70%, rgba(200,196,230,.14), transparent 70%); filter: blur(14px); animation: lp-drift2 26s ease-in-out infinite alternate; pointer-events: none"></div>
+
+<header style="position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; max-width: 1180px; margin: 0 auto; padding: 24px 48px; box-sizing: border-box">
+<span style="font-family: 'IM Fell English SC', serif; font-size: 24px">Dues Banshee</span>
+<nav aria-label="Site" style="display: flex; flex-wrap: wrap; gap: 24px; font-size: 14px">
+<a href="#how" style="color: #A9A497; text-decoration: none">How it works</a>
+<a href="#bomb" style="color: #A9A497; text-decoration: none">The 31 March rule</a>
+<a href="#pricing" style="color: #A9A497; text-decoration: none">Pricing</a>
+<a href="Main.dc.html" style="color: #ECE7DB; text-decoration: none">Sign in</a>
+</nav>
+</header>
+
+<div style="position: relative; max-width: 1180px; margin: 0 auto; padding: 120px 48px 0; box-sizing: border-box">
+<p style="margin: 0 0 18px; font-family: 'IM Fell English', serif; font-style: italic; font-size: 18px; color: #7CE8C0">For India's small suppliers…</p>
+<h1 style="margin: 0; max-width: 820px; font-family: 'IM Fell English', serif; font-weight: 400; font-size: clamp(2.8rem, 6.2vw, 5.6rem); line-height: 0.98; letter-spacing: -0.01em; text-shadow: 0 0 40px rgba(243,235,211,.12); animation: lp-flicker 7s infinite">Your unpaid invoices, <span style="font-style: italic; color: #9B97A8">haunting the right people.</span></h1>
+<p style="margin: 28px 0 0; max-width: 560px; font-size: 18px; line-height: 1.6; color: #C9C4B7">An AI collector that chases late payments on WhatsApp and voice, in Hindi or English — and reminds buyers that the law is on your side.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 36px">
+<a href="Main.dc.html" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; border-radius: 999px; background: #ECE7DB; color: #07080B; font-weight: 600; font-size: 15px; text-decoration: none">Upload your dues list</a>
+<a href="#how" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; border-radius: 999px; border: 1px solid #3A3F4A; color: #ECE7DB; font-size: 15px; text-decoration: none">Watch the 2-min demo</a>
+</div>
+</div>
+</section>
+
+<section aria-label="The problem" style="max-width: 1180px; margin: 0 auto; padding: 120px 48px; box-sizing: border-box; display: flex; flex-wrap: wrap; gap: 48px; align-items: flex-end; border-left: 1px solid #16181D">
+<div style="flex: 1 1 460px">
+<p style="margin: 0 0 12px; font-size: 12px; color: #8C877B">The problem</p>
+<p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: clamp(3rem, 7vw, 6rem); font-weight: 400; letter-spacing: -0.04em">₹8.1 lakh crore</p>
+<p style="margin: 12px 0 0; font-size: 13px; color: #8C877B">owed to MSMEs in delayed payments — Business Today, Feb 2026</p>
+</div>
+<p style="flex: 1 1 380px; margin: 0; font-size: 20px; line-height: 1.5; color: #C9C4B7; font-family: 'IM Fell English', serif; font-weight: 400">Small suppliers chase dues by phone, one awkward call at a time — afraid to push too hard and lose the customer.</p>
+</section>
+
+<section id="how" aria-label="How it works" style="max-width: 1180px; margin: 0 auto; padding: 40px 48px 120px; box-sizing: border-box">
+<p style="margin: 0 0 12px; font-size: 12px; color: #8C877B">How it works</p>
+<h2 style="margin: 0 0 48px; max-width: 760px; font-family: 'IM Fell English', serif; font-weight: 400; font-size: clamp(2rem, 3.8vw, 3.4rem); line-height: 1.05; letter-spacing: -0.03em">Five steps up the ladder. <span style="color: #8C877B">You approve every one that matters.</span></h2>
+<ol style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px">
+<li style="padding: 22px; border-top: 1px solid #7CE8C0"><p style="margin: 0 0 18px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #7CE8C0">01</p><p style="margin: 0 0 8px; font-size: 16px; font-weight: 600">Nudge</p><p style="margin: 0; font-size: 14px; line-height: 1.5; color: #A9A497">A polite WhatsApp the day it's due.</p></li>
+<li style="padding: 22px; border-top: 1px solid #3A3F4A"><p style="margin: 0 0 18px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8C877B">02</p><p style="margin: 0 0 8px; font-size: 16px; font-weight: 600">Pay link</p><p style="margin: 0; font-size: 14px; line-height: 1.5; color: #A9A497">One-tap UPI, plus the 31 March reminder.</p></li>
+<li style="padding: 22px; border-top: 1px solid #3A3F4A"><p style="margin: 0 0 18px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8C877B">03</p><p style="margin: 0 0 8px; font-size: 16px; font-weight: 600">Voice call</p><p style="margin: 0; font-size: 14px; line-height: 1.5; color: #A9A497">A Hindi or English call that records a date to pay.</p></li>
+<li style="padding: 22px; border-top: 1px solid #3A3F4A"><p style="margin: 0 0 18px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8C877B">04</p><p style="margin: 0 0 8px; font-size: 16px; font-weight: 600">Legal notice</p><p style="margin: 0; font-size: 14px; line-height: 1.5; color: #A9A497">A formal PDF with interest worked out.</p></li>
+<li style="padding: 22px; border-top: 1px solid #3A3F4A"><p style="margin: 0 0 18px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8C877B">05</p><p style="margin: 0 0 8px; font-size: 16px; font-weight: 600">Samadhaan</p><p style="margin: 0; font-size: 14px; line-height: 1.5; color: #A9A497">A ready-to-file MSME complaint pack.</p></li>
+</ol>
+</section>
+
+<section id="bomb" aria-label="The 31 March rule" style="background: radial-gradient(70% 90% at 80% 50%, rgba(255,138,61,0.14) 0%, rgba(7,8,11,0) 70%), #0C0A09; border-top: 1px solid #1E1813; border-bottom: 1px solid #1E1813">
+<div style="max-width: 1180px; margin: 0 auto; padding: 120px 48px; box-sizing: border-box; display: flex; flex-wrap: wrap; gap: 56px; align-items: center">
+<div style="flex: 1 1 480px">
+<p style="margin: 0 0 12px; font-size: 12px; color: #FFB27A">The 31 March rule</p>
+<h2 style="margin: 0 0 20px; font-family: 'IM Fell English', serif; font-weight: 400; font-size: clamp(2rem, 3.8vw, 3.4rem); line-height: 1.05; letter-spacing: -0.03em">Stop asking. <span style="color: #FFB27A">Start reminding them what they lose.</span></h2>
+<p style="margin: 0; max-width: 520px; font-size: 16px; line-height: 1.65; color: #C9C4B7">Buyers who don't pay a micro or small supplier by 31 March can't claim that purchase as an expense that year. Late amounts also carry interest at three times the RBI bank rate. Dues Banshee turns those rules into a countdown on every reminder.</p>
+</div>
+<div style="flex: 1 1 360px; padding: 28px; border-radius: 20px; border: 1px solid #5A3418; background: #140E0A">
+<p style="margin: 0 0 6px; font-size: 13px; color: #E9C9AE">Sharma Traders' deduction at risk</p>
+<p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 44px; color: #FFB27A">₹4,12,000</p>
+<div style="position: relative; height: 6px; margin: 22px 0 10px; border-radius: 3px; background: #2A1C12"><div style="width: 62%; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #6B3A16, #FF8A3D)"></div><span aria-hidden="true" style="position: absolute; left: 62%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: #FFD7A8; animation: lp-fuse 1.2s infinite"></span></div>
+<p style="margin: 0; font-size: 13px; color: #E9C9AE">139 days left in the financial year</p>
+</div>
+</div>
+</section>
+
+<section id="pricing" aria-label="Pricing" style="max-width: 1180px; margin: 0 auto; padding: 120px 48px; box-sizing: border-box">
+<p style="margin: 0 0 12px; font-size: 12px; color: #8C877B">Pricing</p>
+<h2 style="margin: 0 0 40px; font-family: 'IM Fell English', serif; font-weight: 400; font-size: clamp(2rem, 3.8vw, 3.4rem); line-height: 1.05; letter-spacing: -0.03em">Pay when the money comes back.</h2>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
+<div style="padding: 28px; border-radius: 18px; border: 1px solid #22262F; background: #0E1015"><p style="margin: 0 0 8px; font-size: 15px; font-weight: 600">Free</p><p style="margin: 0 0 18px; font-family: 'JetBrains Mono', monospace; font-size: 28px">₹0</p><p style="margin: 0; font-size: 14px; line-height: 1.6; color: #A9A497">Upload dues, see interest and 31 March countdowns. WhatsApp nudges only.</p></div>
+<div style="padding: 28px; border-radius: 18px; border: 1px solid #1F4A3C; background: #0E1A16"><p style="margin: 0 0 8px; font-size: 15px; font-weight: 600; color: #7CE8C0">Banshee</p><p style="margin: 0 0 18px; font-family: 'JetBrains Mono', monospace; font-size: 28px">[YOUR PRICE]<span style="font-size: 14px; color: #A9A497">/mo</span></p><p style="margin: 0; font-size: 14px; line-height: 1.6; color: #B5D9CB">Full ladder: pay links, voice calls, notices, Samadhaan packs.</p></div>
+<div style="padding: 28px; border-radius: 18px; border: 1px solid #22262F; background: #0E1015"><p style="margin: 0 0 8px; font-size: 15px; font-weight: 600">For CA firms</p><p style="margin: 0 0 18px; font-family: 'JetBrains Mono', monospace; font-size: 28px">[YOUR PRICE]</p><p style="margin: 0; font-size: 14px; line-height: 1.6; color: #A9A497">Run collections for all your MSME clients from one dashboard.</p></div>
+</div>
+</section>
+
+<footer style="position: relative; overflow: hidden; border-top: 1px solid #16181D; background-image: radial-gradient(rgba(236,231,219,0.16) 1px, transparent 1.2px); background-size: 11px 11px">
+<div style="max-width: 1180px; margin: 0 auto; padding: 72px 48px; box-sizing: border-box; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 24px; align-items: flex-end; background: radial-gradient(60% 100% at 30% 50%, #07080B 30%, rgba(7,8,11,0.6) 100%)">
+<div>
+<p style="margin: 0; font-family: 'IM Fell English', serif; font-weight: 400; font-size: 36px">Wake the banshee.</p>
+<p style="margin: 10px 0 0; font-size: 13px; color: #A9A497">Built for Kiroween 2026. Reminders a supplier sends to its own buyers — not legal advice.</p>
+</div>
+<a href="Main.dc.html" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; border-radius: 999px; background: #7CE8C0; color: #07080B; font-weight: 600; font-size: 15px; text-decoration: none">Start free</a>
+</div>
+</footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2400}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
