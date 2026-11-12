@@ -22,10 +22,14 @@ const SNIPPET = [
 
 const eslint = new ESLint({ cwd: REPO_ROOT });
 
-async function lint(filePath: string) {
-  const [result] = await eslint.lintText(SNIPPET, { filePath });
+async function lintText(text: string, filePath: string) {
+  const [result] = await eslint.lintText(text, { filePath });
   if (result === undefined) throw new Error("ESLint returned no result");
   return result.messages;
+}
+
+function lint(filePath: string) {
+  return lintText(SNIPPET, filePath);
 }
 
 describe("packages/ledger purity lint rules", () => {
@@ -60,5 +64,43 @@ describe("packages/ledger purity lint rules", () => {
 
     const restricted = messages.filter((m) => m.ruleId?.startsWith("no-restricted-") ?? false);
     expect(restricted).toEqual([]);
+  });
+});
+
+// Each construct is linted alone, so "exactly one error" means this construct and no other rule.
+const BYPASS_CASES: ReadonlyArray<readonly [string, string, string]> = [
+  ["Number.parseFloat", 'export const v = Number.parseFloat("1");', "no-restricted-properties"],
+  ["globalThis.parseFloat", 'export const v = globalThis.parseFloat("1");', "no-restricted-properties"],
+  ["new globalThis.Date()", "export const v = new globalThis.Date();", "no-restricted-properties"],
+  ["globalThis.Math.random()", "export const v = globalThis.Math.random();", "no-restricted-properties"],
+  ["a trailing-point literal", "export const v = 1.;", "no-restricted-syntax"],
+  ["process", "export const v = process;", "no-restricted-globals"],
+  ["fetch", "export const v = fetch;", "no-restricted-globals"],
+  ["setTimeout", "export const v = setTimeout;", "no-restricted-globals"],
+  ["setInterval", "export const v = setInterval;", "no-restricted-globals"],
+  ["performance", "export const v = performance;", "no-restricted-globals"],
+  ['an import from "node:fs"', 'import * as fs from "node:fs";\nexport const v = fs;', "no-restricted-imports"],
+];
+
+describe("packages/ledger purity lint rules: bypasses", () => {
+  it.each(BYPASS_CASES)("reports exactly one error for %s in src", async (_name, code, ruleId) => {
+    const messages = await lintText(`${code}\n`, "packages/ledger/src/__lint_fixture__.ts");
+    expect(messages.map((m) => [m.severity, m.ruleId])).toEqual([[2, ruleId]]);
+  });
+
+  it.each(BYPASS_CASES)("reports no restricted-rule error for %s under test", async (_name, code) => {
+    const messages = await lintText(`${code}\n`, "packages/ledger/test/x.ts");
+    expect(messages.filter((m) => m.ruleId?.startsWith("no-restricted-") ?? false)).toEqual([]);
+  });
+});
+
+describe("packages/engine purity lint rules: globalThis bypasses", () => {
+  it.each([
+    ["new globalThis.Date()", "export const v = new globalThis.Date();"],
+    ["globalThis.Math.random()", "export const v = globalThis.Math.random();"],
+    ["globalThis.process", "export const v = globalThis.process;"],
+  ])("reports exactly one error for %s in engine src", async (_name, code) => {
+    const messages = await lintText(`${code}\n`, "packages/engine/src/__lint_fixture__.ts");
+    expect(messages.map((m) => [m.severity, m.ruleId])).toEqual([[2, "no-restricted-properties"]]);
   });
 });

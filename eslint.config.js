@@ -26,6 +26,17 @@ const mathRandom = (pkg) => ({
   property: "random",
   message: `${pkg} is pure: Math.random is not allowed.`,
 });
+/**
+ * `globalThis.X` reaches the same globals that no-restricted-globals bans by bare name, so ban it
+ * for every restricted global. `globalThis.Math` is banned whole, because
+ * `const M = globalThis.Math; M.random()` would otherwise get past mathRandom.
+ */
+const globalThisBans = (pkg, extraNames = []) =>
+  [...restrictedGlobals, ...extraNames, "Math"].map((property) => ({
+    object: "globalThis",
+    property,
+    message: `${pkg} is pure: globalThis.${property} is not allowed. Inject it as an argument instead.`,
+  }));
 
 export default tseslint.config(
   {
@@ -38,7 +49,7 @@ export default tseslint.config(
     rules: {
       "no-restricted-globals": purityGlobals("packages/engine"),
       "no-restricted-imports": purityImports("packages/engine"),
-      "no-restricted-properties": ["error", mathRandom("packages/engine")],
+      "no-restricted-properties": ["error", mathRandom("packages/engine"), ...globalThisBans("packages/engine")],
     },
   },
   {
@@ -52,6 +63,7 @@ export default tseslint.config(
       "no-restricted-properties": [
         "error",
         mathRandom("packages/ledger"),
+        ...globalThisBans("packages/ledger", ["parseFloat"]),
         {
           object: "Number",
           property: "parseFloat",
@@ -63,7 +75,8 @@ export default tseslint.config(
       "no-restricted-syntax": [
         "error",
         {
-          selector: "Literal[raw=/^(\\d[\\d_]*)?\\.\\d|^\\d[\\d_]*[eE]/]",
+          // `.5`, `0.5`, `1e3`, and a trailing point (`1.`, `1.e3`).
+          selector: "Literal[raw=/^(\\d[\\d_]*)?\\.\\d|^\\d[\\d_]*[eE]|^\\d[\\d_]*\\./]",
           message: "no fractional or exponent literals in packages/ledger",
         },
       ],
