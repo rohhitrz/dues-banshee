@@ -277,6 +277,8 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
     - **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8**
   - [ ] 12.3 Write property test in `test/coverage.property.test.ts`
     - **Property 4: Non-covered invoices get only MSMED-SCOPE**
+    - Cover all three non-covered kinds (trader, medium, unregistered supplier) for each of `statutoryInterest`, `taxBomb` and `nextEscalationStep`
+    - Also add one unit test in `test/statutory-interest.test.ts`: inputs where the interest lands just below `Number.MAX_SAFE_INTEGER` return a value, and just above it throw `ValidationError`
     - **Validates: Requirements 3.8, 4.6, 5.6, 6.2, 8.3, 8.4, 8.7**
   - [ ] 12.4 Write property test in `test/coverage.property.test.ts`
     - **Property 5: Registered-after-supply caveat**
