@@ -346,7 +346,7 @@ Out of scope: the Google Sheets API, live Tally integration, dashboard styling, 
 #### Acceptance Criteria
 
 1. THE Web_App SHALL provide an import page at `/import` with minimal styling that accepts one `.csv` or `.xlsx` file.
-2. IF the file is larger than 5 MB, has more than 5,000 data rows, or is not valid CSV or XLSX, THEN THE Web_App SHALL reject it with a message and write nothing.
+2. IF the file is larger than 4 MB, has more than 5,000 data rows, or is not valid CSV or XLSX, THEN THE Web_App SHALL reject it with a message and write nothing. THE Web_App SHALL check the 4 MB limit in the browser before uploading and again on the server, both using one `MAX_UPLOAD_BYTES` constant. (Vercel rejects request bodies over 4.5 MB before the route runs.)
 3. WHEN a file is uploaded, THE Web_App SHALL call a preview route that returns the Import_Preview without writing to the database.
 4. THE Web_App SHALL show a preview table with, for each row: file row number, status (`new`, `already_imported` or `error`), invoice number, buyer, amount formatted with the Engine's `formatINR` in `full` style, invoice date, accepted date, a marker when the acceptance date was defaulted, warnings, and for error rows each column and reason. Unused columns and summary counts per status SHALL appear above the table.
 5. WHEN the owner confirms, THE Web_App SHALL send the file again to a commit route, which repeats parsing and validation on the server and writes only rows that are valid and not already imported. It SHALL NOT trust row data sent from the browser.
