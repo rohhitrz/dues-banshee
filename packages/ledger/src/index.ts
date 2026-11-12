@@ -17,3 +17,5 @@ export type {
 } from "./types";
 
 export { parseAmountLenient } from "./amount";
+export { parseDateLenient, EXCEL_SERIAL_MIN, EXCEL_SERIAL_MAX } from "./date";
+export { parseCreditDays } from "./credit-days";
