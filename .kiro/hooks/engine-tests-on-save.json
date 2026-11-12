@@ -17,10 +17,10 @@
       "trigger": "PostFileSave",
       "action": {
         "type": "command",
-        "command": "date >> /tmp/ledger-hook.log; pnpm --filter @dues-banshee/ledger test 2>&1 | tee -a /tmp/ledger-hook.log"
+        "command": "pnpm --filter @dues-banshee/ledger test"
       },
-      "description": "Runs the ledger's unit and property tests whenever a file under packages/ledger is saved.",
-      "matcher": "packages/ledger/.*",
+      "description": "Runs the ledger's unit and property tests whenever ledger source or test files are saved.",
+      "matcher": "packages/ledger/(src|test)/.*\\.ts$",
       "enabled": true
     }
   ]
