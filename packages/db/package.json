@@ -1,0 +1,30 @@
+{
+  "name": "@dues-banshee/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing.ts"
+  },
+  "dependencies": {
+    "@dues-banshee/engine": "workspace:*",
+    "@dues-banshee/ledger": "workspace:*",
+    "@neondatabase/serverless": "1.2.0",
+    "drizzle-orm": "0.45.4"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.16",
+    "drizzle-kit": "0.31.11",
+    "tsx": "4.23.15"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src test scripts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed": "tsx scripts/seed.ts",
+    "db:reset-demo": "tsx scripts/reset-demo.ts"
+  }
+}
