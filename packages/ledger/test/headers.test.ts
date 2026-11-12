@@ -50,7 +50,7 @@ describe("HEADER_ALIASES (Requirement 5.4)", () => {
   });
 });
 
-describe("detectHeader: Tally bills-receivable export (Requirements 5.5, 5.6)", () => {
+describe("detectHeader: Tally bills-receivable export (Requirement 5.12)", () => {
   const tally = table(
     ["Laxmi Precision Components"],
     ["Bills Receivable"],
@@ -92,7 +92,7 @@ describe("detectHeader: Tally bills-receivable export (Requirements 5.5, 5.6)", 
   });
 });
 
-describe("detectHeader: Delivery_Group (Requirements 5.7, 5.8)", () => {
+describe("detectHeader: Delivery_Group (Requirements 5.5, 5.6)", () => {
   it.each(["Delivery Date", "Date of Delivery", "Delivered On"])(
     "maps %s alone to acceptanceDate",
     (header) => {
@@ -115,7 +115,7 @@ describe("detectHeader: Delivery_Group (Requirements 5.7, 5.8)", () => {
   });
 });
 
-describe("detectHeader: duplicate headers (Requirements 5.9, 5.10)", () => {
+describe("detectHeader: duplicate headers (Requirement 5.7)", () => {
   it.each<[string, string[], string, string]>([
     ["two Delivery_Group columns", ["Delivery Date", "Delivered On"], "Delivery Date", "Delivered On"],
     ["two Acceptance_Group columns", ["Acceptance Date", "Accepted On"], "Acceptance Date", "Accepted On"],
@@ -149,7 +149,7 @@ describe("detectHeader: duplicate headers (Requirements 5.9, 5.10)", () => {
   });
 });
 
-describe("detectHeader: missing headers (Requirement 5.12)", () => {
+describe("detectHeader: missing headers (Requirement 5.9)", () => {
   it("reports each missing field with its aliases", () => {
     const errors = errorsOf(["Invoice No", "Party Name", "Remarks"]);
     expect(errors).toHaveLength(1);
