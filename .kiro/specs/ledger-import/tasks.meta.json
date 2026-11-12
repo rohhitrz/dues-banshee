@@ -1,0 +1,383 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Change `packages/engine/src/validate.ts` and `src/index.ts`": [
+      {
+        "executionId": "d725250e-037f-4e91-8a5f-47f25eddcadd",
+        "chatSessionId": "sess_51d028db-50c0-4b6a-833a-8ad4dfc2826f",
+        "timestamp": 1794506565000
+      },
+      {
+        "executionId": "d725250e-037f-4e91-8a5f-47f25eddcadd",
+        "chatSessionId": "sess_51d028db-50c0-4b6a-833a-8ad4dfc2826f",
+        "timestamp": 1794506611775
+      }
+    ],
+    "1.2 Add `packages/engine/test/exports.test.ts`": [
+      {
+        "executionId": "d725250e-037f-4e91-8a5f-47f25eddcadd",
+        "chatSessionId": "sess_51d028db-50c0-4b6a-833a-8ad4dfc2826f",
+        "timestamp": 1794506617265
+      },
+      {
+        "executionId": "d725250e-037f-4e91-8a5f-47f25eddcadd",
+        "chatSessionId": "sess_51d028db-50c0-4b6a-833a-8ad4dfc2826f",
+        "timestamp": 1794506662029
+      }
+    ],
+    "1.3 Commit task 1": [
+      {
+        "executionId": "d725250e-037f-4e91-8a5f-47f25eddcadd",
+        "chatSessionId": "sess_51d028db-50c0-4b6a-833a-8ad4dfc2826f",
+        "timestamp": 1794506665201
+      },
+      {
+        "executionId": "d725250e-037f-4e91-8a5f-47f25eddcadd",
+        "chatSessionId": "sess_51d028db-50c0-4b6a-833a-8ad4dfc2826f",
+        "timestamp": 1794506699017
+      }
+    ],
+    "1. Export validation helpers and supplier constants from the engine": [
+      {
+        "executionId": "d725250e-037f-4e91-8a5f-47f25eddcadd",
+        "chatSessionId": "sess_51d028db-50c0-4b6a-833a-8ad4dfc2826f",
+        "timestamp": 1794506699061
+      }
+    ],
+    "2.1 Create the package skeleton": [
+      {
+        "executionId": "df701e2a-a841-4e91-b975-9936afe16689",
+        "chatSessionId": "sess_19192b69-14ef-4d55-a0eb-73b2379c7239",
+        "timestamp": 1794506877479
+      },
+      {
+        "executionId": "df701e2a-a841-4e91-b975-9936afe16689",
+        "chatSessionId": "sess_19192b69-14ef-4d55-a0eb-73b2379c7239",
+        "timestamp": 1794506929310
+      }
+    ],
+    "2.2 Extend `eslint.config.js` to `packages/ledger/src/**/*.ts`": [
+      {
+        "executionId": "df701e2a-a841-4e91-b975-9936afe16689",
+        "chatSessionId": "sess_19192b69-14ef-4d55-a0eb-73b2379c7239",
+        "timestamp": 1794506934736
+      },
+      {
+        "executionId": "df701e2a-a841-4e91-b975-9936afe16689",
+        "chatSessionId": "sess_19192b69-14ef-4d55-a0eb-73b2379c7239",
+        "timestamp": 1794507001193
+      }
+    ],
+    "2.3 Add `packages/ledger/test/lint.test.ts`": [
+      {
+        "executionId": "df701e2a-a841-4e91-b975-9936afe16689",
+        "chatSessionId": "sess_19192b69-14ef-4d55-a0eb-73b2379c7239",
+        "timestamp": 1794507006891
+      },
+      {
+        "executionId": "df701e2a-a841-4e91-b975-9936afe16689",
+        "chatSessionId": "sess_19192b69-14ef-4d55-a0eb-73b2379c7239",
+        "timestamp": 1794507094232
+      }
+    ],
+    "2.4 Extend the tests-on-save hook to the ledger": [
+      {
+        "executionId": "df701e2a-a841-4e91-b975-9936afe16689",
+        "chatSessionId": "sess_19192b69-14ef-4d55-a0eb-73b2379c7239",
+        "timestamp": 1794507006935
+      },
+      {
+        "executionId": "df701e2a-a841-4e91-b975-9936afe16689",
+        "chatSessionId": "sess_19192b69-14ef-4d55-a0eb-73b2379c7239",
+        "timestamp": 1794507094519
+      }
+    ],
+    "2.5 Commit task 2": [
+      {
+        "executionId": "df701e2a-a841-4e91-b975-9936afe16689",
+        "chatSessionId": "sess_19192b69-14ef-4d55-a0eb-73b2379c7239",
+        "timestamp": 1794507098267
+      },
+      {
+        "executionId": "df701e2a-a841-4e91-b975-9936afe16689",
+        "chatSessionId": "sess_19192b69-14ef-4d55-a0eb-73b2379c7239",
+        "timestamp": 1794507145277
+      }
+    ],
+    "2. Set up `packages/ledger`, its purity lint rules and its test-on-save hook": [
+      {
+        "executionId": "df701e2a-a841-4e91-b975-9936afe16689",
+        "chatSessionId": "sess_19192b69-14ef-4d55-a0eb-73b2379c7239",
+        "timestamp": 1794507145313
+      }
+    ],
+    "3.1 Create `src/types.ts`": [
+      {
+        "executionId": "2088904e-25b4-41fa-8b1e-5d492535eb51",
+        "chatSessionId": "sess_56e9247a-864a-4950-be0d-bc705209d732",
+        "timestamp": 1794507282754
+      },
+      {
+        "executionId": "2088904e-25b4-41fa-8b1e-5d492535eb51",
+        "chatSessionId": "sess_56e9247a-864a-4950-be0d-bc705209d732",
+        "timestamp": 1794507326667
+      }
+    ],
+    "3.2 Implement `src/amount.ts`": [
+      {
+        "executionId": "2088904e-25b4-41fa-8b1e-5d492535eb51",
+        "chatSessionId": "sess_56e9247a-864a-4950-be0d-bc705209d732",
+        "timestamp": 1794507330209
+      },
+      {
+        "executionId": "2088904e-25b4-41fa-8b1e-5d492535eb51",
+        "chatSessionId": "sess_56e9247a-864a-4950-be0d-bc705209d732",
+        "timestamp": 1794507478398
+      }
+    ],
+    "3.3 Write `test/amount.test.ts`": [
+      {
+        "executionId": "2088904e-25b4-41fa-8b1e-5d492535eb51",
+        "chatSessionId": "sess_56e9247a-864a-4950-be0d-bc705209d732",
+        "timestamp": 1794507483406
+      },
+      {
+        "executionId": "2088904e-25b4-41fa-8b1e-5d492535eb51",
+        "chatSessionId": "sess_56e9247a-864a-4950-be0d-bc705209d732",
+        "timestamp": 1794507704972
+      }
+    ],
+    "3.4 Write `test/arbitraries.ts` and `test/amount.property.test.ts`": [
+      {
+        "executionId": "2088904e-25b4-41fa-8b1e-5d492535eb51",
+        "chatSessionId": "sess_56e9247a-864a-4950-be0d-bc705209d732",
+        "timestamp": 1794507483457
+      },
+      {
+        "executionId": "2088904e-25b4-41fa-8b1e-5d492535eb51",
+        "chatSessionId": "sess_56e9247a-864a-4950-be0d-bc705209d732",
+        "timestamp": 1794507705443
+      }
+    ],
+    "3.5 Commit task 3": [
+      {
+        "executionId": "2088904e-25b4-41fa-8b1e-5d492535eb51",
+        "chatSessionId": "sess_56e9247a-864a-4950-be0d-bc705209d732",
+        "timestamp": 1794507709932
+      },
+      {
+        "executionId": "2088904e-25b4-41fa-8b1e-5d492535eb51",
+        "chatSessionId": "sess_56e9247a-864a-4950-be0d-bc705209d732",
+        "timestamp": 1794507745580
+      }
+    ],
+    "3. Add lenient amount parsing": [
+      {
+        "executionId": "2088904e-25b4-41fa-8b1e-5d492535eb51",
+        "chatSessionId": "sess_56e9247a-864a-4950-be0d-bc705209d732",
+        "timestamp": 1794507745622
+      }
+    ],
+    "4.1 Implement `src/date.ts`": [
+      {
+        "executionId": "c3f43136-bad8-4f12-a81a-61d7a5994b6e",
+        "chatSessionId": "sess_b75fc48d-d545-4554-862e-00d6da21d1f2",
+        "timestamp": 1794507829879
+      },
+      {
+        "executionId": "c3f43136-bad8-4f12-a81a-61d7a5994b6e",
+        "chatSessionId": "sess_b75fc48d-d545-4554-862e-00d6da21d1f2",
+        "timestamp": 1794507910485
+      }
+    ],
+    "4.2 Implement `src/credit-days.ts`": [
+      {
+        "executionId": "c3f43136-bad8-4f12-a81a-61d7a5994b6e",
+        "chatSessionId": "sess_b75fc48d-d545-4554-862e-00d6da21d1f2",
+        "timestamp": 1794507916375
+      },
+      {
+        "executionId": "c3f43136-bad8-4f12-a81a-61d7a5994b6e",
+        "chatSessionId": "sess_b75fc48d-d545-4554-862e-00d6da21d1f2",
+        "timestamp": 1794507983481
+      }
+    ],
+    "4.3 Write `test/date.test.ts`": [
+      {
+        "executionId": "c3f43136-bad8-4f12-a81a-61d7a5994b6e",
+        "chatSessionId": "sess_b75fc48d-d545-4554-862e-00d6da21d1f2",
+        "timestamp": 1794507916473
+      },
+      {
+        "executionId": "c3f43136-bad8-4f12-a81a-61d7a5994b6e",
+        "chatSessionId": "sess_b75fc48d-d545-4554-862e-00d6da21d1f2",
+        "timestamp": 1794507984128
+      }
+    ],
+    "4.4 Write `test/credit-days.test.ts`": [
+      {
+        "executionId": "c3f43136-bad8-4f12-a81a-61d7a5994b6e",
+        "chatSessionId": "sess_b75fc48d-d545-4554-862e-00d6da21d1f2",
+        "timestamp": 1794507987256
+      },
+      {
+        "executionId": "c3f43136-bad8-4f12-a81a-61d7a5994b6e",
+        "chatSessionId": "sess_b75fc48d-d545-4554-862e-00d6da21d1f2",
+        "timestamp": 1794508012540
+      }
+    ],
+    "4.5 Commit task 4": [
+      {
+        "executionId": "c3f43136-bad8-4f12-a81a-61d7a5994b6e",
+        "chatSessionId": "sess_b75fc48d-d545-4554-862e-00d6da21d1f2",
+        "timestamp": 1794508016138
+      },
+      {
+        "executionId": "c3f43136-bad8-4f12-a81a-61d7a5994b6e",
+        "chatSessionId": "sess_b75fc48d-d545-4554-862e-00d6da21d1f2",
+        "timestamp": 1794508049447
+      }
+    ],
+    "4. Add lenient date and credit-days parsing": [
+      {
+        "executionId": "c3f43136-bad8-4f12-a81a-61d7a5994b6e",
+        "chatSessionId": "sess_b75fc48d-d545-4554-862e-00d6da21d1f2",
+        "timestamp": 1794508049476
+      }
+    ],
+    "5.1 Implement `src/csv.ts`": [
+      {
+        "executionId": "fcd59d48-5245-4f44-9187-e5cbc745c45d",
+        "chatSessionId": "sess_bb54e6cc-a308-4d2d-a69c-cae09e03246e",
+        "timestamp": 1794508074186
+      },
+      {
+        "executionId": "fcd59d48-5245-4f44-9187-e5cbc745c45d",
+        "chatSessionId": "sess_bb54e6cc-a308-4d2d-a69c-cae09e03246e",
+        "timestamp": 1794508143517
+      }
+    ],
+    "5.2 Write `test/csv.test.ts`": [
+      {
+        "executionId": "fcd59d48-5245-4f44-9187-e5cbc745c45d",
+        "chatSessionId": "sess_bb54e6cc-a308-4d2d-a69c-cae09e03246e",
+        "timestamp": 1794508147682
+      },
+      {
+        "executionId": "fcd59d48-5245-4f44-9187-e5cbc745c45d",
+        "chatSessionId": "sess_bb54e6cc-a308-4d2d-a69c-cae09e03246e",
+        "timestamp": 1794508236425
+      }
+    ],
+    "5.3 Implement `src/keys.ts` and `src/headers.ts`": [
+      {
+        "executionId": "fcd59d48-5245-4f44-9187-e5cbc745c45d",
+        "chatSessionId": "sess_bb54e6cc-a308-4d2d-a69c-cae09e03246e",
+        "timestamp": 1794508148087
+      },
+      {
+        "executionId": "fcd59d48-5245-4f44-9187-e5cbc745c45d",
+        "chatSessionId": "sess_bb54e6cc-a308-4d2d-a69c-cae09e03246e",
+        "timestamp": 1794508236899
+      }
+    ],
+    "5.4 Write `test/headers.test.ts` and `test/keys.test.ts`": [
+      {
+        "executionId": "fcd59d48-5245-4f44-9187-e5cbc745c45d",
+        "chatSessionId": "sess_bb54e6cc-a308-4d2d-a69c-cae09e03246e",
+        "timestamp": 1794508242051
+      },
+      {
+        "executionId": "fcd59d48-5245-4f44-9187-e5cbc745c45d",
+        "chatSessionId": "sess_bb54e6cc-a308-4d2d-a69c-cae09e03246e",
+        "timestamp": 1794508311939
+      }
+    ],
+    "5.5 Commit task 5": [
+      {
+        "executionId": "fcd59d48-5245-4f44-9187-e5cbc745c45d",
+        "chatSessionId": "sess_bb54e6cc-a308-4d2d-a69c-cae09e03246e",
+        "timestamp": 1794508314918
+      },
+      {
+        "executionId": "fcd59d48-5245-4f44-9187-e5cbc745c45d",
+        "chatSessionId": "sess_bb54e6cc-a308-4d2d-a69c-cae09e03246e",
+        "timestamp": 1794508350091
+      }
+    ],
+    "5. Add the CSV parser, normalisation keys and header detection": [
+      {
+        "executionId": "fcd59d48-5245-4f44-9187-e5cbc745c45d",
+        "chatSessionId": "sess_bb54e6cc-a308-4d2d-a69c-cae09e03246e",
+        "timestamp": 1794508350141
+      }
+    ],
+    "6.1 Implement `src/map-row.ts`": [
+      {
+        "executionId": "1cb62562-aa86-4d90-ab70-e6b10beeb207",
+        "chatSessionId": "sess_4829e8f5-4d3c-4fab-8830-6078f19532d7",
+        "timestamp": 1794508392683
+      },
+      {
+        "executionId": "1cb62562-aa86-4d90-ab70-e6b10beeb207",
+        "chatSessionId": "sess_4829e8f5-4d3c-4fab-8830-6078f19532d7",
+        "timestamp": 1794508522084
+      }
+    ],
+    "6.2 Implement `src/build-import.ts` and `src/compare.ts`": [
+      {
+        "executionId": "1cb62562-aa86-4d90-ab70-e6b10beeb207",
+        "chatSessionId": "sess_4829e8f5-4d3c-4fab-8830-6078f19532d7",
+        "timestamp": 1794508525894
+      },
+      {
+        "executionId": "1cb62562-aa86-4d90-ab70-e6b10beeb207",
+        "chatSessionId": "sess_4829e8f5-4d3c-4fab-8830-6078f19532d7",
+        "timestamp": 1794508603965
+      }
+    ],
+    "6.3 Write `test/map-row.test.ts`": [
+      {
+        "executionId": "1cb62562-aa86-4d90-ab70-e6b10beeb207",
+        "chatSessionId": "sess_4829e8f5-4d3c-4fab-8830-6078f19532d7",
+        "timestamp": 1794508526392
+      },
+      {
+        "executionId": "1cb62562-aa86-4d90-ab70-e6b10beeb207",
+        "chatSessionId": "sess_4829e8f5-4d3c-4fab-8830-6078f19532d7",
+        "timestamp": 1794508604405
+      }
+    ],
+    "6.4 Write `test/build-import.test.ts` and `test/compare.test.ts`": [
+      {
+        "executionId": "1cb62562-aa86-4d90-ab70-e6b10beeb207",
+        "chatSessionId": "sess_4829e8f5-4d3c-4fab-8830-6078f19532d7",
+        "timestamp": 1794508608436
+      },
+      {
+        "executionId": "1cb62562-aa86-4d90-ab70-e6b10beeb207",
+        "chatSessionId": "sess_4829e8f5-4d3c-4fab-8830-6078f19532d7",
+        "timestamp": 1794508675620
+      }
+    ],
+    "6.5 Commit task 6": [
+      {
+        "executionId": "1cb62562-aa86-4d90-ab70-e6b10beeb207",
+        "chatSessionId": "sess_4829e8f5-4d3c-4fab-8830-6078f19532d7",
+        "timestamp": 1794508679616
+      },
+      {
+        "executionId": "1cb62562-aa86-4d90-ab70-e6b10beeb207",
+        "chatSessionId": "sess_4829e8f5-4d3c-4fab-8830-6078f19532d7",
+        "timestamp": 1794508720555
+      }
+    ],
+    "6. Map rows to engine invoices and build the import": [
+      {
+        "executionId": "1cb62562-aa86-4d90-ab70-e6b10beeb207",
+        "chatSessionId": "sess_4829e8f5-4d3c-4fab-8830-6078f19532d7",
+        "timestamp": 1794508720599
+      }
+    ]
+  }
+}
