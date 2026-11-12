@@ -7,9 +7,6 @@ import { arbPaise } from "./arbitraries";
 // Independent oracles (not the implementation's own helpers)
 // ---------------------------------------------------------------------------
 
-/** Canonical Full_Format, written out separately from the one in src/format-inr.ts. */
-const CANONICAL_FULL = /^₹(0|[1-9]\d{0,2}|[1-9]\d?(?:,\d{2})*,\d{3})(?:\.(\d{2}))?$/;
-
 describe("format-inr properties", () => {
   // Feature: legal-engine, Property 17: Full format round trip from paise
   it("Property 17: Full format round trip from paise", () => {
@@ -19,9 +16,8 @@ describe("format-inr properties", () => {
         const text = formatINR(paise, "full");
 
         // The text is canonical Full_Format, and the paise group is never "00".
-        const match = CANONICAL_FULL.exec(text);
-        expect(match).not.toBeNull();
-        expect(match?.[2]).not.toBe("00");
+        expect(isCanonicalFullText(text), text).toBe(true);
+        expect(text.endsWith(".00"), text).toBe(false);
 
         // parseINR inverts formatINR exactly.
         expect(parseINR(text)).toBe(paise);
@@ -35,7 +31,7 @@ describe("format-inr properties", () => {
     fc.assert(
       fc.property(fc.constantFrom(0, 1, 99, 100, Number.MAX_SAFE_INTEGER - 1, Number.MAX_SAFE_INTEGER), (paise) => {
         const text = formatINR(paise, "full");
-        expect(CANONICAL_FULL.test(text)).toBe(true);
+        expect(isCanonicalFullText(text), text).toBe(true);
         expect(parseINR(text)).toBe(paise);
       }),
     );
@@ -51,6 +47,26 @@ const MAX_SAFE_PAISE_BIGINT = BigInt(Number.MAX_SAFE_INTEGER);
 /** Indian grouping of a non-negative BigInt: a comma after a digit when an odd number (>= 3) of digits follows. */
 function groupRupeesIndependently(rupees: bigint): string {
   return rupees.toString().replace(/(\d)(?=(\d\d)+\d$)/g, "$1,");
+}
+
+/**
+ * True when `s` is canonical Full_Format text, decided without the source regex: a loose split into
+ * rupee characters and an optional two-digit paise part, then the canonical string for that value is
+ * built with `groupRupeesIndependently` and compared with `s`. Range is not checked, only shape.
+ * Leading zeros, wrong grouping and a ".00" paise group all fail the comparison.
+ */
+function isCanonicalFullText(s: string): boolean {
+  const parts = /^₹([0-9,]+)(?:\.([0-9]{2}))?$/.exec(s);
+  if (parts === null) {
+    return false;
+  }
+  const digits = (parts[1] ?? "").replace(/,/g, "");
+  const paise = parts[2];
+  if (digits === "" || paise === "00") {
+    return false;
+  }
+  const canonical = `₹${groupRupeesIndependently(BigInt(digits))}${paise === undefined ? "" : `.${paise}`}`;
+  return canonical === s;
 }
 
 /** A canonical Full_Format string whose value is at most MAX_SAFE_INTEGER paise. `.00` is never produced. */
@@ -86,7 +102,7 @@ describe("format-inr properties: parse then format", () => {
     // **Validates: Requirements 7.10**
     fc.assert(
       fc.property(arbCanonicalFullText, (text) => {
-        expect(CANONICAL_FULL.test(text)).toBe(true);
+        expect(isCanonicalFullText(text), text).toBe(true);
         expect(formatINR(parseINR(text), "full")).toBe(text);
       }),
     );
@@ -183,8 +199,7 @@ describe("format-inr properties: short format", () => {
 
 /** True when `s` is not canonical Full_Format by the independent oracle (shape, or a "00" paise group). */
 function isNonCanonical(s: string): boolean {
-  const match = CANONICAL_FULL.exec(s);
-  return match === null || match[2] === "00";
+  return !isCanonicalFullText(s);
 }
 
 /** Values that are not a non-negative safe integer number. Non-number types are cast through unknown. */
@@ -362,12 +377,29 @@ describe("format-inr properties: bad input", () => {
   });
 
   // Feature: legal-engine, Property 20: Formatter and parser reject bad input
+  it("Property 20: parseINR rejects rupee groups of the wrong size", () => {
+    // **Validates: Requirements 7.5, 7.7**
+    // The last group must hold exactly three digits and every earlier group at most two (two, except the first).
+    const pairGrouped = (rupees: bigint): string => rupees.toString().replace(/(\d)(?=(\d\d)+$)/g, "$1,");
+    const arbWrongGroups: fc.Arbitrary<string> = fc.oneof(
+      fc.constantFrom("₹1,00", "₹10,00", "₹99,99", "₹1,0", "₹1,0000", "₹1,00,00", "₹1,000,00", "₹12,3456", "₹,100", "₹100,"),
+      fc.bigInt({ min: 100n, max: MAX_SAFE_PAISE_BIGINT / 100n }).map((rupees) => `₹${pairGrouped(rupees)}`),
+    );
+    fc.assert(
+      fc.property(arbWrongGroups, (text) => {
+        expect(isNonCanonical(text), text).toBe(true);
+        expectParseRejects(text);
+      }),
+    );
+  });
+
+  // Feature: legal-engine, Property 20: Formatter and parser reject bad input
   it("Property 20: parseINR rejects canonical-looking text above MAX_SAFE_INTEGER paise", () => {
     // **Validates: Requirements 7.5, 7.7**
     fc.assert(
       fc.property(arbOutOfRangeCanonicalLooking, (text) => {
         // Shape is canonical, so only the range check can reject it.
-        expect(CANONICAL_FULL.test(text)).toBe(true);
+        expect(isCanonicalFullText(text), text).toBe(true);
         expectParseRejects(text);
       }),
     );
