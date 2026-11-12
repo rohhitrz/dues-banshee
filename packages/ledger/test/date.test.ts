@@ -5,6 +5,7 @@ import { EXCEL_SERIAL_MAX, EXCEL_SERIAL_MIN, parseDateLenient } from "../src/dat
 const EMPTY = "is empty";
 const NOT_REAL_DAY = "not a real calendar day";
 const UNRECOGNISED = "not a recognised date";
+const UNKNOWN_MONTH = "unknown month";
 const TWO_DIGIT_YEAR =
   "two-digit year; write the year in full or use a month name (02-Sep-26)";
 const SERIAL_RANGE = "Excel serial outside 36526–73050 (2000–2099)";
@@ -51,6 +52,8 @@ describe("parseDateLenient: rejected inputs (Requirement 4.6)", () => {
     ["02/09/26", TWO_DIGIT_YEAR],
     ["02-09-26", TWO_DIGIT_YEAR],
     ["02.09.26", TWO_DIGIT_YEAR],
+    // month name that is not jan..dec
+    ["2-Sec-2026", UNKNOWN_MONTH],
     // month-name date with a three-digit year
     ["2-Sep-226", UNRECOGNISED],
     // another layout
