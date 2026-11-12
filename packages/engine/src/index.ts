@@ -27,3 +27,5 @@ export type {
 export { RULE_IDS } from "./rule-ids";
 export type { RuleId } from "./rule-ids";
 export { ValidationError } from "./validation-error";
+export { coverage } from "./coverage";
+export { dueDate } from "./due-date";

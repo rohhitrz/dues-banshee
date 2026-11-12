@@ -22,7 +22,8 @@ const LADDER_STEPS: readonly LadderStep[] = [
   "odr_pack",
 ];
 
-const MAX_AMOUNT_PAISE = 10_000_000_000_000;
+/** ₹1,000 crore in paise (1e12), the same limit as `MAX_PAISE` in src/validate.ts. */
+const MAX_AMOUNT_PAISE = 1_00_000_00_00_000;
 const DEFAULT_MIN_DATE: CalendarDate = "2020-01-01";
 const DEFAULT_MAX_DATE: CalendarDate = "2035-12-31";
 
