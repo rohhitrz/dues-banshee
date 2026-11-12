@@ -122,14 +122,18 @@ export const escalationEvents = pgTable("escalation_events", {
   createdAt: createdAt(),
 });
 
-export const promises = pgTable("promises", {
-  id: id(),
-  invoiceId: invoiceId(),
-  promisedDate: day("promised_date").notNull(),
-  amountPaise: paise("amount_paise").notNull(),
-  recordedOn: day("recorded_on").notNull(),
-  createdAt: createdAt(),
-});
+export const promises = pgTable(
+  "promises",
+  {
+    id: id(),
+    invoiceId: invoiceId(),
+    promisedDate: day("promised_date").notNull(),
+    amountPaise: paise("amount_paise").notNull(),
+    recordedOn: day("recorded_on").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [check("promises_amount_range", sql`${t.amountPaise} between 1 and ${sql.raw(String(MAX_PAISE))}`)],
+);
 
 export const messages = pgTable("messages", {
   id: id(),
@@ -159,15 +163,19 @@ export const approvals = pgTable("approvals", {
   createdAt: createdAt(),
 });
 
-export const paymentLinks = pgTable("payment_links", {
-  id: id(),
-  invoiceId: invoiceId(),
-  providerLinkId: text("provider_link_id").notNull(),
-  url: text("url").notNull(),
-  amountPaise: paise("amount_paise").notNull(),
-  status: text("status").notNull(),
-  createdAt: createdAt(),
-});
+export const paymentLinks = pgTable(
+  "payment_links",
+  {
+    id: id(),
+    invoiceId: invoiceId(),
+    providerLinkId: text("provider_link_id").notNull(),
+    url: text("url").notNull(),
+    amountPaise: paise("amount_paise").notNull(),
+    status: text("status").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [check("payment_links_amount_range", sql`${t.amountPaise} between 1 and ${sql.raw(String(MAX_PAISE))}`)],
+);
 
 export const agentRuns = pgTable("agent_runs", {
   id: id(),

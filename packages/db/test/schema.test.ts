@@ -7,7 +7,7 @@ import {
 } from "@dues-banshee/engine";
 import { eq } from "drizzle-orm";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
-import { buyers, invoices, promises, suppliers } from "../src/schema";
+import { buyers, invoices, paymentLinks, promises, suppliers } from "../src/schema";
 import { cloneTestDb, createTestDb, type TestDb } from "../src/testing";
 
 const UNIQUE_VIOLATION = "23505";
@@ -205,6 +205,52 @@ describe("invoices constraints", () => {
   });
 });
 
+/** Inserts one invoice and returns its id, so promises and payment links have a parent row. */
+async function insertInvoice(t: TestDb): Promise<string> {
+  const { a, buyerA } = await seedTwoSuppliers(t);
+  const [invoice] = await t.db
+    .insert(invoices)
+    .values(invoiceValues(a.id, buyerA.id))
+    .returning({ id: invoices.id });
+  if (invoice === undefined) throw new Error("invoice not inserted");
+  return invoice.id;
+}
+describe("promises_amount_range", () => {
+  const insertPromise = (t: TestDb, invoiceId: string, amountPaise: number) =>
+    t.db
+      .insert(promises)
+      .values({ invoiceId, promisedDate: "2026-10-01", amountPaise, recordedOn: "2026-09-20" })
+      .returning({ amountPaise: promises.amountPaise });
+  it.each([0, 1_000_000_000_001])("rejects amount_paise %i", async (amountPaise) => {
+    const t = await freshDb();
+    const invoiceId = await insertInvoice(t);
+    const failure = await failureOf(insertPromise(t, invoiceId, amountPaise));
+    expect(failure).toEqual({ code: CHECK_VIOLATION, constraint: "promises_amount_range" });
+  });
+  it.each([1, 1_000_000_000_000])("accepts amount_paise %i", async (amountPaise) => {
+    const t = await freshDb();
+    const invoiceId = await insertInvoice(t);
+    expect(await insertPromise(t, invoiceId, amountPaise)).toEqual([{ amountPaise }]);
+  });
+});
+describe("payment_links_amount_range", () => {
+  const insertLink = (t: TestDb, invoiceId: string, amountPaise: number) =>
+    t.db
+      .insert(paymentLinks)
+      .values({ invoiceId, providerLinkId: "plink_test", url: "https://rzp.io/i/test", amountPaise, status: "created" })
+      .returning({ amountPaise: paymentLinks.amountPaise });
+  it.each([0, 1_000_000_000_001])("rejects amount_paise %i", async (amountPaise) => {
+    const t = await freshDb();
+    const invoiceId = await insertInvoice(t);
+    const failure = await failureOf(insertLink(t, invoiceId, amountPaise));
+    expect(failure).toEqual({ code: CHECK_VIOLATION, constraint: "payment_links_amount_range" });
+  });
+  it.each([1, 1_000_000_000_000])("accepts amount_paise %i", async (amountPaise) => {
+    const t = await freshDb();
+    const invoiceId = await insertInvoice(t);
+    expect(await insertLink(t, invoiceId, amountPaise)).toEqual([{ amountPaise }]);
+  });
+});
 describe("column round-trips through Drizzle", () => {
   it("returns a date column as the string 2026-09-02", async () => {
     const t = await freshDb();
@@ -217,9 +263,9 @@ describe("column round-trips through Drizzle", () => {
     expect(row?.invoiceDate).toBe("2026-09-02");
   });
 
-  it("returns a bigint amount of 10^13 as the number 10000000000000", async () => {
-    // 10^13 is above MAX_PAISE, so invoices would reject it. promises.amount_paise is the same
-    // bigint number-mode column type without the range check.
+  it("returns a bigint amount of 10^12 as the number 1000000000000", async () => {
+    // 10^12 is MAX_PAISE, the largest amount promises.amount_paise accepts. It is far above the
+    // 32-bit limit, so it only round-trips if the column is a real 64-bit integer.
     const t = await freshDb();
     const { a, buyerA } = await seedTwoSuppliers(t);
     const [invoice] = await t.db
@@ -230,11 +276,11 @@ describe("column round-trips through Drizzle", () => {
     await t.db.insert(promises).values({
       invoiceId: invoice.id,
       promisedDate: "2026-10-01",
-      amountPaise: 10_000_000_000_000,
+      amountPaise: 1_000_000_000_000,
       recordedOn: "2026-09-20",
     });
     const [row] = await t.db.select({ amountPaise: promises.amountPaise }).from(promises);
-    expect(row?.amountPaise).toBe(10_000_000_000_000);
+    expect(row?.amountPaise).toBe(1_000_000_000_000);
     expect(typeof row?.amountPaise).toBe("number");
 
     // The column really is a 64-bit integer, not a 32-bit one that would have rejected the insert.

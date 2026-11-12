@@ -1,0 +1,2 @@
+ALTER TABLE "payment_links" ADD CONSTRAINT "payment_links_amount_range" CHECK ("payment_links"."amount_paise" between 1 and 1000000000000);--> statement-breakpoint
+ALTER TABLE "promises" ADD CONSTRAINT "promises_amount_range" CHECK ("promises"."amount_paise" between 1 and 1000000000000);

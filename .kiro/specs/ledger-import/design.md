@@ -621,11 +621,11 @@ Every table has `id uuid primary key default gen_random_uuid()` and `created_at 
 | `buyers` | `supplier_id → suppliers`, `name text`, `name_key text` | `unique(supplier_id, name_key)`; `unique(id, supplier_id)` (target of the composite FK below) |
 | `invoices` | `supplier_id`, `buyer_id`, `invoice_number text`, `invoice_number_key text`, `invoice_date date`, `accepted_on date`, `acceptance_date_defaulted boolean default false`, `agreed_term_days integer null`, `amount_paise bigint`, `paid_on date null`, `supplier_category`, `supplier_activity` | `unique(supplier_id, buyer_id, invoice_number_key)`; FK `(buyer_id, supplier_id) → buyers(id, supplier_id)`, so an invoice can't point at another supplier's buyer; `check amount_paise between 1 and MAX_PAISE` (value interpolated from the Engine constant); `check agreed_term_days is null or agreed_term_days > 0` |
 | `escalation_events` | `invoice_id`, `step ladder_step`, `occurred_on date` | — |
-| `promises` | `invoice_id`, `promised_date date`, `amount_paise bigint`, `recorded_on date` | — |
+| `promises` | `invoice_id`, `promised_date date`, `amount_paise bigint`, `recorded_on date` | `check amount_paise between 1 and MAX_PAISE` (`promises_amount_range`) |
 | `messages` | `invoice_id`, `channel text`, `direction text`, `body text`, `status text` | — |
 | `calls` | `invoice_id`, `started_at timestamptz`, `ended_at timestamptz null`, `transcript text null` | — |
 | `approvals` | `invoice_id`, `step approval_step`, `status approval_status default 'pending'`, `decided_at timestamptz null` | — |
-| `payment_links` | `invoice_id`, `provider_link_id text`, `url text`, `amount_paise bigint`, `status text` | — |
+| `payment_links` | `invoice_id`, `provider_link_id text`, `url text`, `amount_paise bigint`, `status text` | `check amount_paise between 1 and MAX_PAISE` (`payment_links_amount_range`) |
 | `agent_runs` | `tool text`, `input jsonb`, `output jsonb null`, `invoice_id null` | — |
 | `config` | `key text`, `value_int integer`, `effective_from date` | `unique(key, effective_from)` |
 
@@ -657,7 +657,7 @@ export const invoices = pgTable("invoices", {
 ]);
 ```
 
-`bigint` in number mode is safe because the check constraint caps values at MAX_PAISE (10¹³), which is below 2⁵³.
+`bigint` in number mode is safe because check constraints cap `amount_paise` at MAX_PAISE (10¹³), which is below 2⁵³, on all three tables that have such a column: `invoices` (`invoices_amount_range`), `promises` (`promises_amount_range`) and `payment_links` (`payment_links_amount_range`).
 
 ### Hand-check: Bansal Hardware (Requirement 11.5)
 
