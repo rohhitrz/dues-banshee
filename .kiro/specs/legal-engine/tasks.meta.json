@@ -7,6 +7,30 @@
     "5.3 Write property test for the due date in `test/due-date.property.test.ts`": {
       "status": "passed",
       "lastRunTimestamp": 1794489071163
+    },
+    "7.2 Write property test in `test/statutory-interest.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794491099472
+    },
+    "7.3 Write property test in `test/statutory-interest.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794491285593
+    },
+    "7.4 Write property test in `test/statutory-interest.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794491949405
+    },
+    "7.5 Write property test in `test/statutory-interest.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794492021649
+    },
+    "8.2 Write property test in `test/tax-bomb.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794492321001
+    },
+    "8.3 Write property test in `test/tax-bomb.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794492411685
     }
   },
   "executionHistory": {
@@ -283,6 +307,176 @@
         "executionId": "d6b5aea0-e83b-428f-9ce4-e0f9fbfea71a",
         "chatSessionId": "sess_22bf6ccf-1731-4949-a7be-7abb84983dd7",
         "timestamp": 1794489197039
+      }
+    ],
+    "7.1 Implement `src/statutory-interest.ts`": [
+      {
+        "executionId": "5364d1f9-4d5c-4f3b-8fa7-fbf60052a64a",
+        "chatSessionId": "sess_c950c4eb-d0ba-4352-afed-6944ba02fec8",
+        "timestamp": 1794490189472
+      },
+      {
+        "executionId": "5364d1f9-4d5c-4f3b-8fa7-fbf60052a64a",
+        "chatSessionId": "sess_c950c4eb-d0ba-4352-afed-6944ba02fec8",
+        "timestamp": 1794491037394
+      }
+    ],
+    "7.2 Write property test in `test/statutory-interest.property.test.ts`": [
+      {
+        "executionId": "5364d1f9-4d5c-4f3b-8fa7-fbf60052a64a",
+        "chatSessionId": "sess_c950c4eb-d0ba-4352-afed-6944ba02fec8",
+        "timestamp": 1794491041708
+      },
+      {
+        "executionId": "5364d1f9-4d5c-4f3b-8fa7-fbf60052a64a",
+        "chatSessionId": "sess_c950c4eb-d0ba-4352-afed-6944ba02fec8",
+        "timestamp": 1794491227430
+      }
+    ],
+    "7.6 Write unit tests in `test/statutory-interest.test.ts`": [
+      {
+        "executionId": "5364d1f9-4d5c-4f3b-8fa7-fbf60052a64a",
+        "chatSessionId": "sess_c950c4eb-d0ba-4352-afed-6944ba02fec8",
+        "timestamp": 1794491042443
+      },
+      {
+        "executionId": "5364d1f9-4d5c-4f3b-8fa7-fbf60052a64a",
+        "chatSessionId": "sess_c950c4eb-d0ba-4352-afed-6944ba02fec8",
+        "timestamp": 1794491228123
+      }
+    ],
+    "7.3 Write property test in `test/statutory-interest.property.test.ts`": [
+      {
+        "executionId": "5364d1f9-4d5c-4f3b-8fa7-fbf60052a64a",
+        "chatSessionId": "sess_c950c4eb-d0ba-4352-afed-6944ba02fec8",
+        "timestamp": 1794491233283
+      },
+      {
+        "executionId": "5364d1f9-4d5c-4f3b-8fa7-fbf60052a64a",
+        "chatSessionId": "sess_c950c4eb-d0ba-4352-afed-6944ba02fec8",
+        "timestamp": 1794491863977
+      }
+    ],
+    "7.4 Write property test in `test/statutory-interest.property.test.ts`": [
+      {
+        "executionId": "5364d1f9-4d5c-4f3b-8fa7-fbf60052a64a",
+        "chatSessionId": "sess_c950c4eb-d0ba-4352-afed-6944ba02fec8",
+        "timestamp": 1794491868065
+      },
+      {
+        "executionId": "5364d1f9-4d5c-4f3b-8fa7-fbf60052a64a",
+        "chatSessionId": "sess_c950c4eb-d0ba-4352-afed-6944ba02fec8",
+        "timestamp": 1794491970237
+      }
+    ],
+    "7.5 Write property test in `test/statutory-interest.property.test.ts`": [
+      {
+        "executionId": "5364d1f9-4d5c-4f3b-8fa7-fbf60052a64a",
+        "chatSessionId": "sess_c950c4eb-d0ba-4352-afed-6944ba02fec8",
+        "timestamp": 1794491970770
+      },
+      {
+        "executionId": "5364d1f9-4d5c-4f3b-8fa7-fbf60052a64a",
+        "chatSessionId": "sess_c950c4eb-d0ba-4352-afed-6944ba02fec8",
+        "timestamp": 1794492053389
+      }
+    ],
+    "7.7 Commit task 7": [
+      {
+        "executionId": "5364d1f9-4d5c-4f3b-8fa7-fbf60052a64a",
+        "chatSessionId": "sess_c950c4eb-d0ba-4352-afed-6944ba02fec8",
+        "timestamp": 1794492054052
+      },
+      {
+        "executionId": "5364d1f9-4d5c-4f3b-8fa7-fbf60052a64a",
+        "chatSessionId": "sess_c950c4eb-d0ba-4352-afed-6944ba02fec8",
+        "timestamp": 1794492098105
+      }
+    ],
+    "7. Implement statutory interest (MSMED-16)": [
+      {
+        "executionId": "5364d1f9-4d5c-4f3b-8fa7-fbf60052a64a",
+        "chatSessionId": "sess_c950c4eb-d0ba-4352-afed-6944ba02fec8",
+        "timestamp": 1794492098140
+      }
+    ],
+    "8.1 Implement `src/tax-bomb.ts`": [
+      {
+        "executionId": "b8faf73a-cb78-4584-9bdd-27f330b27c22",
+        "chatSessionId": "sess_66472a63-acb9-4697-97e5-1ca4a34ae4a0",
+        "timestamp": 1794492189528
+      },
+      {
+        "executionId": "b8faf73a-cb78-4584-9bdd-27f330b27c22",
+        "chatSessionId": "sess_66472a63-acb9-4697-97e5-1ca4a34ae4a0",
+        "timestamp": 1794492242820
+      }
+    ],
+    "8.2 Write property test in `test/tax-bomb.property.test.ts`": [
+      {
+        "executionId": "b8faf73a-cb78-4584-9bdd-27f330b27c22",
+        "chatSessionId": "sess_66472a63-acb9-4697-97e5-1ca4a34ae4a0",
+        "timestamp": 1794492248574
+      },
+      {
+        "executionId": "b8faf73a-cb78-4584-9bdd-27f330b27c22",
+        "chatSessionId": "sess_66472a63-acb9-4697-97e5-1ca4a34ae4a0",
+        "timestamp": 1794492332709
+      }
+    ],
+    "8.4 Write unit tests in `test/tax-bomb.test.ts`": [
+      {
+        "executionId": "b8faf73a-cb78-4584-9bdd-27f330b27c22",
+        "chatSessionId": "sess_66472a63-acb9-4697-97e5-1ca4a34ae4a0",
+        "timestamp": 1794492248608
+      },
+      {
+        "executionId": "b8faf73a-cb78-4584-9bdd-27f330b27c22",
+        "chatSessionId": "sess_66472a63-acb9-4697-97e5-1ca4a34ae4a0",
+        "timestamp": 1794492333224
+      }
+    ],
+    "8.3 Write property test in `test/tax-bomb.property.test.ts`": [
+      {
+        "executionId": "b8faf73a-cb78-4584-9bdd-27f330b27c22",
+        "chatSessionId": "sess_66472a63-acb9-4697-97e5-1ca4a34ae4a0",
+        "timestamp": 1794492337805
+      },
+      {
+        "executionId": "b8faf73a-cb78-4584-9bdd-27f330b27c22",
+        "chatSessionId": "sess_66472a63-acb9-4697-97e5-1ca4a34ae4a0",
+        "timestamp": 1794492422709
+      }
+    ],
+    "8.5 Commit task 8": [
+      {
+        "executionId": "b8faf73a-cb78-4584-9bdd-27f330b27c22",
+        "chatSessionId": "sess_66472a63-acb9-4697-97e5-1ca4a34ae4a0",
+        "timestamp": 1794492426584
+      },
+      {
+        "executionId": "b8faf73a-cb78-4584-9bdd-27f330b27c22",
+        "chatSessionId": "sess_66472a63-acb9-4697-97e5-1ca4a34ae4a0",
+        "timestamp": 1794492463513
+      }
+    ],
+    "8. Implement the tax bomb (IT-43BH)": [
+      {
+        "executionId": "b8faf73a-cb78-4584-9bdd-27f330b27c22",
+        "chatSessionId": "sess_66472a63-acb9-4697-97e5-1ca4a34ae4a0",
+        "timestamp": 1794492463551
+      }
+    ],
+    "9. Checkpoint: tests, typecheck and lint pass": [
+      {
+        "executionId": "df20476b-a297-4c92-bb91-95ec66d4ac9b",
+        "chatSessionId": "sess_014c1e91-3749-45ed-a536-9d258a100f41",
+        "timestamp": 1794492514075
+      },
+      {
+        "executionId": "df20476b-a297-4c92-bb91-95ec66d4ac9b",
+        "chatSessionId": "sess_014c1e91-3749-45ed-a536-9d258a100f41",
+        "timestamp": 1794492537759
       }
     ]
   }

@@ -122,8 +122,8 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
 - [x] 6. Checkpoint: tests, typecheck and lint pass
   - Run `pnpm test`, `pnpm typecheck` and `pnpm lint`. Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Implement statutory interest (MSMED-16)
-  - [ ] 7.1 Implement `src/statutory-interest.ts`
+- [x] 7. Implement statutory interest (MSMED-16)
+  - [x] 7.1 Implement `src/statutory-interest.ts`
     - Validate invoice, `today`, `bankRate`; return `{ ...nonCoverage, interestPaise: 0 }` for non-covered invoices
     - Accrual end = earlier of `paidOn` and `today`; `d = max(0, dayDifference(due, end))`
     - `d = 0` or `annualBps = 0` → 0; `d % 30 === 0` → exact BigInt path (`N = 120000n + 3n·bps`, `D = 120000n`, half-up via `(2·num + den) / (2·den)`); otherwise float path `Math.floor(A · Math.expm1((d/30) · Math.log1p(3·bps/120000)) + 0.5)`
@@ -131,21 +131,21 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
     - Return `interestPaise`, `accrualDays`, `statutoryRateBps = 3·annualBps`, `rateAsOf = bankRate.asOf`, `ruleIds: ["MSMED-16"]` plus caveat
     - Re-export `statutoryInterest` and `MAX_PAISE` from `src/index.ts`
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 8.2_
-  - [ ] 7.2 Write property test in `test/statutory-interest.property.test.ts`
+  - [x] 7.2 Write property test in `test/statutory-interest.property.test.ts`
     - **Property 6: Interest matches the Interest_Convention**
     - Non-negative safe integer within `0.5 + 1e-9·interestPaise` of `A·((1+r)^(d/30) − 1)`; `accrualDays`, `statutoryRateBps`, `rateAsOf`, `MSMED-16` checked; cap Accrual_Days at 3,650
     - **Validates: Requirements 4.1, 4.2, 4.5, 4.8, 8.2**
-  - [ ] 7.3 Write property test in `test/statutory-interest.property.test.ts`
+  - [x] 7.3 Write property test in `test/statutory-interest.property.test.ts`
     - **Property 7: No interest on or before the due date**
     - **Validates: Requirements 4.3, 4.10**
-  - [ ] 7.4 Write property test in `test/statutory-interest.property.test.ts`
+  - [x] 7.4 Write property test in `test/statutory-interest.property.test.ts`
     - **Property 8: Interest never decreases as time passes**
     - **Validates: Requirements 4.9**
-  - [ ] 7.5 Write property test in `test/statutory-interest.property.test.ts`
+  - [x] 7.5 Write property test in `test/statutory-interest.property.test.ts`
     - **Property 9: Whole-month rests are exact**
     - `today = addDays(dueDate, 30·m)`, no `paidOn`; compare against an independent BigInt rational reference written in the test
     - **Validates: Requirements 4.11**
-  - [ ] 7.6 Write unit tests in `test/statutory-interest.test.ts`
+  - [x] 7.6 Write unit tests in `test/statutory-interest.test.ts`
     - Sharma Traders, `today` 2026-11-12, 575 bps → `accrualDays === 26`, `interestPaise === 512794` (₹5,127.94), `statutoryRateBps === 1725`, `rateAsOf === "2026-10-07"`, `ruleIds` contains `MSMED-16`
     - `today` 2026-10-18 → `accrualDays === 1`; `today` 2026-10-17 → `interestPaise === 0`
     - `today` 2026-11-16 (30 days) → `interestPaise === 592250`
@@ -153,26 +153,26 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
     - Non-covered invoice → `applicable: false`, `interestPaise: 0`
     - Overflow input (₹1,000 crore, 5000 bps, many years) → `ValidationError` with `field === "today"`
     - _Requirements: 4.3, 4.4, 4.5, 4.6, 4.7, 4.11_
-  - [ ] 7.7 Commit task 7
+  - [x] 7.7 Commit task 7
     - `git add` the touched files by path, check `git diff --staged`
     - Commit `feat(engine): add statutoryInterest with monthly rests (MSMED-16)`, body `Spec: legal-engine, task 7`
     - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-- [ ] 8. Implement the tax bomb (IT-43BH)
-  - [ ] 8.1 Implement `src/tax-bomb.ts`
+- [x] 8. Implement the tax bomb (IT-43BH)
+  - [x] 8.1 Implement `src/tax-bomb.ts`
     - Validate invoice and `today`; non-covered → `{ ...nonCoverage, status: "not_applicable", deductionAtRiskPaise: 0 }` with no date fields
     - `taxBombDate = financialYearEnd(acceptedOn)`; `deductionDeadline` = later of `taxBombDate` and Due_Date
     - Status table: paid on/before deadline → `defused`, 0, 0; paid after deadline → `exploded`, 0, A; unpaid and `today ≤ deadline` → `armed`, `dayDifference(today, deadline)`, A; unpaid and `today > deadline` → `exploded`, 0, A
     - `ruleIds: ["IT-43BH"]` plus caveat; re-export `taxBomb` from `src/index.ts`
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.11, 8.2_
-  - [ ] 8.2 Write property test in `test/tax-bomb.property.test.ts`
+  - [x] 8.2 Write property test in `test/tax-bomb.property.test.ts`
     - **Property 10: Tax_Bomb_Date and Deduction_Deadline**
     - **Validates: Requirements 5.1, 5.9**
-  - [ ] 8.3 Write property test in `test/tax-bomb.property.test.ts`
+  - [x] 8.3 Write property test in `test/tax-bomb.property.test.ts`
     - **Property 11: Tax bomb status oracle**
     - Include the 15 Feb–31 Mar acceptance branch so Due_Date falls after the Tax_Bomb_Date
     - **Validates: Requirements 5.2, 5.3, 5.4, 5.5, 5.7, 5.10, 5.11, 8.2**
-  - [ ] 8.4 Write unit tests in `test/tax-bomb.test.ts`
+  - [x] 8.4 Write unit tests in `test/tax-bomb.test.ts`
     - Sharma Traders, `today` 2026-11-12 → `taxBombDate` 2027-03-31, `deductionDeadline` 2027-03-31, `armed`, `daysLeft` 139, `deductionAtRiskPaise` 41200000, `ruleIds` contains `IT-43BH`
     - Accepted 2027-03-10, term 45, `today` 2027-03-20 → `taxBombDate` 2027-03-31, `deductionDeadline` 2027-04-24, `armed`, `daysLeft` 35
     - Paid 2027-04-05 after deadline 2027-03-31, `today` 2027-04-10 → `exploded`, 0, A
@@ -180,12 +180,12 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
     - Unpaid, `today` 2027-04-01 → `exploded`, 0, A
     - Non-covered → `not_applicable`, `deductionAtRiskPaise` 0, no `taxBombDate`
     - _Requirements: 5.2, 5.3, 5.4, 5.5, 5.6, 5.8, 5.11_
-  - [ ] 8.5 Commit task 8
+  - [x] 8.5 Commit task 8
     - `git add` the touched files by path, check `git diff --staged`
     - Commit `feat(engine): add taxBomb for 31 March deduction risk (IT-43BH)`, body `Spec: legal-engine, task 8`
     - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-- [ ] 9. Checkpoint: tests, typecheck and lint pass
+- [x] 9. Checkpoint: tests, typecheck and lint pass
   - Run `pnpm test`, `pnpm typecheck` and `pnpm lint`. Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 10. Implement the escalation ladder decision
