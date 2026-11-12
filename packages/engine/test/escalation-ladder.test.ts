@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LADDER_STEPS, nextEscalationStep } from "../src/index";
+import { APPROVAL_STEP_LIST, LADDER_STEPS, isApprovalStep, nextEscalationStep } from "../src/index";
 import type { EscalationHistory, Invoice, LadderStep } from "../src/types";
 import { sharmaTradersInvoice } from "./fixtures";
 
@@ -273,5 +273,65 @@ describe("nextEscalationStep", () => {
       // MSMED-SCOPE sorts between MSMED-18 and MSMED-ODR (RULE_IDS order).
       expect(decision.ruleIds).toEqual(["MSMED-15", "MSMED-18", "MSMED-SCOPE", "MSMED-ODR"]);
     });
+  });
+});
+
+describe("exported ladder constants are immutable", () => {
+  it("freezes LADDER_STEPS and APPROVAL_STEP_LIST", () => {
+    expect(Object.isFrozen(LADDER_STEPS)).toBe(true);
+    expect(Object.isFrozen(APPROVAL_STEP_LIST)).toBe(true);
+  });
+
+  it("lists the approval steps in ladder order and answers isApprovalStep to match", () => {
+    expect(APPROVAL_STEP_LIST).toStrictEqual(["voice_call", "legal_notice", "odr_pack"]);
+    expect(LADDER_STEPS.map((step) => isApprovalStep(step))).toStrictEqual([false, false, true, true, true]);
+  });
+
+  it("is unchanged by mutation attempts in non-strict code", () => {
+    // ES modules are always strict, so run the mutations in a sloppy-mode function.
+    // Index writes and `length` writes to a frozen array are then silent no-ops; `push` still throws.
+    const sloppyMutate = new Function(
+      "ladderSteps",
+      "approvalSteps",
+      `
+      ladderSteps[0] = "odr_pack";
+      ladderSteps[4] = "whatsapp_nudge";
+      ladderSteps.length = 0;
+      approvalSteps[1] = "whatsapp_nudge";
+      approvalSteps.length = 0;
+      try { ladderSteps.push("extra"); } catch (e) {}
+      try { approvalSteps.push("extra"); } catch (e) {}
+      try { ladderSteps.pop(); } catch (e) {}
+      try { approvalSteps.pop(); } catch (e) {}
+      `,
+    ) as (ladderSteps: unknown, approvalSteps: unknown) => void;
+    expect(new Function("return typeof this")()).toBe("object"); // sloppy mode: `this` is the global object
+
+    sloppyMutate(LADDER_STEPS, APPROVAL_STEP_LIST);
+
+    expect(LADDER_STEPS).toStrictEqual(["whatsapp_nudge", "whatsapp_paylink", "voice_call", "legal_notice", "odr_pack"]);
+    expect(APPROVAL_STEP_LIST).toStrictEqual(["voice_call", "legal_notice", "odr_pack"]);
+
+    // An empty-history evaluation still starts at rank 1.
+    expect(nextEscalationStep(sharmaTradersInvoice, [], "2026-10-18")).toStrictEqual({
+      action: "advance",
+      applicable: true,
+      step: "whatsapp_nudge",
+      rank: 1,
+      requiresApproval: false,
+      ruleIds: ["MSMED-15"],
+    });
+
+    // legal_notice (rank 4) still needs approval.
+    const afterVoiceCall: EscalationHistory = [stepEvent("voice_call", "2026-10-20")];
+    expect(nextEscalationStep(sharmaTradersInvoice, afterVoiceCall, "2026-10-30")).toStrictEqual({
+      action: "advance",
+      applicable: true,
+      step: "legal_notice",
+      rank: 4,
+      requiresApproval: true,
+      ruleIds: ["MSMED-15"],
+    });
+    expect(isApprovalStep("legal_notice")).toBe(true);
   });
 });

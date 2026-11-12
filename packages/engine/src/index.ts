@@ -35,7 +35,8 @@ export {
   nextEscalationStep,
   LADDER_STEPS,
   stepRank,
-  APPROVAL_STEPS,
+  APPROVAL_STEP_LIST,
+  isApprovalStep,
   DEFAULT_STEP_GAP_DAYS,
 } from "./escalation-ladder";
 export { formatINR, parseINR } from "./format-inr";

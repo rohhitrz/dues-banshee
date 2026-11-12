@@ -167,7 +167,7 @@ The engine is consumed from source (`"exports": { ".": "./src/index.ts" }`). Nex
 | `due-date.ts` | `dueDate` |
 | `statutory-interest.ts` | `statutoryInterest`, `MAX_PAISE` |
 | `tax-bomb.ts` | `taxBomb` |
-| `escalation-ladder.ts` | `LADDER_STEPS`, `stepRank`, `APPROVAL_STEPS`, `nextEscalationStep`, `DEFAULT_STEP_GAP_DAYS` |
+| `escalation-ladder.ts` | `LADDER_STEPS`, `stepRank`, `APPROVAL_STEP_LIST`, `isApprovalStep`, `nextEscalationStep`, `DEFAULT_STEP_GAP_DAYS` |
 | `format-inr.ts` | `formatINR`, `parseINR` |
 
 Tests live in `packages/engine/test/`, one unit file and one property file per module (`due-date.test.ts`, `due-date.property.test.ts`, …), with shared generators in `test/arbitraries.ts` and fixtures in `test/fixtures.ts` (the Sharma Traders invoice).
@@ -306,10 +306,14 @@ function taxBomb(inv: Invoice, today: CalendarDate): TaxBombResult {
 ### escalation-ladder.ts
 
 ```ts
-const LADDER_STEPS = ["whatsapp_nudge", "whatsapp_paylink", "voice_call", "legal_notice", "odr_pack"] as const;
-const stepRank = (s: LadderStep) => LADDER_STEPS.indexOf(s) + 1;     // 1..5
-const APPROVAL_STEPS = new Set(["voice_call", "legal_notice", "odr_pack"]);
+export const LADDER_STEPS = Object.freeze(["whatsapp_nudge", "whatsapp_paylink", "voice_call", "legal_notice", "odr_pack"] as const);
+export const stepRank = (s: LadderStep) => LADDER_STEPS.indexOf(s) + 1;     // 1..5
+const APPROVAL_STEP_SET = new Set(["voice_call", "legal_notice", "odr_pack"]);  // module-private, used by the engine
+export const APPROVAL_STEP_LIST: readonly LadderStep[] = Object.freeze(LADDER_STEPS.filter((s) => APPROVAL_STEP_SET.has(s)));
+export const isApprovalStep = (s: LadderStep): boolean => APPROVAL_STEP_SET.has(s);
 ```
+
+`LADDER_STEPS` and `APPROVAL_STEP_LIST` are frozen. The approval Set is not exported, so a caller cannot change `requiresApproval` by mutating an export.
 
 `nextEscalationStep(inv, history, today, config = { stepGapDays: 7 })` checks wait reasons in the fixed order of Requirement 6.15 and returns the first one that applies:
 
@@ -330,7 +334,7 @@ const APPROVAL_STEPS = new Set(["voice_call", "legal_notice", "odr_pack"]);
 - `maxRank` is the highest rank in history, so a history with gaps (e.g. only rank 3) advances to rank 4. The ladder never skips past `maxRank + 1` and never goes backwards (Requirement 6.12).
 - After a promise's `promisedDate` passes, check 4 no longer applies, so the ladder resumes from `maxRank`, still subject to cooldown measured from the latest step event (Requirement 6.9). The promise date does not reset the cooldown.
 - History events dated after `today` (`compareDates(on, today) > 0` or `compareDates(recordedOn, today) > 0`) are ignored, because they have not happened yet from the engine's point of view.
-- `advance` result: `{ action: "advance", applicable: true, step, rank, requiresApproval: APPROVAL_STEPS.has(step), ruleIds }`. `ruleIds` is `["MSMED-15"]` (the advance is justified by the invoice being past its MSMED-15 due date); for `odr_pack` it is `["MSMED-15", "MSMED-18", "MSMED-ODR"]` (Requirement 6.11). The caveat adds `MSMED-SCOPE`.
+- `advance` result: `{ action: "advance", applicable: true, step, rank, requiresApproval: APPROVAL_STEP_SET.has(step), ruleIds }`. `ruleIds` is `["MSMED-15"]` (the advance is justified by the invoice being past its MSMED-15 due date); for `odr_pack` it is `["MSMED-15", "MSMED-18", "MSMED-ODR"]` (Requirement 6.11). The caveat adds `MSMED-SCOPE`.
 
 ### format-inr.ts
 

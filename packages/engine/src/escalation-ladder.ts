@@ -13,14 +13,14 @@ import type {
 } from "./types";
 import { assertCalendarDate, validateHistory, validateInvoice, validateLadderConfig } from "./validate";
 
-/** The five escalation steps in order, rank 1 to 5. */
-export const LADDER_STEPS = [
+/** The five escalation steps in order, rank 1 to 5. Frozen, so callers cannot change the ladder. */
+export const LADDER_STEPS = Object.freeze([
   "whatsapp_nudge",
   "whatsapp_paylink",
   "voice_call",
   "legal_notice",
   "odr_pack",
-] as const satisfies readonly LadderStep[];
+] as const satisfies readonly LadderStep[]);
 
 type Rank = 1 | 2 | 3 | 4 | 5;
 
@@ -37,12 +37,25 @@ export function stepRank(step: LadderStep): Rank {
   return RANKS[step];
 }
 
-/** Steps that need the owner's explicit approval before the agent acts. */
-export const APPROVAL_STEPS: ReadonlySet<LadderStep> = new Set<LadderStep>([
+/**
+ * Steps that need the owner's explicit approval before the agent acts.
+ * Module-private and never exported: the engine reads this Set, so no caller can change a decision by mutating an export.
+ */
+const APPROVAL_STEP_SET: ReadonlySet<LadderStep> = new Set<LadderStep>([
   "voice_call",
   "legal_notice",
   "odr_pack",
 ]);
+
+/** The steps that need the owner's approval, in ladder order. A frozen copy for display and docs. */
+export const APPROVAL_STEP_LIST: readonly LadderStep[] = Object.freeze(
+  LADDER_STEPS.filter((step) => APPROVAL_STEP_SET.has(step)),
+);
+
+/** True when the owner must approve `step` before the agent acts on it. */
+export function isApprovalStep(step: LadderStep): boolean {
+  return APPROVAL_STEP_SET.has(step);
+}
 
 /** Minimum days between two consecutive ladder steps. */
 export const DEFAULT_STEP_GAP_DAYS = 7;
@@ -137,7 +150,7 @@ export function nextEscalationStep(
     applicable: true,
     step,
     rank: stepRank(step),
-    requiresApproval: APPROVAL_STEPS.has(step),
+    requiresApproval: APPROVAL_STEP_SET.has(step),
     ruleIds: advanceRuleIds(step),
   };
   return withCaveat(advance, cov);
