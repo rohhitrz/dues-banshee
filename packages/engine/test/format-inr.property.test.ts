@@ -114,13 +114,6 @@ describe("format-inr properties: parse then format", () => {
 // ---------------------------------------------------------------------------
 const SHORT_PATTERN = /^₹([0-9,]+)(?:\.(\d{1,2}))?(Cr|L)?$/;
 const INDIAN_GROUPED_INTEGER = /^(0|[1-9]\d{0,2}|[1-9]\d?(,\d{2})*,\d{3})$/;
-/** Paise per displayed unit (1 crore, 1 lakh, 1 rupee) and half of the smallest displayed step. */
-const SHORT_UNITS = {
-  Cr: { unitPaise: 1_000_000_000n, halfStepPaise: 5_000_000n },
-  L: { unitPaise: 10_000_000n, halfStepPaise: 50_000n },
-  none: { unitPaise: 100n, halfStepPaise: 50n },
-} as const;
-
 /** The tier the short text must show, decided from the rounded value (exact half boundaries round up). */
 function expectedShortTier(p: bigint): "Cr" | "L" | "none" {
   if (p >= 999_950_000n) {
@@ -132,6 +125,34 @@ function expectedShortTier(p: bigint): "Cr" | "L" | "none" {
   return "none";
 }
 
+/** `p / unit` rounded half-up, in integers: r = p % unit, q = (p - r) / unit, plus 1 when 2r >= unit. */
+function halfUpDiv(p: bigint, unit: bigint): bigint {
+  const r = p % unit;
+  const q = (p - r) / unit;
+  return 2n * r >= unit ? q + 1n : q;
+}
+
+/** `hundredths / 100` with Indian grouping on the whole part and no trailing zero or point on the fraction. */
+function hundredthsText(hundredths: bigint): string {
+  const whole = hundredths / 100n;
+  const frac = hundredths % 100n;
+  const fracText = frac === 0n ? "" : `.${String(frac).padStart(2, "0").replace(/0$/, "")}`;
+  return `${groupRupeesIndependently(whole)}${fracText}`;
+}
+
+/** The exact Short_Format text for `p` paise: crore, lakh or whole rupees, half-up, with the 100-unit bump to the next tier. */
+function expectedShortText(p: bigint): string {
+  if (p >= 1_000_000_000n) {
+    return `₹${hundredthsText(halfUpDiv(p, 10_000_000n))}Cr`; // hundredths of a crore
+  }
+  if (p >= 10_000_000n) {
+    const hundredths = halfUpDiv(p, 100_000n); // hundredths of a lakh
+    return hundredths >= 10_000n ? "₹1Cr" : `₹${hundredthsText(hundredths)}L`;
+  }
+  const rupees = halfUpDiv(p, 100n);
+  return rupees >= 100_000n ? "₹1L" : `₹${groupRupeesIndependently(rupees)}`;
+}
+
 function checkShortFormat(p: number): void {
   const text = formatINR(p, "short");
   const big = BigInt(p);
@@ -140,7 +161,7 @@ function checkShortFormat(p: number): void {
   expect(match, text).not.toBeNull();
   const integerText = match?.[1] ?? "";
   const fractionText = match?.[2];
-  const tier: keyof typeof SHORT_UNITS = (match?.[3] as "Cr" | "L" | undefined) ?? "none";
+  const tier = (match?.[3] as "Cr" | "L" | undefined) ?? "none";
 
   // Tier follows the rounded value.
   expect(tier, text).toBe(expectedShortTier(big));
@@ -156,12 +177,8 @@ function checkShortFormat(p: number): void {
   }
   expect(text.endsWith("."), text).toBe(false);
 
-  // Numeric value, as exact paise, is within half a display step of p.
-  const { unitPaise, halfStepPaise } = SHORT_UNITS[tier];
-  const fractionHundredths = BigInt((fractionText ?? "").padEnd(2, "0") || "0");
-  const valuePaise = BigInt(integerText.replace(/,/g, "")) * unitPaise + (fractionHundredths * unitPaise) / 100n;
-  const diff = valuePaise > big ? valuePaise - big : big - valuePaise;
-  expect(diff <= halfStepPaise, `${text} vs ${p}: diff ${diff} > ${halfStepPaise}`).toBe(true);
+  // The text is exactly what an independent half-up oracle gives (not "within a tolerance").
+  expect(text, `formatINR(${p}, "short")`).toBe(expectedShortText(big));
 }
 
 describe("format-inr properties: short format", () => {
@@ -185,9 +202,27 @@ describe("format-inr properties: short format", () => {
       [999_949_999, "₹99.99L"],
       [999_950_000, "₹1Cr"],
       [Number.MAX_SAFE_INTEGER, "₹90,07,199.25Cr"],
+      // Exact halves round up (half-up, not half-to-even) and one paise below rounds down, in every tier.
+      [49, "₹0"],
+      [50, "₹1"],
+      [150, "₹2"],
+      [249, "₹2"],
+      [250, "₹3"],
+      [349, "₹3"],
+      [350, "₹4"],
+      [450, "₹5"],
+      [10_049_999, "₹1L"],
+      [10_050_000, "₹1.01L"],
+      [41_249_999, "₹4.12L"],
+      [41_250_000, "₹4.13L"],
+      [1_004_999_999, "₹1Cr"],
+      [1_005_000_000, "₹1.01Cr"],
+      [1_244_999_999, "₹1.24Cr"],
+      [1_245_000_000, "₹1.25Cr"],
     ];
     for (const [paise, expected] of cases) {
       expect(formatINR(paise, "short")).toBe(expected);
+      expect(expectedShortText(BigInt(paise))).toBe(expected);
       checkShortFormat(paise);
     }
   });
