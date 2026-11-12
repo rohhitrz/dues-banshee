@@ -109,7 +109,19 @@ describe("parseAmountLenient: long input (backtracking guard)", () => {
     expect((result as ValidationError).reason).toBe(`${UNRECOGNISED}: ${JSON.stringify(input)}`);
   });
 
-  it("accepts 64 characters and collapses inner whitespace runs", () => {
+  it("parses an input of exactly 64 characters, which is not rejected for length", () => {
+    const input = "4.12" + " ".repeat(56) + "lakh";
+    expect(input).toHaveLength(64);
+    expect(parseAmountLenient(input)).toBe(41_200_000);
+  });
+  it("rejects the same input at 65 characters for length", () => {
+    const input = "4.12" + " ".repeat(57) + "lakh";
+    expect(input).toHaveLength(65);
+    const result = parseAmountLenient(input);
+    expect(result).toBeInstanceOf(ValidationError);
+    expect((result as ValidationError).reason).toBe(`${UNRECOGNISED}: ${JSON.stringify(input)}`);
+  });
+  it("parses short inputs and collapses inner whitespace runs", () => {
     expect(parseAmountLenient("1".repeat(14))).toBe(Number("1".repeat(14) + "00"));
     expect(parseAmountLenient("₹ \u00a0 500")).toBe(50_000);
     expect(parseAmountLenient("4.12 \t\u00a0 lakh")).toBe(41_200_000);

@@ -88,6 +88,22 @@ describe("Excel serial bounds", () => {
   });
 });
 
+describe("parseDateLenient: 64 character limit", () => {
+  // A date can't be padded to 64 characters and still parse, so the 64-character input is a digit
+  // string. It reaches the serial branch and fails there, which a length rejection would not do.
+  it("lets an input of exactly 64 characters reach the parser", () => {
+    const input = "1".repeat(64);
+    const result = parseDateLenient(input);
+    expect(result).toBeInstanceOf(ValidationError);
+    expect((result as ValidationError).reason).toBe(`${SERIAL_RANGE}: ${JSON.stringify(input)}`);
+  });
+  it("rejects an input of 65 characters for length", () => {
+    const input = "1".repeat(65);
+    const result = parseDateLenient(input);
+    expect(result).toBeInstanceOf(ValidationError);
+    expect((result as ValidationError).reason).toBe(`${UNRECOGNISED}: ${JSON.stringify(input)}`);
+  });
+});
 describe("parseDateLenient: long input (backtracking guard)", () => {
   const hostile = "1" + " ".repeat(100_000) + "x";
 

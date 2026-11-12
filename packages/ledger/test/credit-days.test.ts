@@ -46,6 +46,18 @@ describe("parseCreditDays: long input (backtracking guard)", () => {
     expect(parseCreditDays(input)).toBeInstanceOf(ValidationError);
   });
 
+  it("parses an input of exactly 64 characters, which is not rejected for length", () => {
+    const input = "1" + " ".repeat(60) + "day";
+    expect(input).toHaveLength(64);
+    expect(parseCreditDays(input)).toBe(1);
+  });
+  it("rejects the same input at 65 characters for length", () => {
+    const input = "1" + " ".repeat(61) + "day";
+    expect(input).toHaveLength(65);
+    const result = parseCreditDays(input);
+    expect(result).toBeInstanceOf(ValidationError);
+    expect((result as ValidationError).reason).toBe(`not a number of days: ${JSON.stringify(input)}`);
+  });
   it("collapses inner whitespace runs", () => {
     expect(parseCreditDays("Net \t\u00a0 30  days")).toBe(30);
   });
