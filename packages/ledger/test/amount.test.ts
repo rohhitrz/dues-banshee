@@ -86,3 +86,26 @@ describe("parseAmountLenient: rejected inputs (Requirement 3.7)", () => {
     expect(error.reason).toBe(`${reason}: ${JSON.stringify(input)}`);
   });
 });
+
+describe("parseAmountLenient: long input (backtracking guard)", () => {
+  const hostile = "1" + " ".repeat(100_000) + "x";
+
+  it("rejects a hostile whitespace run quickly", { timeout: 1000 }, () => {
+    const result = parseAmountLenient(hostile);
+    expect(result).toBeInstanceOf(ValidationError);
+    expect((result as ValidationError).reason).toBe(`${UNRECOGNISED}: ${JSON.stringify(hostile)}`);
+  });
+
+  it("rejects trimmed input longer than 64 characters", { timeout: 1000 }, () => {
+    const input = "1".repeat(65);
+    const result = parseAmountLenient(input);
+    expect(result).toBeInstanceOf(ValidationError);
+    expect((result as ValidationError).reason).toBe(`${UNRECOGNISED}: ${JSON.stringify(input)}`);
+  });
+
+  it("accepts 64 characters and collapses inner whitespace runs", () => {
+    expect(parseAmountLenient("1".repeat(14))).toBe(Number("1".repeat(14) + "00"));
+    expect(parseAmountLenient("₹ \u00a0 500")).toBe(50_000);
+    expect(parseAmountLenient("4.12 \t\u00a0 lakh")).toBe(41_200_000);
+  });
+});

@@ -187,15 +187,15 @@ export function dedupeKey(supplierId: string, buyerName: string, invoiceNumber: 
 
 ### amount.ts (Requirement 3)
 
-`parseAmountLenient(raw)` trims the input and matches it against one anchored, case-insensitive regex:
+`parseAmountLenient(raw)` trims the input, rejects it if it is longer than 64 characters, collapses every whitespace run (including non-breaking spaces) to one space, and matches the result against one anchored, case-insensitive regex. Every optional space is written as ` ?` inside the optional group it introduces, so no two optional whitespace groups are adjacent and a long run of spaces cannot make the match backtrack:
 
 ```
-^(?:(₹|rs\.?|inr)\s*)?                                   prefix
+^(?:(₹|rs\.?|inr) ?)?                                    prefix
  (\d+|\d{1,2}(?:,\d{2})*,\d{3}|\d{1,3}(?:,\d{3})+)       plain | Indian | western
  (?:\.(\d+))?                                            fraction
- \s*(lakhs|lakh|lacs|lac|l|crores|crore)?                unit (longest first)
- \s*(\/-)?                                               "rupees only" mark
- \s*(dr|cr)?$                                            Balance_Suffix
+ (?: ?(lakhs|lakh|lacs|lac|l|crores|crore))?             unit (longest first)
+ (?: ?(\/-))?                                            "rupees only" mark
+ (?: ?(dr|cr))?$                                         Balance_Suffix
 ```
 
 | Unit | Multiplier in paise |
@@ -207,17 +207,17 @@ export function dedupeKey(supplierId: string, buyerName: string, invoiceNumber: 
 Steps:
 
 1. Blank after trimming → `is empty: <quoted raw>`.
-2. No match → `not a recognised amount: <quoted raw>`. This covers negatives, malformed grouping, `500.`, `.50`, `Rs`, repeated parts and other letters. `Cr` can't be read as a unit, because the unit alternatives contain only `crore`/`crores`. A trailing `Cr` therefore reaches the suffix group.
+2. Longer than 64 characters after trimming → `not a recognised amount: <quoted raw>`, before any regex runs. No match → the same reason. This covers negatives, malformed grouping, `500.`, `.50`, `Rs`, repeated parts and other letters. `Cr` can't be read as a unit, because the unit alternatives contain only `crore`/`crores`. A trailing `Cr` therefore reaches the suffix group.
 3. Suffix `cr` → `Credit balance (Cr) is not a receivable: <quoted raw>`.
 4. Integer arithmetic: `digits = int (commas removed) + frac`, `scaled = BigInt(digits) × multiplier`, `den = 10n ** BigInt(frac.length)`. A non-zero `scaled % den` → `more precise than one paisa: <quoted raw>`.
 5. `scaled / den > BigInt(Number.MAX_SAFE_INTEGER)` → `above the largest supported amount (9007199254740991 paise): <quoted raw>`.
 6. Return `Number(scaled / den)`.
 
-`<quoted raw>` is `JSON.stringify(raw)`, the untrimmed input. Every error is `new ValidationError("amount", reason, raw)`, returned and never thrown. `\s` also matches the non-breaking spaces that Excel sometimes writes.
+`<quoted raw>` is `JSON.stringify(raw)`, the untrimmed input. Every error is `new ValidationError("amount", reason, raw)`, returned and never thrown. The whitespace collapse uses `\s`, which also matches the non-breaking spaces that Excel sometimes writes.
 
 ### date.ts (Requirement 4)
 
-The input is trimmed, then tested in this order:
+The input is trimmed. Blank gives `is empty`. Text longer than 64 characters gives `not a recognised date: <quoted raw>` before any pattern runs, so a 100,000-character cell cannot slow the parser. Otherwise the patterns are tested in this order:
 
 | Pattern | Reading |
 |---|---|
@@ -233,7 +233,8 @@ Matched parts are zero-padded into `YYYY-MM-DD` and checked with the Engine's `i
 ### credit-days.ts
 
 ```ts
-// ^(?:net\s*)?(\d{1,6})(?:\s*days?)?$  case-insensitive. Blank → undefined (no agreed term).
+// ^(?:net ?)?(\d{1,6})(?: ?days?)?$  case-insensitive, run on the trimmed text with every whitespace run collapsed to one space.
+// Blank → undefined (no agreed term). Over 64 characters after trimming → the same error as no match.
 export function parseCreditDays(raw: string): number | undefined | ValidationError
 ```
 

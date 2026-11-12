@@ -84,3 +84,24 @@ describe("Excel serial bounds", () => {
     expect(EXCEL_SERIAL_MAX).toBe(73050);
   });
 });
+
+describe("parseDateLenient: long input (backtracking guard)", () => {
+  const hostile = "1" + " ".repeat(100_000) + "x";
+
+  it("rejects a hostile whitespace run quickly", { timeout: 1000 }, () => {
+    const result = parseDateLenient(hostile);
+    expect(result).toBeInstanceOf(ValidationError);
+    expect((result as ValidationError).reason).toBe(
+      `not a recognised date: ${JSON.stringify(hostile)}`,
+    );
+  });
+
+  it("rejects trimmed input longer than 64 characters", { timeout: 1000 }, () => {
+    const input = "1".repeat(65);
+    const result = parseDateLenient(input);
+    expect(result).toBeInstanceOf(ValidationError);
+    expect((result as ValidationError).reason).toBe(
+      `not a recognised date: ${JSON.stringify(input)}`,
+    );
+  });
+});

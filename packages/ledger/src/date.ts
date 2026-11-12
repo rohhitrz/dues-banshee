@@ -15,6 +15,8 @@ const NUMERIC_FULL_YEAR_PATTERN = /^(\d{1,2})([/.-])(\d{1,2})\2(\d{4})$/;
 const NUMERIC_SHORT_YEAR_PATTERN = /^(\d{1,2})([/.-])(\d{1,2})\2(\d{2})$/;
 const MONTH_NAME_PATTERN = /^(\d{1,2})-([a-z]{3})-(\d{4}|\d{2})$/i;
 
+/** Longest trimmed cell text the parser will look at. */
+const MAX_DATE_LENGTH = 64;
 const MONTH_ABBREVIATIONS = [
   "jan",
   "feb",
@@ -42,6 +44,7 @@ export function parseDateLenient(raw: string): CalendarDate | ValidationError {
 
   const text = raw.trim();
   if (text === "") return fail("is empty");
+  if (text.length > MAX_DATE_LENGTH) return fail("not a recognised date");
 
   const build = (year: string, month: number, day: number): CalendarDate | ValidationError => {
     const candidate = `${year.padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;

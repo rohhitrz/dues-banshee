@@ -6,10 +6,17 @@ import type { Paise } from "@dues-banshee/engine";
  * "rupees only" mark, Balance_Suffix. `Cr` can't be read as a unit because the
  * unit alternatives contain only `crore`/`crores`, so a trailing `Cr` reaches
  * the suffix group.
+ *
+ * Whitespace has been collapsed to single spaces before matching, and every
+ * optional space sits inside the optional group it introduces, so no two
+ * optional whitespace groups are ever adjacent and nothing can backtrack
+ * through a run of spaces.
  */
 const AMOUNT_PATTERN =
-  /^(?:(₹|rs\.?|inr)\s*)?(\d+|\d{1,2}(?:,\d{2})*,\d{3}|\d{1,3}(?:,\d{3})+)(?:\.(\d+))?\s*(lakhs|lakh|lacs|lac|l|crores|crore)?\s*(\/-)?\s*(dr|cr)?$/i;
+  /^(?:(₹|rs\.?|inr) ?)?(\d+|\d{1,2}(?:,\d{2})*,\d{3}|\d{1,3}(?:,\d{3})+)(?:\.(\d+))?(?: ?(lakhs|lakh|lacs|lac|l|crores|crore))?(?: ?(\/-))?(?: ?(dr|cr))?$/i;
 
+/** Longest trimmed cell text the parser will look at. */
+const MAX_AMOUNT_LENGTH = 64;
 const PAISE_PER_RUPEE = 100n;
 const PAISE_PER_LAKH = 10_000_000n;
 const PAISE_PER_CRORE = 1_000_000_000n;
@@ -28,8 +35,10 @@ export function parseAmountLenient(raw: string): Paise | ValidationError {
   const fail = (reason: string): ValidationError =>
     new ValidationError("amount", `${reason}: ${JSON.stringify(raw)}`, raw);
 
-  const text = raw.trim();
-  if (text === "") return fail("is empty");
+  const trimmed = raw.trim();
+  if (trimmed === "") return fail("is empty");
+  if (trimmed.length > MAX_AMOUNT_LENGTH) return fail("not a recognised amount");
+  const text = trimmed.replace(/\s+/g, " ");
 
   const match = AMOUNT_PATTERN.exec(text);
   if (match === null) return fail("not a recognised amount");

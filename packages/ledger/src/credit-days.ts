@@ -1,7 +1,14 @@
 import { ValidationError } from "@dues-banshee/engine";
 
-/** Optional `Net` prefix, 1-6 digits, optional `day`/`days` suffix. */
-const CREDIT_DAYS_PATTERN = /^(?:net\s*)?(\d{1,6})(?:\s*days?)?$/i;
+/**
+ * Optional `Net` prefix, 1-6 digits, optional `day`/`days` suffix. Whitespace
+ * is collapsed to single spaces before matching, and each optional space sits
+ * inside the optional group it introduces.
+ */
+const CREDIT_DAYS_PATTERN = /^(?:net ?)?(\d{1,6})(?: ?days?)?$/i;
+
+/** Longest trimmed cell text the parser will look at. */
+const MAX_CREDIT_DAYS_LENGTH = 64;
 
 /**
  * Parses a credit-days cell (`45`, `45 days`, `Net 30`, `1 day`).
@@ -10,10 +17,13 @@ const CREDIT_DAYS_PATTERN = /^(?:net\s*)?(\d{1,6})(?:\s*days?)?$/i;
  * instead of throwing.
  */
 export function parseCreditDays(raw: string): number | undefined | ValidationError {
-  const text = raw.trim();
-  if (text === "") return undefined;
+  const trimmed = raw.trim();
+  if (trimmed === "") return undefined;
 
-  const match = CREDIT_DAYS_PATTERN.exec(text);
+  const match =
+    trimmed.length > MAX_CREDIT_DAYS_LENGTH
+      ? null
+      : CREDIT_DAYS_PATTERN.exec(trimmed.replace(/\s+/g, " "));
   if (match === null) {
     return new ValidationError(
       "creditDays",

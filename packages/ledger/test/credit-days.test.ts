@@ -29,3 +29,24 @@ describe("parseCreditDays: rejected inputs (Requirement 6.2)", () => {
     expect(error.reason).toBe(reason);
   });
 });
+
+describe("parseCreditDays: long input (backtracking guard)", () => {
+  const hostile = "1" + " ".repeat(100_000) + "x";
+
+  it("rejects a hostile whitespace run quickly", { timeout: 1000 }, () => {
+    const result = parseCreditDays(hostile);
+    expect(result).toBeInstanceOf(ValidationError);
+    expect((result as ValidationError).reason).toBe(
+      `not a number of days: ${JSON.stringify(hostile)}`,
+    );
+  });
+
+  it("rejects trimmed input longer than 64 characters", { timeout: 1000 }, () => {
+    const input = "1" + " ".repeat(70) + "day";
+    expect(parseCreditDays(input)).toBeInstanceOf(ValidationError);
+  });
+
+  it("collapses inner whitespace runs", () => {
+    expect(parseCreditDays("Net \t\u00a0 30  days")).toBe(30);
+  });
+});
