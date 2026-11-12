@@ -18,6 +18,14 @@ The schema lives in `packages/db`. Every command below needs `DATABASE_URL` set 
 
 `db:reset-demo` refuses to run without `--yes`. It prints only the database host, never the user or password. If the reseed fails, the delete is rolled back.
 
+### Local setup
+
+1. Create `apps/web/.env.local` with `DATABASE_URL` (a Postgres connection string) and `AUTH_SECRET` (any long random string). `apps/web/.env.example` lists the names.
+2. Run `pnpm --filter @dues-banshee/db db:migrate`.
+3. Run `pnpm --filter @dues-banshee/db db:seed`.
+
+The sign-in page has one button that signs in as the seeded demo supplier. It exists for judging only. A production deployment would use phone OTP.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).

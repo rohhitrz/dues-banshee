@@ -82,4 +82,27 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    // proxy.ts and auth.config.ts are bundled for the edge-style proxy. They may only decode the
+    // JWT cookie, so they must not reach auth.ts (Credentials provider) or any database code.
+    files: ["apps/web/proxy.ts", "apps/web/auth.config.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            "./auth",
+            "@/auth",
+            "@/lib/db",
+            "./lib/db",
+            "@dues-banshee/db",
+          ].map((name) => ({
+            name,
+            message:
+              "proxy.ts and auth.config.ts must not import auth.ts or any Db code: build auth from auth.config.ts only, so the proxy bundle stays free of the provider and the database.",
+          })),
+        },
+      ],
+    },
+  },
 );
