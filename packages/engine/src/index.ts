@@ -38,3 +38,4 @@ export {
   APPROVAL_STEPS,
   DEFAULT_STEP_GAP_DAYS,
 } from "./escalation-ladder";
+export { formatINR, parseINR } from "./format-inr";

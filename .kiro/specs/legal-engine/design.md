@@ -337,14 +337,17 @@ const APPROVAL_STEPS = new Set(["voice_call", "legal_notice", "odr_pack"]);
 `formatINR(paise, style)` validates `paise` as a non-negative safe integer (Requirement 7.5), then:
 
 **Full_Format** (`style: "full"`):
-- `rupees = Math.floor(p / 100)`, `paisePart = p % 100`.
+- `paisePart = p % 100`, `rupees = (p - paisePart) / 100`.
 - Group `rupees` Indian-style: the last three digits, then pairs from the right: `groupIndian(412000) = "4,12,000"`, `groupIndian(12500000) = "1,25,00,000"`, `groupIndian(0) = "0"`.
 - Result: `"₹" + groupIndian(rupees)` plus `"." + two-digit paisePart` only if `paisePart ≠ 0`. 0 → `₹0` (Requirement 7.4); 41,20,00,050 → `₹4,12,000.50`.
 
 **Short_Format** (`style: "short"`), integer arithmetic only. 1 lakh = 1,00,00,000 paise (1e7); 1 crore = 1e9 paise.
-- `p ≥ 1e9`: `h = floor((p + 5e6) / 1e7)` (hundredths of a crore, half-up); render `h / 100` with trailing zeros and trailing point removed, integer part Indian-grouped, suffix `Cr`. ₹1.25Cr, ₹1,234.5Cr.
-- `1e7 ≤ p < 1e9`: `h = floor((p + 5e4) / 1e5)` (hundredths of a lakh). If `h ≥ 10000` the value rounded to 100L, so render `₹1Cr`. Otherwise suffix `L`: ₹4.12L, ₹4L, ₹4.1L.
-- `p < 1e7`: `r = floor((p + 50) / 100)` (whole rupees, half-up). If `r ≥ 100000`, render `₹1L`. Otherwise `"₹" + groupIndian(r)`.
+
+Rounding helper `roundedDiv(p, unit)` (half-up): `r = p % unit`, `q = (p - r) / unit`; the result is `q + 1` when `2 * r >= unit`, otherwise `q`. This avoids forming `p + unit / 2` and avoids a float quotient `p / unit` that can round up to the next integer near `Number.MAX_SAFE_INTEGER`. The `unit` is 1e7 paise for hundredths of a crore, 1e5 paise for hundredths of a lakh, and 100 paise for whole rupees.
+
+- `p ≥ 1e9`: `h = roundedDiv(p, 1e7)` (hundredths of a crore, half-up); render `h / 100` with trailing zeros and trailing point removed, integer part Indian-grouped, suffix `Cr`. ₹1.25Cr, ₹1,234.5Cr.
+- `1e7 ≤ p < 1e9`: `h = roundedDiv(p, 1e5)` (hundredths of a lakh, half-up). If `h ≥ 10000` the value rounded to 100L, so render `₹1Cr`. Otherwise suffix `L`: ₹4.12L, ₹4L, ₹4.1L.
+- `p < 1e7`: `r = roundedDiv(p, 100)` (whole rupees, half-up). If `r ≥ 100000`, render `₹1L`. Otherwise `"₹" + groupIndian(r)`.
 
 The two bump rules (`₹1Cr` instead of `₹100L`, `₹1L` instead of `₹1,00,000`) keep the unit consistent with the rounded value. See Open Questions.
 

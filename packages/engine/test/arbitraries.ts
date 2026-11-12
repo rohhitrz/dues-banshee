@@ -360,3 +360,63 @@ export function arbHistory(inv: Invoice): fc.Arbitrary<EscalationHistory> {
 export const arbLadderConfig: fc.Arbitrary<LadderConfig> = fc
   .oneof({ weight: 1, arbitrary: fc.constant(7) }, { weight: 3, arbitrary: fc.integer({ min: 1, max: 30 }) })
   .map((stepGapDays) => ({ stepGapDays }));
+
+// ---------------------------------------------------------------------------
+// Rupee formatting
+// ---------------------------------------------------------------------------
+
+/** Paise values at the digit-group, lakh and crore boundaries, and at both ends of the safe range. */
+const PAISE_EDGES: readonly Paise[] = [
+  0,
+  1,
+  99,
+  100,
+  101,
+  999,
+  1_000,
+  99_900,
+  99_999,
+  100_000, // ₹1,000
+  9_999_900,
+  9_999_999,
+  10_000_000, // 1 lakh in paise is 1e7
+  99_999_999,
+  100_000_000,
+  999_999_999,
+  1_000_000_000, // 1 crore in paise is 1e9
+  1_000_000_001,
+  99_999_999_999,
+  100_000_000_000,
+  Number.MAX_SAFE_INTEGER - 1,
+  Number.MAX_SAFE_INTEGER,
+];
+
+/**
+ * Any non-negative safe integer number of paise (0..Number.MAX_SAFE_INTEGER), with extra weight on
+ * group/lakh/crore boundaries (and their +-1 neighbours), whole-rupee amounts (paise part 0),
+ * amounts with a non-zero paise part, and the top of the safe range.
+ */
+export const arbPaise: fc.Arbitrary<Paise> = fc.oneof(
+  { weight: 3, arbitrary: fc.integer({ min: 0, max: Number.MAX_SAFE_INTEGER }) },
+  { weight: 2, arbitrary: fc.constantFrom(...PAISE_EDGES) },
+  {
+    weight: 2,
+    arbitrary: fc
+      .tuple(fc.constantFrom(...PAISE_EDGES), fc.integer({ min: -1, max: 1 }))
+      .map(([edge, delta]) => Math.min(Math.max(edge + delta, 0), Number.MAX_SAFE_INTEGER)),
+  },
+  // Whole rupees: paise part is 0.
+  {
+    weight: 2,
+    arbitrary: fc.integer({ min: 0, max: Math.floor(Number.MAX_SAFE_INTEGER / 100) }).map((rupees) => rupees * 100),
+  },
+  // Non-zero paise part.
+  {
+    weight: 2,
+    arbitrary: fc
+      .tuple(fc.integer({ min: 0, max: Math.floor(Number.MAX_SAFE_INTEGER / 100) - 1 }), fc.integer({ min: 1, max: 99 }))
+      .map(([rupees, paisePart]) => rupees * 100 + paisePart),
+  },
+  // Small amounts, where the digit-group edges are dense.
+  { weight: 2, arbitrary: fc.integer({ min: 0, max: 100_000_000 }) },
+);
