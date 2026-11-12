@@ -29,3 +29,4 @@ export type { RuleId } from "./rule-ids";
 export { ValidationError } from "./validation-error";
 export { coverage } from "./coverage";
 export { dueDate } from "./due-date";
+export { statutoryInterest, MAX_PAISE } from "./statutory-interest";
