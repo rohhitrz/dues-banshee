@@ -188,32 +188,32 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
 - [x] 9. Checkpoint: tests, typecheck and lint pass
   - Run `pnpm test`, `pnpm typecheck` and `pnpm lint`. Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. Implement the escalation ladder decision
-  - [ ] 10.1 Implement `src/escalation-ladder.ts`
+- [x] 10. Implement the escalation ladder decision
+  - [x] 10.1 Implement `src/escalation-ladder.ts`
     - `LADDER_STEPS`, `stepRank`, `APPROVAL_STEPS` (`voice_call`, `legal_notice`, `odr_pack`), `DEFAULT_STEP_GAP_DAYS = 7`
     - `nextEscalationStep(invoice, history, today, config = { stepGapDays: 7 })`: validate all inputs, ignore events dated after `today`, then check in order: `paid` → non-coverage reason → `not_overdue` (`today ≤ dueDate`) → `promise_active` (`promisedDate > today`) → `ladder_complete` (max rank 5) → `cooldown` (`dayDifference(latestStepOn, today) < stepGapDays`, latest by date not array position) → `advance` to `maxRank + 1`
     - Wait decisions carry `ruleIds: []` (plus `MSMED-SCOPE` and caveat when registered after supply); a paid non-covered invoice returns `paid` with `applicable: false` and `ruleIds: []`
     - Advance: `{ action: "advance", applicable: true, step, rank, requiresApproval, ruleIds }` with `ruleIds` `["MSMED-15"]`, or `["MSMED-15", "MSMED-18", "MSMED-ODR"]` for `odr_pack`, plus caveat
     - Re-export `nextEscalationStep`, `LADDER_STEPS`, `stepRank`, `APPROVAL_STEPS`, `DEFAULT_STEP_GAP_DAYS` from `src/index.ts`
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 6.10, 6.11, 6.15, 8.2_
-  - [ ] 10.2 Write property test in `test/escalation-ladder.property.test.ts`
+  - [x] 10.2 Write property test in `test/escalation-ladder.property.test.ts`
     - **Property 12: Escalation precedence oracle**
     - Independent oracle in the test, written from the precedence table
     - **Validates: Requirements 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 6.15**
-  - [ ] 10.3 Write property test in `test/escalation-ladder.property.test.ts`
+  - [x] 10.3 Write property test in `test/escalation-ladder.property.test.ts`
     - **Property 13: Advances never skip, go backwards, or miss approval**
     - **Validates: Requirements 6.10, 6.11, 6.12**
-  - [ ] 10.4 Write property test in `test/escalation-ladder.property.test.ts`
+  - [x] 10.4 Write property test in `test/escalation-ladder.property.test.ts`
     - **Property 14: An active promise blocks advancing**
     - **Validates: Requirements 6.4, 6.13**
-  - [ ] 10.5 Write property test in `test/escalation-ladder.property.test.ts`
+  - [x] 10.5 Write property test in `test/escalation-ladder.property.test.ts`
     - **Property 15: Expired promises do not affect the decision**
     - **Validates: Requirements 6.9**
-  - [ ] 10.6 Write property test in `test/escalation-ladder.property.test.ts`
+  - [x] 10.6 Write property test in `test/escalation-ladder.property.test.ts`
     - **Property 16: Day-by-day simulation climbs one rung at a time**
     - Step `today` forward up to 400 days, append each `advance` as a step event; ranks rise by exactly 1, advances are at least `stepGapDays` apart, max rank 5
     - **Validates: Requirements 6.14, 6.7, 6.12**
-  - [ ] 10.7 Write unit tests in `test/escalation-ladder.test.ts`
+  - [x] 10.7 Write unit tests in `test/escalation-ladder.test.ts`
     - Sharma Traders, empty history, `today` 2026-10-18 → `advance`, `whatsapp_nudge`, `requiresApproval` false
     - `today` 2026-10-17 → `wait`, `not_overdue`
     - History up to `legal_notice` 7+ days before `today` → `odr_pack`, `requiresApproval` true, `ruleIds` contains `MSMED-18` and `MSMED-ODR`
@@ -222,38 +222,38 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
     - Paid invoice with active promise → `paid`; ladder complete inside cooldown → `ladder_complete`
     - History with only rank 3 → advances to rank 4; history array out of date order → cooldown uses the latest date
     - _Requirements: 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 6.10, 6.11, 6.15_
-  - [ ] 10.8 Commit task 10
+  - [x] 10.8 Commit task 10
     - `git add` the touched files by path, check `git diff --staged`
     - Commit `feat(engine): add nextEscalationStep for the five-step ladder`, body `Spec: legal-engine, task 10`
     - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-- [ ] 11. Implement Indian rupee formatting and parsing
-  - [ ] 11.1 Implement `formatINR` in `src/format-inr.ts`
+- [x] 11. Implement Indian rupee formatting and parsing
+  - [x] 11.1 Implement `formatINR` in `src/format-inr.ts`
     - Validate `paise` as a non-negative safe integer (`ValidationError` otherwise)
     - `groupIndian` helper (last three digits, then pairs)
     - Full: `₹` + grouped rupees + `.` + two paise digits only when paise ≠ 0
     - Short, integer arithmetic only: `≥ 1e9` paise → hundredths of a crore, suffix `Cr`; `1e7..1e9` → hundredths of a lakh, suffix `L`, bump to `₹1Cr` when it rounds to 100L; below 1e7 → whole rupees half-up, bump to `₹1L` at 1,00,000; strip trailing zeros and point
     - Re-export `formatINR` from `src/index.ts`
     - _Requirements: 7.1, 7.2, 7.4, 7.5, 7.8_
-  - [ ] 11.2 Implement `parseINR` in `src/format-inr.ts`
+  - [x] 11.2 Implement `parseINR` in `src/format-inr.ts`
     - Accept only canonical Full_Format: `^₹(0|[1-9]\d{0,2}|[1-9]\d?(?:,\d{2})*,\d{3})(?:\.(\d{2}))?$`, paise group not `00`, result a safe integer
     - Otherwise throw `ValidationError("text", "not in Full_Format: \"<input>\"")`
     - Re-export `parseINR` from `src/index.ts`
     - _Requirements: 7.6, 7.7_
-  - [ ] 11.3 Write property test in `test/format-inr.property.test.ts`
+  - [x] 11.3 Write property test in `test/format-inr.property.test.ts`
     - **Property 17: Full format round trip from paise**
     - **Validates: Requirements 7.1, 7.6, 7.9**
-  - [ ] 11.4 Write property test in `test/format-inr.property.test.ts`
+  - [x] 11.4 Write property test in `test/format-inr.property.test.ts`
     - **Property 18: Full format round trip from text**
     - **Validates: Requirements 7.10**
-  - [ ] 11.5 Write property test in `test/format-inr.property.test.ts`
+  - [x] 11.5 Write property test in `test/format-inr.property.test.ts`
     - **Property 19: Short format tier and accuracy**
     - **Validates: Requirements 7.2**
-  - [ ] 11.6 Write property test in `test/format-inr.property.test.ts`
+  - [x] 11.6 Write property test in `test/format-inr.property.test.ts`
     - **Property 20: Formatter and parser reject bad input**
     - Mutations: drop `₹`, western grouping, leading zeros, `.00`, one paise digit, `L`/`Cr` suffix, spaces, arbitrary unicode; error message contains the input
     - **Validates: Requirements 7.5, 7.7**
-  - [ ] 11.7 Write unit tests in `test/format-inr.test.ts`
+  - [x] 11.7 Write unit tests in `test/format-inr.test.ts`
     - `formatINR(41200000, "full") === "₹4,12,000"`, `formatINR(41200000, "short") === "₹4.12L"`
     - `formatINR(0, "full") === "₹0"`, `formatINR(1250000000, "short") === "₹1.25Cr"`, `formatINR(41200050, "full") === "₹4,12,000.50"`, `formatINR(1250000000, "full") === "₹1,25,00,000"`
     - `formatINR(40000000, "short") === "₹4L"`, `formatINR(41000000, "short") === "₹4.1L"`
@@ -261,39 +261,39 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
     - `parseINR("₹4,12,000") === 41200000`; `parseINR("₹412,000")` throws `ValidationError` quoting the input
     - `formatINR(-1)`, `formatINR(1.5)`, `formatINR(NaN)` throw `ValidationError`
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7_
-  - [ ] 11.8 Commit task 11
+  - [x] 11.8 Commit task 11
     - `git add` the touched files by path, check `git diff --staged`
     - Commit `feat(engine): add formatINR and parseINR with Indian grouping`, body `Spec: legal-engine, task 11`
     - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-- [ ] 12. Finalise the public API and add cross-module properties
-  - [ ] 12.1 Review `src/index.ts` against the design's Public API
+- [x] 12. Finalise the public API and add cross-module properties
+  - [x] 12.1 Review `src/index.ts` against the design's Public API
     - Exports exactly: `coverage`, `dueDate`, `statutoryInterest`, `taxBomb`, `nextEscalationStep`, `formatINR`, `parseINR`, `ValidationError`, `RULE_IDS`, `MAX_PAISE`, `LADDER_STEPS`, `stepRank`, `APPROVAL_STEPS`, `DEFAULT_STEP_GAP_DAYS` and all public types; no internal helpers
     - Confirm every public function validates its inputs in the fixed order (invoice fields, `today`, `bankRate`, `history`, `config`)
     - _Requirements: 1.6, 7.8, 8.1, 8.2_
-  - [ ] 12.2 Write property test in `test/validation.property.test.ts`
+  - [x] 12.2 Write property test in `test/validation.property.test.ts`
     - **Property 2: Invalid input is rejected with the field name**
     - Corrupt exactly one field and check every public function taking it throws `ValidationError` with that `field`
     - **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8**
-  - [ ] 12.3 Write property test in `test/coverage.property.test.ts`
+  - [x] 12.3 Write property test in `test/coverage.property.test.ts`
     - **Property 4: Non-covered invoices get only MSMED-SCOPE**
     - Cover all three non-covered kinds (trader, medium, unregistered supplier) for each of `statutoryInterest`, `taxBomb` and `nextEscalationStep`
     - Also add one unit test in `test/statutory-interest.test.ts`: inputs where the interest lands just below `Number.MAX_SAFE_INTEGER` return a value, and just above it throw `ValidationError`
     - **Validates: Requirements 3.8, 4.6, 5.6, 6.2, 8.3, 8.4, 8.7**
-  - [ ] 12.4 Write property test in `test/coverage.property.test.ts`
+  - [x] 12.4 Write property test in `test/coverage.property.test.ts`
     - **Property 5: Registered-after-supply caveat**
     - The generator must bias `udyamRegisteredOn` offsets toward −1, 0 and +1 days around `acceptedOn`
     - **Validates: Requirements 8.5, 8.6**
-  - [ ] 12.5 Write unit tests in `test/purity.test.ts`
+  - [x] 12.5 Write unit tests in `test/purity.test.ts`
     - Call all four invoice functions for the Sharma Traders invoice under `vi.setSystemTime` at two different instants; results are identical
     - Late-registered Sharma invoice: caveat and `MSMED-SCOPE` on `dueDate`, `statutoryInterest`, `taxBomb` and `nextEscalationStep`
     - _Requirements: 1.6, 8.5, 8.6_
-  - [ ] 12.6 Commit task 12
+  - [x] 12.6 Commit task 12
     - `git add` the touched files by path, check `git diff --staged`
     - Commit `test(engine): add cross-module validation and coverage properties`, body `Spec: legal-engine, task 12`
     - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-- [ ] 13. Final checkpoint: tests, typecheck and lint pass
+- [x] 13. Final checkpoint: tests, typecheck and lint pass
   - Run `pnpm install`, `pnpm test`, `pnpm typecheck` and `pnpm lint` from the repo root. Ensure all tests pass, ask the user if questions arise.
 
 ## Notes
