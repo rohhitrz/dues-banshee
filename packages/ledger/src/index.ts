@@ -19,3 +19,6 @@ export type {
 export { parseAmountLenient } from "./amount";
 export { parseDateLenient, EXCEL_SERIAL_MIN, EXCEL_SERIAL_MAX } from "./date";
 export { parseCreditDays } from "./credit-days";
+export { parseCsv } from "./csv";
+export { headerKey, textKey, dedupeKey } from "./keys";
+export { HEADER_ALIASES, REQUIRED_FIELDS, detectHeader } from "./headers";
