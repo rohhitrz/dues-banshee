@@ -6,8 +6,7 @@ inclusion: always
 An AI collections agent for Indian MSME suppliers. It chases unpaid invoices from the supplier's own buyers over WhatsApp and voice (Hindi/English), and uses Indian payment law (MSMED Act; Income-tax s.43B(h) / s.37(2)(g)) as leverage.
 
 ## Users
-- Small supplier/trader owner: Hindi-first, WhatsApp-native, low patience for dashboards. Voice commands are a first-class input.
-- CA firms managing many MSME clients.
+- Small manufacturer, job-work unit or service provider registered on Udyam as micro/small: Hindi-first, WhatsApp-native. NOT wholesale/retail traders (excluded from MSMED delayed-payment rules).
 
 ## Core principles
 1. **Lead with the buyer's self-interest:** the 31 March tax-bomb, statutory interest. Never beg, never threaten.
