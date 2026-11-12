@@ -18,8 +18,20 @@ import { ValidationError } from "./validation-error";
  */
 export const MAX_PAISE = 1_00_000_00_00_000;
 
-const SUPPLIER_CATEGORIES: readonly SupplierCategory[] = ["micro", "small", "medium", "unregistered"];
-const SUPPLIER_ACTIVITIES: readonly SupplierActivity[] = ["manufacturing", "services", "trading"];
+/** Every supplier category the engine accepts, in declaration order. */
+export const SUPPLIER_CATEGORIES = Object.freeze([
+  "micro",
+  "small",
+  "medium",
+  "unregistered",
+] as const satisfies readonly SupplierCategory[]);
+
+/** Every supplier activity the engine accepts, in declaration order. */
+export const SUPPLIER_ACTIVITIES = Object.freeze([
+  "manufacturing",
+  "services",
+  "trading",
+] as const satisfies readonly SupplierActivity[]);
 // Mirrors LADDER_STEPS in escalation-ladder.ts, which imports this module (no cycle allowed).
 const LADDER_STEP_NAMES: readonly LadderStep[] = [
   "whatsapp_nudge",
