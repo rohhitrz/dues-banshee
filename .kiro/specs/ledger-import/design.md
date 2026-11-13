@@ -501,7 +501,7 @@ export const config = {
 
 The proxy only decodes the JWT cookie with `AUTH_SECRET`. It needs no provider and no database.
 
-An ESLint `no-restricted-imports` rule on `apps/web/proxy.ts` and `apps/web/auth.config.ts` bans `./auth`, `@/auth`, `@/lib/db` and `@dues-banshee/db`, so the separation can't regress silently. Route handlers and the `(app)` layout call `auth()` from `auth.ts` again (12.5), so a proxy misconfiguration can't expose them. Auth.js sets the session cookie `SameSite=Lax`, so a cross-site POST arrives without a session and gets a 401.
+An ESLint allowlist (`no-restricted-syntax` selectors on the import source, built by `edgeImportAllowlist` in `eslint.config.js`) restricts `apps/web/proxy.ts` and `apps/web/auth.config.ts`. `proxy.ts` may import only `next`, `next/*`, `next-auth`, `next-auth/*` and `./auth.config`; `auth.config.ts` may import only the `next` and `next-auth` entries and nothing local. Everything else fails lint: `@/` aliases, other relative paths, `@dues-banshee/*` packages and other bare packages. Type-only imports, `export ... from`, `export *`, `require()`, `import x = require()`, `import("x").T` types and dynamic `import()` are all covered. So the separation can't regress silently. Route handlers and the `(app)` layout call `auth()` from `auth.ts` again (12.5), so a proxy misconfiguration can't expose them. Auth.js sets the session cookie `SameSite=Lax`, so a cross-site POST arrives without a session and gets a 401.
 
 **Upload limit (13.2).** `MAX_UPLOAD_BYTES` in `lib/import/limits.ts` is the single source, and that file imports nothing else, so it is safe in client code.
 

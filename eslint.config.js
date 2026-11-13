@@ -38,6 +38,33 @@ const globalThisBans = (pkg, extraNames = []) =>
     message: `${pkg} is pure: globalThis.${property} is not allowed. Inject it as an argument instead.`,
   }));
 
+/**
+ * Import allowlist as no-restricted-syntax selectors (no-restricted-imports cannot see `export ... from`,
+ * `require`, `import()` or `import x = require()`). `allowed` is a regex body matched against the whole
+ * specifier. Type-only imports are ImportDeclarations too, so they are held to the same list.
+ */
+const edgeImportAllowlist = (file, allowed) => {
+  const bad = `:not([source.value=/^(?:${allowed})$/])`;
+  const message = `${file.split("/").pop()} may only import next, next/*, next-auth, next-auth/*${
+    file.endsWith("proxy.ts") ? " and ./auth.config" : ""
+  }: it is bundled for the proxy and must not reach auth.ts, Db code or any other module.`;
+  return {
+    files: [file],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        ...["ImportDeclaration", "ExportAllDeclaration", "ExportNamedDeclaration[source]"].map((n) => ({
+          selector: `${n}${bad}`,
+          message,
+        })),
+        { selector: `TSExternalModuleReference:not([expression.value=/^(?:${allowed})$/])`, message },
+        { selector: "TSImportType", message },
+        { selector: "CallExpression[callee.name='require']", message },
+        { selector: "ImportExpression", message: "dynamic import() is not allowed here: it would bypass the import allowlist." },
+      ],
+    },
+  };
+};
 export default tseslint.config(
   {
     ignores: ["**/node_modules/**", "**/.next/**", "**/dist/**", "**/coverage/**", "**/.turbo/**", "**/.vercel/**"],
@@ -95,34 +122,9 @@ export default tseslint.config(
       ],
     },
   },
-  {
-    // proxy.ts and auth.config.ts are bundled for the edge-style proxy. They may only decode the
-    // JWT cookie, so they must not reach auth.ts (Credentials provider) or any database code.
-    files: ["apps/web/proxy.ts", "apps/web/auth.config.ts"],
-    rules: {
-      // `patterns` use gitignore-style matching, so they catch any path to these modules
-      // (`../web/lib/db`, `@/auth`) and subpaths (`@dues-banshee/db/testing`), not just exact names.
-      "no-restricted-imports": [
-        "error",
-        {
-          patterns: [
-            {
-              group: ["@dues-banshee/db", "@dues-banshee/db/*", "**/auth", "**/auth.ts", "**/auth.js", "**/lib/db*"],
-              message:
-                "proxy.ts and auth.config.ts must not import auth.ts or any Db code: build auth from auth.config.ts only, so the proxy bundle stays free of the provider and the database.",
-            },
-          ],
-        },
-      ],
-      // A dynamic `import("./auth")` would get past the static import ban above.
-      "no-restricted-syntax": [
-        "error",
-        {
-          selector: "ImportExpression",
-          message:
-            "proxy.ts and auth.config.ts must not use dynamic import(): it would bypass the ban on importing auth.ts and Db code.",
-        },
-      ],
-    },
-  },
+  // proxy.ts and auth.config.ts are bundled for the edge-style proxy. They may only decode the
+  // JWT cookie, so they get an ALLOWLIST of imports: anything not listed (auth.ts, db code, `@/`
+  // aliases, other relative paths, workspace packages, other bare packages) fails lint.
+  edgeImportAllowlist("apps/web/proxy.ts", String.raw`next(\/.*)?|next-auth(\/.*)?|\.\/auth\.config`),
+  edgeImportAllowlist("apps/web/auth.config.ts", String.raw`next(\/.*)?|next-auth(\/.*)?`),
 );
