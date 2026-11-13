@@ -3,5 +3,6 @@ export * from "./schema";
 export { getSupplier, findSupplierIdByUdyam, type Supplier } from "./suppliers";
 export { getBankRate, BANK_RATE_KEY } from "./bank-rate";
 export { findStoredInvoices, importInvoices, toEngineInvoice } from "./invoices";
+export type { GraveyardInvoiceRecord } from "./graveyard";
 export { seed, DEMO_SUPPLIER, DEMO_INVOICES } from "./seed";
 export { resetDemo, RESET_TABLES } from "./reset";
