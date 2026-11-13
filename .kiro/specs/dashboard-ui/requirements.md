@@ -104,9 +104,9 @@ Out of scope: the debtor séance screen (debtor-ui), ladder actions and approval
 #### Acceptance Criteria
 
 1. THE Graveyard_Page SHALL render exactly one Tombstone per Tombstone_View, in Graveyard_View order.
-2. THE Tombstone SHALL show the buyer name, invoice number, principal formatted with `formatINR`, the Engine due date, Days_Overdue and the Engine statutory interest formatted with `formatINR`.
+2. THE Tombstone SHALL show the buyer name, invoice number, principal formatted with `formatINR`, the Engine due date and the Engine statutory interest formatted with `formatINR`. WHILE the Tombstone_State is `overdue`, `armed` or `exploded`, THE Tombstone SHALL also show "Overdue N days", where N is Days_Overdue. WHILE the Tombstone_State is `not_due`, `resurrected` or `not_covered`, THE Tombstone SHALL NOT show Days_Overdue as text, because "Overdue 0 days" adds nothing. Days_Overdue is always in the aria-label (Requirement 10 criterion 3).
 3. THE Tombstone SHALL show the Tombstone_State as exactly one of these texts: "Not due yet" (`not_due`), "Overdue, interest accruing" (`overdue`), "Tax bomb armed: N days left to 31 March" (`armed`, where N is the Engine `daysLeft`), "Tax bomb exploded" (`exploded`), "Resurrected (paid)" (`resurrected`) or "Outside MSMED (<reason>)" (`not_covered`, where <reason> is the Engine non-coverage reason).
-4. WHILE the Tombstone_State is `armed` or `exploded`, THE Tombstone SHALL also show "Overdue N days, interest accruing", where N is Days_Overdue.
+4. WHILE the Tombstone_State is `armed` or `exploded`, THE Tombstone SHALL show the text of criterion 2 as "Overdue N days, interest accruing", where N is Days_Overdue.
 5. IF the Engine reports the caveat `registered_after_supply` for the Invoice_Record, THEN THE Tombstone SHALL show the badge "Registered on Udyam after supply: claim may be contested".
 6. THE Tombstone SHALL show the Next_Step_Label and SHALL contain no button or control that triggers an escalation step.
 7. THE Graveyard_Builder SHALL map every Engine `LadderStep` to its Step_Text as follows: `whatsapp_nudge` → "WhatsApp nudge", `whatsapp_paylink` → "WhatsApp + UPI link", `voice_call` → "Voice call", `legal_notice` → "Legal notice", `odr_pack` → "MSME ODR pack".
