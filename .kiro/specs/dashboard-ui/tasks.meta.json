@@ -1,0 +1,628 @@
+{
+  "pbtResults": {
+    "1.6 Write property test `apps/web/test/today.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794577661701
+    },
+    "1.3 Write property test `apps/web/test/labels.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794577679266
+    },
+    "3.7 Write property test `apps/web/test/graveyard-sort.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794578469736
+    },
+    "3.6 Write property test `apps/web/test/graveyard-engine.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794578492644
+    },
+    "3.9 Write property test `apps/web/test/graveyard-future.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794578936091
+    },
+    "3.11 Write property test `apps/web/test/graveyard-aria.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794578964184
+    },
+    "3.10 Write property test `apps/web/test/graveyard-look.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794579001620
+    }
+  },
+  "executionHistory": {
+    "1.1 Implement `apps/web/lib/graveyard/labels.ts`": [
+      {
+        "executionId": "fc33f1d3-6462-499c-9c17-bf1074afabf2",
+        "chatSessionId": "sess_f5ed8df8-1936-4089-b370-e952fd218e61",
+        "timestamp": 1794577462526
+      },
+      {
+        "executionId": "fc33f1d3-6462-499c-9c17-bf1074afabf2",
+        "chatSessionId": "sess_f5ed8df8-1936-4089-b370-e952fd218e61",
+        "timestamp": 1794577567699
+      }
+    ],
+    "1.4 Implement `apps/web/lib/graveyard/today.ts`": [
+      {
+        "executionId": "fc33f1d3-6462-499c-9c17-bf1074afabf2",
+        "chatSessionId": "sess_f5ed8df8-1936-4089-b370-e952fd218e61",
+        "timestamp": 1794577462581
+      },
+      {
+        "executionId": "fc33f1d3-6462-499c-9c17-bf1074afabf2",
+        "chatSessionId": "sess_f5ed8df8-1936-4089-b370-e952fd218e61",
+        "timestamp": 1794577568300
+      }
+    ],
+    "1.2 Write `apps/web/test/labels.test.ts` with exact labels": [
+      {
+        "executionId": "fc33f1d3-6462-499c-9c17-bf1074afabf2",
+        "chatSessionId": "sess_f5ed8df8-1936-4089-b370-e952fd218e61",
+        "timestamp": 1794577596434
+      },
+      {
+        "executionId": "fc33f1d3-6462-499c-9c17-bf1074afabf2",
+        "chatSessionId": "sess_f5ed8df8-1936-4089-b370-e952fd218e61",
+        "timestamp": 1794577694098
+      }
+    ],
+    "1.3 Write property test `apps/web/test/labels.property.test.ts`": [
+      {
+        "executionId": "fc33f1d3-6462-499c-9c17-bf1074afabf2",
+        "chatSessionId": "sess_f5ed8df8-1936-4089-b370-e952fd218e61",
+        "timestamp": 1794577596471
+      },
+      {
+        "executionId": "fc33f1d3-6462-499c-9c17-bf1074afabf2",
+        "chatSessionId": "sess_f5ed8df8-1936-4089-b370-e952fd218e61",
+        "timestamp": 1794577694889
+      }
+    ],
+    "1.5 Write `apps/web/test/today.test.ts` with injected instants": [
+      {
+        "executionId": "fc33f1d3-6462-499c-9c17-bf1074afabf2",
+        "chatSessionId": "sess_f5ed8df8-1936-4089-b370-e952fd218e61",
+        "timestamp": 1794577596501
+      },
+      {
+        "executionId": "fc33f1d3-6462-499c-9c17-bf1074afabf2",
+        "chatSessionId": "sess_f5ed8df8-1936-4089-b370-e952fd218e61",
+        "timestamp": 1794577695656
+      }
+    ],
+    "1.6 Write property test `apps/web/test/today.property.test.ts`": [
+      {
+        "executionId": "fc33f1d3-6462-499c-9c17-bf1074afabf2",
+        "chatSessionId": "sess_f5ed8df8-1936-4089-b370-e952fd218e61",
+        "timestamp": 1794577596650
+      },
+      {
+        "executionId": "fc33f1d3-6462-499c-9c17-bf1074afabf2",
+        "chatSessionId": "sess_f5ed8df8-1936-4089-b370-e952fd218e61",
+        "timestamp": 1794577695892
+      }
+    ],
+    "1. Add label maps and the Today_Resolver": [
+      {
+        "executionId": "fc33f1d3-6462-499c-9c17-bf1074afabf2",
+        "chatSessionId": "sess_f5ed8df8-1936-4089-b370-e952fd218e61",
+        "timestamp": 1794577695926
+      }
+    ],
+    "2.1 Implement `apps/web/lib/graveyard/look.ts`": [
+      {
+        "executionId": "3f46eb48-dc3c-463a-9b8f-cc841bc9c5b3",
+        "chatSessionId": "sess_a7a02308-1e10-4198-89da-df0c8634d890",
+        "timestamp": 1794577750869
+      },
+      {
+        "executionId": "3f46eb48-dc3c-463a-9b8f-cc841bc9c5b3",
+        "chatSessionId": "sess_a7a02308-1e10-4198-89da-df0c8634d890",
+        "timestamp": 1794577813245
+      }
+    ],
+    "2.2 Write `apps/web/test/look.test.ts` with exact boundaries": [
+      {
+        "executionId": "3f46eb48-dc3c-463a-9b8f-cc841bc9c5b3",
+        "chatSessionId": "sess_a7a02308-1e10-4198-89da-df0c8634d890",
+        "timestamp": 1794577817979
+      },
+      {
+        "executionId": "3f46eb48-dc3c-463a-9b8f-cc841bc9c5b3",
+        "chatSessionId": "sess_a7a02308-1e10-4198-89da-df0c8634d890",
+        "timestamp": 1794577893301
+      }
+    ],
+    "2. Add tombstone look rules": [
+      {
+        "executionId": "3f46eb48-dc3c-463a-9b8f-cc841bc9c5b3",
+        "chatSessionId": "sess_a7a02308-1e10-4198-89da-df0c8634d890",
+        "timestamp": 1794577893336
+      }
+    ],
+    "3.1 Add the `GraveyardInvoiceRecord` type": [
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794577950064
+      },
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794578010402
+      }
+    ],
+    "3.2 Implement `apps/web/lib/graveyard/build-graveyard.ts`": [
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794578016005
+      },
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794578232838
+      }
+    ],
+    "3.3 Add sort comparator and Totals to `build-graveyard.ts`": [
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794578236713
+      },
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794578322258
+      }
+    ],
+    "3.4 Write `apps/web/test/build-graveyard.test.ts` with exact demo-seed literals": [
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794578344478
+      },
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794578825377
+      }
+    ],
+    "3.5 Write property test `apps/web/test/graveyard-deterministic.property.test.ts`": [
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794578344733
+      },
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794578825638
+      }
+    ],
+    "3.6 Write property test `apps/web/test/graveyard-engine.property.test.ts`": [
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794578344774
+      },
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794578825893
+      }
+    ],
+    "3.7 Write property test `apps/web/test/graveyard-sort.property.test.ts`": [
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794578344978
+      },
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794578825939
+      }
+    ],
+    "3.8 Write property test `apps/web/test/graveyard-totals.property.test.ts`": [
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794578345017
+      },
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794578826132
+      }
+    ],
+    "3.9 Write property test `apps/web/test/graveyard-future.property.test.ts`": [
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794578838434
+      },
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794579029815
+      }
+    ],
+    "3.10 Write property test `apps/web/test/graveyard-look.property.test.ts`": [
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794578838910
+      },
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794579030625
+      }
+    ],
+    "3.11 Write property test `apps/web/test/graveyard-aria.property.test.ts`": [
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794578839723
+      },
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794579031132
+      }
+    ],
+    "3.12 Write `apps/web/test/money-lint.test.ts`": [
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794578840245
+      },
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794579031847
+      }
+    ],
+    "3. Implement the pure Graveyard_Builder": [
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794579031875
+      },
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794579054406
+      },
+      {
+        "executionId": "9041c992-aba2-416a-8b43-c42887f1a221",
+        "chatSessionId": "sess_35e5043c-921c-4d67-8eb4-af089757644f",
+        "timestamp": 1794579122744
+      }
+    ],
+    "4. Checkpoint: pure logic": [
+      {
+        "executionId": "649d872a-42a4-4985-9957-348486a7ebea",
+        "chatSessionId": "sess_33419d30-06e8-42a2-883f-7ca3a5c7a590",
+        "timestamp": 1794579152912
+      },
+      {
+        "executionId": "649d872a-42a4-4985-9957-348486a7ebea",
+        "chatSessionId": "sess_33419d30-06e8-42a2-883f-7ca3a5c7a590",
+        "timestamp": 1794579202247
+      }
+    ],
+    "5.1 Add `packages/db/src/errors.ts` and throw the typed errors": [
+      {
+        "executionId": "a3654007-2edf-4eeb-9639-b4fa43e1d0bf",
+        "chatSessionId": "sess_4534e28b-fa79-48b7-a12c-01c6198ffc8a",
+        "timestamp": 1794579273096
+      },
+      {
+        "executionId": "a3654007-2edf-4eeb-9639-b4fa43e1d0bf",
+        "chatSessionId": "sess_4534e28b-fa79-48b7-a12c-01c6198ffc8a",
+        "timestamp": 1794579330756
+      }
+    ],
+    "5.2 Implement `listGraveyardInvoices(db, supplierId)` in `packages/db/src/graveyard.ts`": [
+      {
+        "executionId": "a3654007-2edf-4eeb-9639-b4fa43e1d0bf",
+        "chatSessionId": "sess_4534e28b-fa79-48b7-a12c-01c6198ffc8a",
+        "timestamp": 1794579331059
+      },
+      {
+        "executionId": "a3654007-2edf-4eeb-9639-b4fa43e1d0bf",
+        "chatSessionId": "sess_4534e28b-fa79-48b7-a12c-01c6198ffc8a",
+        "timestamp": 1794579466195
+      }
+    ],
+    "5.3 Write `packages/db/test/graveyard.test.ts`": [
+      {
+        "executionId": "a3654007-2edf-4eeb-9639-b4fa43e1d0bf",
+        "chatSessionId": "sess_4534e28b-fa79-48b7-a12c-01c6198ffc8a",
+        "timestamp": 1794579466487
+      },
+      {
+        "executionId": "a3654007-2edf-4eeb-9639-b4fa43e1d0bf",
+        "chatSessionId": "sess_4534e28b-fa79-48b7-a12c-01c6198ffc8a",
+        "timestamp": 1794579605702
+      }
+    ],
+    "5. Add the db read function and typed errors": [
+      {
+        "executionId": "a3654007-2edf-4eeb-9639-b4fa43e1d0bf",
+        "chatSessionId": "sess_4534e28b-fa79-48b7-a12c-01c6198ffc8a",
+        "timestamp": 1794579605732
+      }
+    ],
+    "6.1 Update `apps/web/proxy.ts`": [
+      {
+        "executionId": "d5b05326-a7ec-4e83-b8e2-52e7bf5ee3f6",
+        "chatSessionId": "sess_2b858f16-9ee4-4a8e-9e2f-a32d31ad0319",
+        "timestamp": 1794579731587
+      },
+      {
+        "executionId": "d5b05326-a7ec-4e83-b8e2-52e7bf5ee3f6",
+        "chatSessionId": "sess_2b858f16-9ee4-4a8e-9e2f-a32d31ad0319",
+        "timestamp": 1794579802006
+      }
+    ],
+    "6.2 Write `apps/web/test/proxy.test.ts`": [
+      {
+        "executionId": "d5b05326-a7ec-4e83-b8e2-52e7bf5ee3f6",
+        "chatSessionId": "sess_2b858f16-9ee4-4a8e-9e2f-a32d31ad0319",
+        "timestamp": 1794579802517
+      },
+      {
+        "executionId": "d5b05326-a7ec-4e83-b8e2-52e7bf5ee3f6",
+        "chatSessionId": "sess_2b858f16-9ee4-4a8e-9e2f-a32d31ad0319",
+        "timestamp": 1794579881746
+      }
+    ],
+    "6. Clear stale sessions in proxy.ts": [
+      {
+        "executionId": "d5b05326-a7ec-4e83-b8e2-52e7bf5ee3f6",
+        "chatSessionId": "sess_2b858f16-9ee4-4a8e-9e2f-a32d31ad0319",
+        "timestamp": 1794579881774
+      }
+    ],
+    "7.1 Change `apps/web/app/(site)/signin/actions.ts` and `messages.ts`": [
+      {
+        "executionId": "e01cd091-0256-4d2c-b2fb-5a23fca07681",
+        "chatSessionId": "sess_e79dc69d-a9a0-4f73-bbf8-f2050bb1f4b2",
+        "timestamp": 1794579914996
+      },
+      {
+        "executionId": "e01cd091-0256-4d2c-b2fb-5a23fca07681",
+        "chatSessionId": "sess_e79dc69d-a9a0-4f73-bbf8-f2050bb1f4b2",
+        "timestamp": 1794579955227
+      }
+    ],
+    "7.2 Edit exactly two lines of `apps/web/test/signin.test.tsx`": [
+      {
+        "executionId": "e01cd091-0256-4d2c-b2fb-5a23fca07681",
+        "chatSessionId": "sess_e79dc69d-a9a0-4f73-bbf8-f2050bb1f4b2",
+        "timestamp": 1794579960872
+      },
+      {
+        "executionId": "e01cd091-0256-4d2c-b2fb-5a23fca07681",
+        "chatSessionId": "sess_e79dc69d-a9a0-4f73-bbf8-f2050bb1f4b2",
+        "timestamp": 1794580148029
+      }
+    ],
+    "7.3 Write `apps/web/test/signin-session-expired.test.tsx`": [
+      {
+        "executionId": "e01cd091-0256-4d2c-b2fb-5a23fca07681",
+        "chatSessionId": "sess_e79dc69d-a9a0-4f73-bbf8-f2050bb1f4b2",
+        "timestamp": 1794579961093
+      },
+      {
+        "executionId": "e01cd091-0256-4d2c-b2fb-5a23fca07681",
+        "chatSessionId": "sess_e79dc69d-a9a0-4f73-bbf8-f2050bb1f4b2",
+        "timestamp": 1794580148575
+      }
+    ],
+    "7. Update sign-in redirect and SessionExpired message": [
+      {
+        "executionId": "e01cd091-0256-4d2c-b2fb-5a23fca07681",
+        "chatSessionId": "sess_e79dc69d-a9a0-4f73-bbf8-f2050bb1f4b2",
+        "timestamp": 1794580148607
+      },
+      {
+        "executionId": "e01cd091-0256-4d2c-b2fb-5a23fca07681",
+        "chatSessionId": "sess_e79dc69d-a9a0-4f73-bbf8-f2050bb1f4b2",
+        "timestamp": 1794580165123
+      },
+      {
+        "executionId": "e01cd091-0256-4d2c-b2fb-5a23fca07681",
+        "chatSessionId": "sess_e79dc69d-a9a0-4f73-bbf8-f2050bb1f4b2",
+        "timestamp": 1794580209894
+      }
+    ],
+    "8. Checkpoint: db, proxy and sign-in": [
+      {
+        "executionId": "abe68f0d-a3a0-4ef6-abe6-3cdc14050af6",
+        "chatSessionId": "sess_031a3dc2-949e-4bfe-ba83-e2b20b28d18a",
+        "timestamp": 1794581376636
+      },
+      {
+        "executionId": "abe68f0d-a3a0-4ef6-abe6-3cdc14050af6",
+        "chatSessionId": "sess_031a3dc2-949e-4bfe-ba83-e2b20b28d18a",
+        "timestamp": 1794581420039
+      }
+    ],
+    "9.2 Implement `apps/web/components/app-shell.tsx`, `app-shell.module.css`, `sign-out-action.ts`": [
+      {
+        "executionId": "e7ab5bfd-a0aa-49fd-a36b-157e132740e8",
+        "chatSessionId": "sess_521ac294-3451-4010-ade2-a58f0924d1a4",
+        "timestamp": 1794582514128
+      },
+      {
+        "executionId": "e7ab5bfd-a0aa-49fd-a36b-157e132740e8",
+        "chatSessionId": "sess_521ac294-3451-4010-ade2-a58f0924d1a4",
+        "timestamp": 1794582579615
+      }
+    ],
+    "9.1 Add fonts and theme tokens to `apps/web/app/layout.tsx`": [
+      {
+        "executionId": "e7ab5bfd-a0aa-49fd-a36b-157e132740e8",
+        "chatSessionId": "sess_521ac294-3451-4010-ade2-a58f0924d1a4",
+        "timestamp": 1794582580138
+      },
+      {
+        "executionId": "e7ab5bfd-a0aa-49fd-a36b-157e132740e8",
+        "chatSessionId": "sess_521ac294-3451-4010-ade2-a58f0924d1a4",
+        "timestamp": 1794582649771
+      }
+    ],
+    "9.3 Write `apps/web/test/app-shell.test.tsx`": [
+      {
+        "executionId": "e7ab5bfd-a0aa-49fd-a36b-157e132740e8",
+        "chatSessionId": "sess_521ac294-3451-4010-ade2-a58f0924d1a4",
+        "timestamp": 1794582658318
+      },
+      {
+        "executionId": "e7ab5bfd-a0aa-49fd-a36b-157e132740e8",
+        "chatSessionId": "sess_521ac294-3451-4010-ade2-a58f0924d1a4",
+        "timestamp": 1794582721617
+      }
+    ],
+    "9. Build the App_Shell and theme": [
+      {
+        "executionId": "e7ab5bfd-a0aa-49fd-a36b-157e132740e8",
+        "chatSessionId": "sess_521ac294-3451-4010-ade2-a58f0924d1a4",
+        "timestamp": 1794582721667
+      }
+    ],
+    "10. Build the graveyard components and loader": [
+      {
+        "executionId": "0b878fe5-3158-470d-a6a9-20d270645741",
+        "chatSessionId": "sess_517c247f-1a74-4bc3-ba35-de55bbf83759",
+        "timestamp": 1794582919364
+      },
+      {
+        "executionId": "0b878fe5-3158-470d-a6a9-20d270645741",
+        "chatSessionId": "sess_517c247f-1a74-4bc3-ba35-de55bbf83759",
+        "timestamp": 1794583374590
+      }
+    ],
+    "10.1 Implement `apps/web/lib/graveyard/load.ts`": [
+      {
+        "executionId": "0b878fe5-3158-470d-a6a9-20d270645741",
+        "chatSessionId": "sess_517c247f-1a74-4bc3-ba35-de55bbf83759",
+        "timestamp": 1794582927345
+      },
+      {
+        "executionId": "0b878fe5-3158-470d-a6a9-20d270645741",
+        "chatSessionId": "sess_517c247f-1a74-4bc3-ba35-de55bbf83759",
+        "timestamp": 1794583124413
+      }
+    ],
+    "10.2 Implement components in `apps/web/components/graveyard/`": [
+      {
+        "executionId": "0b878fe5-3158-470d-a6a9-20d270645741",
+        "chatSessionId": "sess_517c247f-1a74-4bc3-ba35-de55bbf83759",
+        "timestamp": 1794583128884
+      },
+      {
+        "executionId": "0b878fe5-3158-470d-a6a9-20d270645741",
+        "chatSessionId": "sess_517c247f-1a74-4bc3-ba35-de55bbf83759",
+        "timestamp": 1794583374560
+      }
+    ],
+    "11.1 Implement `apps/web/app/(app)/page.tsx`": [
+      {
+        "executionId": "b75c0751-b0bc-47a5-b753-1bab22122c2d",
+        "chatSessionId": "sess_c2f61043-96f6-4fb6-b93c-fa69b4295266",
+        "timestamp": 1794583435338
+      },
+      {
+        "executionId": "b75c0751-b0bc-47a5-b753-1bab22122c2d",
+        "chatSessionId": "sess_c2f61043-96f6-4fb6-b93c-fa69b4295266",
+        "timestamp": 1794583510619
+      }
+    ],
+    "11.2 Write `apps/web/test/graveyard-page.test.tsx`": [
+      {
+        "executionId": "b75c0751-b0bc-47a5-b753-1bab22122c2d",
+        "chatSessionId": "sess_c2f61043-96f6-4fb6-b93c-fa69b4295266",
+        "timestamp": 1794583511197
+      },
+      {
+        "executionId": "b75c0751-b0bc-47a5-b753-1bab22122c2d",
+        "chatSessionId": "sess_c2f61043-96f6-4fb6-b93c-fa69b4295266",
+        "timestamp": 1794583647705
+      }
+    ],
+    "11. Wire the Graveyard_Page and its route tests": [
+      {
+        "executionId": "b75c0751-b0bc-47a5-b753-1bab22122c2d",
+        "chatSessionId": "sess_c2f61043-96f6-4fb6-b93c-fa69b4295266",
+        "timestamp": 1794583647744
+      }
+    ],
+    "12.1 Implement `apps/web/app/not-found.tsx` and `apps/web/app/(app)/error.tsx`": [
+      {
+        "executionId": "b36f2917-4179-4b25-8af0-63f3c85367d8",
+        "chatSessionId": "sess_632ffe9c-d626-43a9-a6af-a9b97935c0f1",
+        "timestamp": 1794583733931
+      },
+      {
+        "executionId": "b36f2917-4179-4b25-8af0-63f3c85367d8",
+        "chatSessionId": "sess_632ffe9c-d626-43a9-a6af-a9b97935c0f1",
+        "timestamp": 1794583809434
+      }
+    ],
+    "12.2 Write `apps/web/test/not-found.test.tsx`": [
+      {
+        "executionId": "b36f2917-4179-4b25-8af0-63f3c85367d8",
+        "chatSessionId": "sess_632ffe9c-d626-43a9-a6af-a9b97935c0f1",
+        "timestamp": 1794583810016
+      },
+      {
+        "executionId": "b36f2917-4179-4b25-8af0-63f3c85367d8",
+        "chatSessionId": "sess_632ffe9c-d626-43a9-a6af-a9b97935c0f1",
+        "timestamp": 1794583922617
+      }
+    ],
+    "12. Add not-found and error pages": [
+      {
+        "executionId": "b36f2917-4179-4b25-8af0-63f3c85367d8",
+        "chatSessionId": "sess_632ffe9c-d626-43a9-a6af-a9b97935c0f1",
+        "timestamp": 1794583922649
+      }
+    ],
+    "13.1 Restyle `apps/web/app/(site)/signin/page.tsx` + `signin.module.css` and `apps/web/app/(app)/import/page.tsx` + `import.module.css`": [
+      {
+        "executionId": "fd19a292-1c89-4fcf-adb6-39f1552ffce6",
+        "chatSessionId": "sess_9af8c2a1-b540-4e28-af2e-e7803c5ba291",
+        "timestamp": 1794583969522
+      },
+      {
+        "executionId": "fd19a292-1c89-4fcf-adb6-39f1552ffce6",
+        "chatSessionId": "sess_9af8c2a1-b540-4e28-af2e-e7803c5ba291",
+        "timestamp": 1794584049299
+      }
+    ],
+    "13. Restyle /signin and /import": [
+      {
+        "executionId": "fd19a292-1c89-4fcf-adb6-39f1552ffce6",
+        "chatSessionId": "sess_9af8c2a1-b540-4e28-af2e-e7803c5ba291",
+        "timestamp": 1794584049327
+      }
+    ],
+    "14. Final checkpoint": [
+      {
+        "executionId": "dad1c0bb-3d99-4e61-a6d7-468318d17034",
+        "chatSessionId": "sess_5225e69d-1f7e-430b-af47-ac355d98fd50",
+        "timestamp": 1794584195740
+      },
+      {
+        "executionId": "dad1c0bb-3d99-4e61-a6d7-468318d17034",
+        "chatSessionId": "sess_5225e69d-1f7e-430b-af47-ac355d98fd50",
+        "timestamp": 1794584308714
+      }
+    ]
+  }
+}

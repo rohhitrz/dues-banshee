@@ -155,22 +155,22 @@ Commit rule for every top-level task (git-workflow.md): one Conventional Commit 
     - Signed-out → `redirect("/signin")`; signed-in render contains Sharma `LPC/26-27/0412`; `?today=2027-03-10` shows "Demo date: 10 Mar 2027"; no chip without `today`; `SupplierNotFoundError` → `redirect` called exactly once with `/signin?error=SessionExpired`, no markup; `BankRateNotFoundError` → tombstones and Totals render, every interest slot, Interest_Accrued and the rules line show "Bank rate not configured for 12 Nov 2026", no "We couldn't load your graveyard just now", page resolves; plain `Error` from `getBankRate` → LoadError; failure with message, stack and `select * from invoices` → markup contains none, has retry link to `/`; `Date.now` spied to 2026-11-12T18:29:59Z then 2026-11-12T19:00:00Z → different Today (`2026-11-12`, then `2026-11-13`), seen as `getBankRate` called with `2026-11-12` then `2026-11-13`; supplier id in query is ignored; empty records → "The graveyard is quiet", `/import` link, `formatINR(0)` totals
     - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.5, 4.1, 4.2, 4.6, 4.7, 4.8, 8.1, 8.2, 11.1, 11.2, 11.3, 12.5, 12.6, 12.7, 12.8, 12.11_
 
-- [~] 12. Add not-found and error pages
+- [x] 12. Add not-found and error pages
   - Commit: `feat(web): add themed not-found and graveyard error pages`
   - [x] 12.1 Implement `apps/web/app/not-found.tsx` and `apps/web/app/(app)/error.tsx`
     - Not_Found_Page with link to `/`; `error.tsx` fixed text and retry link, never renders `error.message` or `error.digest`
     - _Requirements: 1.5, 11.1, 11.2_
-  - [-] 12.2 Write `apps/web/test/not-found.test.tsx`
+  - [x] 12.2 Write `apps/web/test/not-found.test.tsx`
     - Not_Found_Page has a link to `/`; `error.tsx` given an error with message, stack and digest renders none of them and has a retry link to `/`
     - _Requirements: 1.5, 11.2, 12.7_
 
-- [ ] 13. Restyle /signin and /import
+- [x] 13. Restyle /signin and /import
   - Commit: `style(web): restyle sign-in and import pages to the graveyard theme`
-  - [ ] 13.1 Restyle `apps/web/app/(site)/signin/page.tsx` + `signin.module.css` and `apps/web/app/(app)/import/page.tsx` + `import.module.css`
+  - [x] 13.1 Restyle `apps/web/app/(site)/signin/page.tsx` + `signin.module.css` and `apps/web/app/(app)/import/page.tsx` + `import.module.css`
     - Class names, wrappers and CSS only; keep form fields, button labels ("Enter the graveyard (demo)"), server actions, API routes, redirect targets and messages; existing tests pass unchanged
     - _Requirements: 9.5, 9.6, 9.7, 9.8, 9.9, 10.4, 10.9_
 
-- [ ] 14. Final checkpoint
+- [x] 14. Final checkpoint
   - From the repo root run `pnpm -r --if-present test && pnpm -r --if-present typecheck && pnpm -r --if-present lint` with zero failures and zero errors; ensure all tests pass, ask the user if questions arise.
   - Ask the user to confirm these manual checks in the browser:
     - (a) Sign in, then run `pnpm --filter @dues-banshee/db db:reset-demo --yes`; reload `/` → lands on `/signin` with "The demo was reset. Enter the graveyard again."; signing in again works; no redirect loop.
