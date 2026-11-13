@@ -58,7 +58,8 @@ export async function listGraveyardInvoices(db: Db, supplierId: string): Promise
     })
     .from(escalationEvents)
     .innerJoin(invoices, eq(invoices.id, escalationEvents.invoiceId))
-    .where(eq(invoices.supplierId, supplierId))
+    // Only approved events are ladder steps; drafted, edited, rejected and expired are the audit trail.
+    .where(and(eq(invoices.supplierId, supplierId), eq(escalationEvents.action, "approved")))
     .orderBy(asc(escalationEvents.occurredOn), asc(escalationEvents.id));
 
   const promiseRows = await db

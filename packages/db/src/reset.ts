@@ -15,6 +15,7 @@ export const RESET_TABLES = [
   "messages",
   "promises",
   "escalation_events",
+  "drafts",
   "invoices",
   "buyers",
   "suppliers",

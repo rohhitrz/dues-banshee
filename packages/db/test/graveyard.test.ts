@@ -84,7 +84,12 @@ async function insertOtherSupplier(t: TestDb, buyerName: string) {
     })
     .returning();
   if (invoice === undefined) throw new Error("invoice not inserted");
-  await t.db.insert(escalationEvents).values({ invoiceId: invoice.id, step: "voice_call", occurredOn: "2026-10-01" });
+  await t.db.insert(escalationEvents).values({
+    invoiceId: invoice.id,
+    step: "voice_call",
+    occurredOn: "2026-10-01",
+    action: "approved",
+  });
   await t.db
     .insert(promises)
     .values({ invoiceId: invoice.id, promisedDate: "2026-11-30", amountPaise: 7_700_000, recordedOn: "2026-10-02" });
@@ -145,8 +150,8 @@ describe("listGraveyardInvoices", () => {
     const invoiceId = sharma.invoice.id;
 
     await t.db.insert(escalationEvents).values([
-      { invoiceId, step: "whatsapp_paylink", occurredOn: "2026-11-02" },
-      { invoiceId, step: "whatsapp_nudge", occurredOn: "2026-10-20" },
+      { invoiceId, step: "whatsapp_paylink", occurredOn: "2026-11-02", action: "approved" },
+      { invoiceId, step: "whatsapp_nudge", occurredOn: "2026-10-20", action: "approved" },
     ]);
     await t.db
       .insert(promises)
@@ -170,7 +175,7 @@ describe("listGraveyardInvoices", () => {
     const demoSharmaId = recordFor(await listGraveyardInvoices(t.db, supplierId), "LPC/26-27/0412").invoice.id;
     await t.db
       .insert(escalationEvents)
-      .values({ invoiceId: demoSharmaId, step: "whatsapp_nudge", occurredOn: "2026-10-20" });
+      .values({ invoiceId: demoSharmaId, step: "whatsapp_nudge", occurredOn: "2026-10-20", action: "approved" });
     await t.db
       .insert(promises)
       .values({ invoiceId: demoSharmaId, promisedDate: "2026-11-20", amountPaise: 1_000_000, recordedOn: "2026-10-28" });

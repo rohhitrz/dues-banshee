@@ -145,6 +145,7 @@ describe("resetDemo", () => {
       invoiceId: extraInvoice.id,
       step: "whatsapp_nudge",
       occurredOn: "2026-11-01",
+      action: "approved",
     });
     expect(await invoiceCount(t.db)).toBe(9);
 

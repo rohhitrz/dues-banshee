@@ -1,5 +1,6 @@
 import {
   APPROVAL_STEP_LIST,
+  type EscalationDecision,
   LADDER_STEPS,
   MAX_PAISE,
   SUPPLIER_ACTIVITIES,
@@ -10,6 +11,7 @@ import {
   bigint,
   boolean,
   check,
+  customType,
   date,
   foreignKey,
   integer,
@@ -19,6 +21,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -34,12 +37,22 @@ export const approvalStep = pgEnum("approval_step", tuple(APPROVAL_STEP_LIST));
 export const supplierCategory = pgEnum("supplier_category", tuple(SUPPLIER_CATEGORIES));
 export const supplierActivity = pgEnum("supplier_activity", tuple(SUPPLIER_ACTIVITIES));
 export const approvalStatus = pgEnum("approval_status", ["pending", "approved", "rejected"]);
+export const draftStatus = pgEnum("draft_status", ["pending", "approved", "rejected", "expired"]);
+export const draftLanguage = pgEnum("draft_language", ["hinglish", "english"]);
+export const escalationAction = pgEnum("escalation_action", [
+  "drafted",
+  "edited",
+  "approved",
+  "rejected",
+  "expired",
+]);
 
 // Column helpers. Dates are calendar days (string mode, "YYYY-MM-DD"); instants are timestamptz.
 const id = () => uuid("id").primaryKey().defaultRandom();
 const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
 const paise = (name: string) => bigint(name, { mode: "number" });
 const day = (name: string) => date(name, { mode: "string" });
+const bytea = customType<{ data: Uint8Array; driverData: Buffer }>({ dataType: () => "bytea" });
 
 export const suppliers = pgTable(
   "suppliers",
@@ -114,14 +127,49 @@ const invoiceId = () =>
     .notNull()
     .references(() => invoices.id, { onDelete: "restrict" });
 
+/**
+ * An LLM draft waiting for the owner's decision. There is no `supplier_id`: ownership is always
+ * reached through `invoices.supplier_id`, so a Draft can't disagree with its invoice.
+ */
+export const drafts = pgTable(
+  "drafts",
+  {
+    id: id(),
+    invoiceId: invoiceId(),
+    step: ladderStep("step").notNull(),
+    status: draftStatus("status").notNull().default("pending"),
+    language: draftLanguage("language").notNull(),
+    bodyText: text("body_text").notNull(),
+    finalText: text("final_text").notNull(),
+    ruleIds: text("rule_ids").array().notNull(),
+    modelId: text("model_id").notNull(),
+    decision: jsonb("decision").$type<EscalationDecision>().notNull(),
+    document: bytea("document"),
+    createdOn: day("created_on").notNull(),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    // At most one pending Draft per invoice.
+    uniqueIndex("drafts_one_pending_per_invoice")
+      .on(t.invoiceId)
+      .where(sql`${t.status} = 'pending'`),
+    check("drafts_body_not_blank", sql`btrim(${t.bodyText}) <> ''`),
+  ],
+);
+/** What an `edited` or `rejected` event records: the text before and after, or the reject reason. */
+export type EscalationDetail = { before: string; after: string } | { reason: string | null };
+/** Only rows with `action = 'approved'` count as ladder steps; the rest are the Draft audit trail. */
 export const escalationEvents = pgTable("escalation_events", {
   id: id(),
   invoiceId: invoiceId(),
   step: ladderStep("step").notNull(),
   occurredOn: day("occurred_on").notNull(),
+  action: escalationAction("action").notNull(),
+  draftId: uuid("draft_id").references(() => drafts.id, { onDelete: "restrict" }),
+  detail: jsonb("detail").$type<EscalationDetail>(),
   createdAt: createdAt(),
 });
-
 export const promises = pgTable(
   "promises",
   {
@@ -204,6 +252,8 @@ export type BuyerRow = typeof buyers.$inferSelect;
 export type NewBuyerRow = typeof buyers.$inferInsert;
 export type InvoiceRow = typeof invoices.$inferSelect;
 export type NewInvoiceRow = typeof invoices.$inferInsert;
+export type DraftRow = typeof drafts.$inferSelect;
+export type NewDraftRow = typeof drafts.$inferInsert;
 export type EscalationEventRow = typeof escalationEvents.$inferSelect;
 export type PromiseRow = typeof promises.$inferSelect;
 export type MessageRow = typeof messages.$inferSelect;
