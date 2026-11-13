@@ -46,7 +46,7 @@ Commit rule for every top-level task (git-workflow.md): one Conventional Commit 
     - Type-only export in `packages/db/src/graveyard.ts`, re-exported from `packages/db/src/index.ts` (the read function comes in task 5)
     - _Requirements: 2.3_
   - [ ] 3.2 Implement `apps/web/lib/graveyard/build-graveyard.ts`
-    - View types from design Data Models; per-record Engine calls (`dueDate`, `taxBomb`, `nextEscalationStep`, `statutoryInterest` with the `{ annualBps: 0, asOf: DEMO_MIN }` placeholder when no Bank_Rate, interest `null`); state precedence; `daysOverdue`; `formatINR(…, "full")`; `ariaLabel`; exclude `acceptedOn > today`; `rulesAsOf`; no input mutation
+    - View types from design Data Models; per-record Engine calls (`dueDate`, `taxBomb`, `nextEscalationStep`, `statutoryInterest` with the placeholder stated in design.md (0 bps), i.e. `{ annualBps: 0, asOf: DEMO_MIN }`, when no Bank_Rate, because the Engine accepts 0 (`packages/engine/src/validate.ts` lines 119–124); interest `null`); state precedence; `daysOverdue`; `formatINR(…, "full")`; `ariaLabel`; exclude `acceptedOn > today`; `rulesAsOf`; no input mutation
     - _Requirements: 2.5, 3.1, 3.2, 3.3, 3.4, 3.6, 3.7, 3.8, 3.9, 5.2, 5.3, 5.4, 5.5, 5.10, 10.3_
   - [ ] 3.3 Add sort comparator and Totals to `build-graveyard.ts`
     - Group map, primary keys, tie-breaks by `<`/`>` (never `localeCompare`); Totals by integer addition with `Number.isSafeInteger` guard; `interestAccruedPaise` `null` with no Bank_Rate
@@ -57,6 +57,7 @@ Commit rule for every top-level task (git-workflow.md): one Conventional Commit 
     - Totals `toEqual({ outstandingPaise: 105200000, interestAccruedPaise: 6236681, deductionsAtRiskPaise: 83700000, explodedCount: 2, paidCount: 1 })`
     - Order `toEqual(["LPC/26-27/0301","LPC/26-27/0412","LPC/23-24/0098","LPC/25-26/0388","LPC/26-27/0466","LPC/26-27/0377"])`
     - No Bank_Rate: every `interest` and `interestAccruedPaise` `null`, `rulesAsOf` `null`, other figures unchanged
+    - No-bank-rate build (`bankRate = null`) does not throw and returns a Graveyard_View with Rules_As_Of none (`rulesAsOf` `null`)
     - A record with `acceptedOn` after Today is absent and Totals unchanged; one with `acceptedOn` equal to Today is present; empty records → no tombstones, Totals all 0
     - _Requirements: 2.5, 3.7, 3.8, 3.9, 7.5, 8.1, 8.2, 12.1, 12.2, 12.3, 12.9, 12.12_
   - [ ] 3.5 Write property test `apps/web/test/graveyard-deterministic.property.test.ts`
@@ -85,7 +86,7 @@ Commit rule for every top-level task (git-workflow.md): one Conventional Commit 
     - _Requirements: 3.5_
 
 - [ ] 4. Checkpoint: pure logic
-  - Run `pnpm --filter web test`, `typecheck` and `lint`; ensure all tests pass, ask the user if questions arise.
+  - From the repo root run `pnpm -r --if-present test && pnpm -r --if-present typecheck && pnpm -r --if-present lint`; ensure all tests pass, ask the user if questions arise.
 
 - [ ] 5. Add the db read function and typed errors
   - Commit: `feat(db): add listGraveyardInvoices and typed not-found errors`
@@ -121,7 +122,7 @@ Commit rule for every top-level task (git-workflow.md): one Conventional Commit 
     - _Requirements: 1.3, 1.4, 12.11_
 
 - [ ] 8. Checkpoint: db, proxy and sign-in
-  - Run `pnpm --filter web test`, `typecheck`, `lint` and `packages/db` tests; ensure all tests pass, ask the user if questions arise.
+  - From the repo root run `pnpm -r --if-present test && pnpm -r --if-present typecheck && pnpm -r --if-present lint`; ensure all tests pass, ask the user if questions arise.
 
 - [ ] 9. Build the App_Shell and theme
   - Commit: `feat(web): add themed app shell with nav, sign out and footer`
@@ -148,9 +149,10 @@ Commit rule for every top-level task (git-workflow.md): one Conventional Commit 
   - Commit: `feat(web): serve the graveyard of dues at /`
   - [ ] 11.1 Implement `apps/web/app/(app)/page.tsx`
     - `auth()` → `supplierId` only; `resolveToday(Date.now(), (await searchParams).today)`; `loadGraveyardData`; `redirect("/signin?error=SessionExpired")` outside `try`; `buildGraveyard`; render Totals, TimeTravel, Tombstones, empty state ("The graveyard is quiet" + `/import` link) or LoadError
+    - design.md: cacheComponents/prerendering does not apply, so no `await connection()`; if `cacheComponents` is ever enabled, call `await connection()` from `next/server` before `Date.now()`.
     - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.4, 4.6, 8.1, 8.2, 11.1_
   - [ ] 11.2 Write `apps/web/test/graveyard-page.test.tsx`
-    - Signed-out → `redirect("/signin")`; signed-in render contains Sharma `LPC/26-27/0412`; `?today=2027-03-10` shows "Demo date: 10 Mar 2027"; no chip without `today`; `SupplierNotFoundError` → `redirect` called exactly once with `/signin?error=SessionExpired`, no markup; `BankRateNotFoundError` → tombstones and Totals render, every interest slot, Interest_Accrued and the rules line show "Bank rate not configured for 12 Nov 2026", no "We couldn't load your graveyard just now", page resolves; plain `Error` from `getBankRate` → LoadError; failure with message, stack and `select * from invoices` → markup contains none, has retry link to `/`; `Date.now` spied to 2026-11-12T18:29:59Z then 19:00:00Z → `getBankRate` called with `2026-11-12` then `2026-11-13`; supplier id in query is ignored; empty records → "The graveyard is quiet", `/import` link, `formatINR(0)` totals
+    - Signed-out → `redirect("/signin")`; signed-in render contains Sharma `LPC/26-27/0412`; `?today=2027-03-10` shows "Demo date: 10 Mar 2027"; no chip without `today`; `SupplierNotFoundError` → `redirect` called exactly once with `/signin?error=SessionExpired`, no markup; `BankRateNotFoundError` → tombstones and Totals render, every interest slot, Interest_Accrued and the rules line show "Bank rate not configured for 12 Nov 2026", no "We couldn't load your graveyard just now", page resolves; plain `Error` from `getBankRate` → LoadError; failure with message, stack and `select * from invoices` → markup contains none, has retry link to `/`; `Date.now` spied to 2026-11-12T18:29:59Z then 2026-11-12T19:00:00Z → different Today (`2026-11-12`, then `2026-11-13`), seen as `getBankRate` called with `2026-11-12` then `2026-11-13`; supplier id in query is ignored; empty records → "The graveyard is quiet", `/import` link, `formatINR(0)` totals
     - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.5, 4.1, 4.2, 4.6, 4.7, 4.8, 8.1, 8.2, 11.1, 11.2, 11.3, 12.5, 12.6, 12.7, 12.8, 12.11_
 
 - [ ] 12. Add not-found and error pages
@@ -169,8 +171,13 @@ Commit rule for every top-level task (git-workflow.md): one Conventional Commit 
     - _Requirements: 9.5, 9.6, 9.7, 9.8, 9.9, 10.4, 10.9_
 
 - [ ] 14. Final checkpoint
-  - Run `pnpm --filter web test`, `typecheck`, `lint` and `packages/db` tests with zero failures and zero errors; ensure all tests pass, ask the user if questions arise.
-  - Ask the user to confirm the CSS-only checks from design.md in the browser: contrast, reduced motion, 360 px layout, 44 px targets (Req 10.4, 10.5, 10.7, 10.9).
+  - From the repo root run `pnpm -r --if-present test && pnpm -r --if-present typecheck && pnpm -r --if-present lint` with zero failures and zero errors; ensure all tests pass, ask the user if questions arise.
+  - Ask the user to confirm these manual checks in the browser:
+    - (a) Sign in, then run `pnpm --filter @dues-banshee/db db:reset-demo --yes`; reload `/` → lands on `/signin` with "The demo was reset. Enter the graveyard again."; signing in again works; no redirect loop.
+    - (b) Each time-travel preset ("Today", "10 Mar 2027 (tax-bomb week)", "1 Apr 2027 (after 31 March)") shows the Demo_Date_Chip when an override is set (none for "Today") and the expected states; at 1 Apr 2027, Sharma, Kumar and Gupta show "Tax bomb exploded".
+    - (c) Side-by-side visual check against `/design/Main.dc.html`.
+    - (d) The CSS-only checks from design.md: contrast, reduced motion, 360 px layout, 44 px targets (Req 10.4, 10.5, 10.7, 10.9).
+    - Any sample or scratch files used for these checks go only in `/tmp`, never in the repo.
 
 ## Notes
 
