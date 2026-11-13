@@ -1,5 +1,6 @@
 import type { CalendarDate } from "@dues-banshee/engine";
 import type { TombstoneView } from "@/lib/graveyard/build-graveyard";
+import { GraveyardLegend } from "./graveyard-legend";
 import { GraveyardScene } from "./graveyard-scene";
 import { Tombstone } from "./tombstone";
 import styles from "./tombstone-grid.module.css";
@@ -9,16 +10,22 @@ export interface TombstoneGridProps {
   today: CalendarDate;
 }
 
-/** The scene sits in a layer behind the list; the list is above it, so no decoration covers any text. */
+/**
+ * The scene sits in a layer behind the list; the list is above it, so no decoration covers any text.
+ * The legend is one line under the stage, so it never sits on the scene.
+ */
 export function TombstoneGrid({ tombstones, today }: TombstoneGridProps) {
   return (
-    <div className={styles.stage}>
-      <GraveyardScene />
-      <ul className={styles.grid}>
-        {tombstones.map((view) => (
-          <Tombstone key={view.id} view={view} today={today} />
-        ))}
-      </ul>
-    </div>
+    <>
+      <div className={styles.stage}>
+        <GraveyardScene />
+        <ul className={styles.grid}>
+          {tombstones.map((view) => (
+            <Tombstone key={view.id} view={view} today={today} />
+          ))}
+        </ul>
+      </div>
+      <GraveyardLegend />
+    </>
   );
 }

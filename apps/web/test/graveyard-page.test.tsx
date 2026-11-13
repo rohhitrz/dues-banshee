@@ -162,6 +162,42 @@ describe("GraveyardPage signed in", () => {
     expect(mocks.close).toHaveBeenCalledTimes(1);
   });
 
+  it("shows the legend line once, under the grid", async () => {
+    const html = await render();
+    const entries = [
+      "Taller stone = more owed",
+      "Moss = days overdue",
+      "Cracks = over 60 days",
+      "Ember = over 45 days",
+      "Wisp = promise to pay pending",
+    ];
+    for (const entry of entries) expect(count(html, entry)).toBe(1);
+    const text = html.replace(/<[^>]*>/g, "");
+    expect(count(text, entries.join(" · "))).toBe(1);
+    expect(html.indexOf(entries[0]!)).toBeGreaterThan(html.lastIndexOf("</article>"));
+  });
+  it("shows no legend when there are no tombstones", async () => {
+    mocks.listGraveyardInvoices.mockResolvedValue([]);
+    const html = await render();
+    expect(html).not.toContain("Taller stone = more owed");
+  });
+  it("shows each totals card with its themed title and plain label", async () => {
+    const html = await render();
+    const text = html.replace(/<[^>]*>/g, "|").replace(/\|+/g, "|");
+    expect(text).toContain("|Buried in dues|Outstanding|");
+    expect(text).toContain("|Interest curse|Interest accrued|");
+    expect(text).toContain("|The tax bomb|Deductions at risk|");
+    expect(text).toContain("|The graveyard|Counts|");
+  });
+  it("shows the interest card as formatINR short with full beneath, and no missing-rate text", async () => {
+    const html = await render();
+    const interestCard = html.slice(html.indexOf("Interest curse"), html.indexOf("The tax bomb"));
+    expect(interestCard).toContain(formatINR(6236681, "short"));
+    expect(interestCard).toContain(formatINR(6236681, "full"));
+    expect(formatINR(6236681, "short")).not.toBe(formatINR(6236681, "full"));
+    expect(interestCard).toContain("MSMED-16");
+    expect(interestCard).not.toContain(MISSING);
+  });
   it("shows the Demo_Date_Chip for ?today=2027-03-10", async () => {
     const html = await render({ today: "2027-03-10" });
 

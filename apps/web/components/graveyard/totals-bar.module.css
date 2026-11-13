@@ -19,12 +19,35 @@
   background: #14111f;
 }
 
-.label {
-  margin: 0 0 6px;
-  color: #a9a497;
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 0 8px;
+}
+.title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ece7db;
   font-family: var(--font-signage-sc, "IM Fell English SC"), Georgia, serif;
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   letter-spacing: 0.04em;
+}
+.titleEmber {
+  color: #ffb27a;
+}
+.emberDot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff8a3d;
+  box-shadow: 0 0 8px #ff8a3d;
+}
+.label {
+  color: #a9a497;
+  font-size: 0.8rem;
 }
 
 .figure {

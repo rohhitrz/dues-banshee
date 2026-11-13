@@ -1,0 +1,64 @@
+/* Secondary text #A9A497 on the page background (#07080B to #0C0A14) is at least 4.5:1. Swatches are
+   static and decorative; every meaning is also in the text beside it. */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  color: #a9a497;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  list-style: none;
+}
+.entry {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.sep {
+  margin-left: 4px;
+}
+.icon {
+  display: inline-flex;
+  flex: none;
+  align-items: flex-end;
+  justify-content: center;
+  width: 12px;
+  height: 14px;
+}
+.stone {
+  width: 8px;
+  height: 14px;
+  border: 1px solid #555b68;
+  border-radius: 4px 4px 1px 1px;
+  background: #3a3f4b;
+}
+.moss {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: #5e7a4e;
+}
+.cracks {
+  fill: none;
+  stroke: #a9a497;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.ember {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff8a3d;
+  box-shadow: 0 0 6px #ff8a3d;
+}
+.wisp {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #7ce8c0;
+  box-shadow: 0 0 6px #7ce8c0;
+}

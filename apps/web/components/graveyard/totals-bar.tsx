@@ -11,6 +11,18 @@ export interface TotalsBarProps {
   today: CalendarDate;
 }
 
+/** A card heading: the themed title from /design/Main.dc.html, then the plain label naming the figure. */
+function CardHeading({ title, label, ember = false }: { title: string; label: string; ember?: boolean }) {
+  return (
+    <dt className={styles.heading}>
+      <span className={ember ? `${styles.title} ${styles.titleEmber}` : styles.title}>
+        {ember ? <span className={styles.emberDot} aria-hidden="true" /> : null}
+        {title}
+      </span>
+      <span className={styles.label}>{label}</span>
+    </dt>
+  );
+}
 function Money({ paise, withShort = false }: { paise: Paise; withShort?: boolean }) {
   const full = formatINR(paise, "full");
   const short = formatINR(paise, "short");
@@ -29,33 +41,33 @@ export function TotalsBar({ totals, rulesAsOf, today }: TotalsBarProps) {
     <section className={styles.bar} aria-label="Totals">
       <dl className={styles.grid}>
         <div className={styles.card}>
-          <dt className={styles.label}>Outstanding</dt>
+          <CardHeading title="Buried in dues" label="Outstanding" />
           <dd className={styles.figure}>
             <Money paise={totals.outstandingPaise} withShort />
           </dd>
         </div>
         <div className={styles.card}>
-          <dt className={styles.label}>Interest accrued</dt>
+          <CardHeading title="Interest curse" label="Interest accrued" />
           <dd className={styles.figure}>
             {totals.interestAccruedPaise === null ? (
               <span className={styles.missing}>{missing}</span>
             ) : (
               <>
-                <Money paise={totals.interestAccruedPaise} />
+                <Money paise={totals.interestAccruedPaise} withShort />
                 <span className={styles.rule}>MSMED-16</span>
               </>
             )}
           </dd>
         </div>
         <div className={styles.card}>
-          <dt className={styles.label}>Deductions at risk</dt>
+          <CardHeading title="The tax bomb" label="Deductions at risk" ember />
           <dd className={styles.figure}>
             <Money paise={totals.deductionsAtRiskPaise} withShort />
             <span className={styles.rule}>IT-43BH</span>
           </dd>
         </div>
         <div className={styles.card}>
-          <dt className={styles.label}>Graveyard</dt>
+          <CardHeading title="The graveyard" label="Counts" />
           <dd className={styles.figure}>
             <span className={styles.value}>
               {`Exploded ${totals.explodedCount} · Resurrected ${totals.paidCount}`}
