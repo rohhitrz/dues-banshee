@@ -1,7 +1,7 @@
 import { DEMO_SUPPLIER, findSupplierIdByUdyam, seed, suppliers } from "@dues-banshee/db";
 import { cloneTestDb, createTestDb, type TestDb } from "@dues-banshee/db/testing";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { MAX_DATA_ROWS, MAX_UPLOAD_BYTES, MULTIPART_OVERHEAD_BYTES } from "@/lib/import/limits";
+import { MAX_DATA_ROWS, MAX_UPLOAD_BYTES, MULTIPART_OVERHEAD_BYTES, uploadTooLargeMessage } from "@/lib/import/limits";
 
 // `vi.mock` is hoisted above the imports, so the mocks' state has to be hoisted with it.
 const mocks = vi.hoisted(() => ({
@@ -235,6 +235,54 @@ describe("import routes: size and row limits (Requirements 13.2, 13.5)", () => {
     });
     it(`${name}: accepts a small upload with no Content-Length`, async () => {
       expect((await route(await streamed(name, formWith(csv(NEW_ROW))))).status).toBe(200);
+    });
+  }
+  // Content-Length says 100 but the stream carries 5 MB. The route must count the bytes it really reads,
+  // answer 413 with the fixed message, and stop pulling from the stream (it cancels it).
+  for (const [name, route] of [
+    ["preview", preview],
+    ["commit", commit],
+  ] as const) {
+    it(`${name}: returns 413 and stops reading when Content-Length says 100 but the body is 5 MB`, async () => {
+      const chunkBytes = 16 * 1024;
+      const totalBytes = 5 * 1024 * 1024;
+      const cap = MAX_UPLOAD_BYTES + MULTIPART_OVERHEAD_BYTES;
+      let pulled = 0;
+      let cancelled = false;
+      // highWaterMark 0: the stream produces a chunk only when the route asks for one, so `pulled` is what was read.
+      const body = new ReadableStream<Uint8Array>(
+        {
+          pull(controller) {
+            if (pulled >= totalBytes) {
+              controller.close();
+              return;
+            }
+            pulled += chunkBytes;
+            controller.enqueue(new Uint8Array(chunkBytes).fill(0x78));
+          },
+          cancel() {
+            cancelled = true;
+          },
+        },
+        { highWaterMark: 0 },
+      );
+      const request = new Request(`http://localhost/api/import/${name}`, {
+        method: "POST",
+        body,
+        headers: { "content-type": "multipart/form-data; boundary=x", "content-length": "100" },
+        duplex: "half",
+      } as RequestInit);
+      expect(request.headers.get("content-length")).toBe("100");
+
+      const res = await route(request);
+
+      expect(res.status).toBe(413);
+      expect(await res.json()).toEqual({ error: uploadTooLargeMessage() });
+      expect(cancelled).toBe(true);
+      expect(pulled).toBeGreaterThan(cap);
+      expect(pulled).toBeLessThanOrEqual(cap + chunkBytes);
+      expect(pulled).toBeLessThan(totalBytes);
+      expect(mocks.close).not.toHaveBeenCalled();
     });
   }
   it("returns 422 from preview and commit for a CSV with 5,001 data rows, and writes nothing", async () => {
