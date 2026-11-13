@@ -1,0 +1,139 @@
+/* Decorative layer behind the tombstone grid. The parent must be position: relative and put its content
+   above this layer (z-index: 1). pointer-events: none, overflow: hidden, no canvas or WebGL.
+   Animations are declared only under prefers-reduced-motion: no-preference. */
+.scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.stars {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 120px;
+  opacity: 0.6;
+}
+
+.moon {
+  position: absolute;
+  top: 24px;
+  right: 8%;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #f3ebd3, #d9cfae 70%);
+  box-shadow: 0 0 40px rgba(243, 235, 211, 0.35);
+}
+
+.tree {
+  position: absolute;
+  bottom: 40px;
+  width: 120px;
+  height: 200px;
+  fill: none;
+  stroke: #05060a;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.treeLeft {
+  left: 2%;
+}
+
+.treeRight {
+  right: 4%;
+  transform: scaleX(-1);
+}
+
+.bat {
+  position: absolute;
+  fill: #05060a;
+}
+
+.batA {
+  top: 70px;
+  right: 22%;
+}
+
+.batB {
+  top: 46px;
+  right: 30%;
+}
+
+.ground {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 120px;
+  overflow: hidden;
+}
+
+.fence {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  fill: none;
+  stroke: #05060a;
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+.fog {
+  position: absolute;
+  right: -20%;
+  bottom: 0;
+  left: -20%;
+  height: 90px;
+  background: radial-gradient(60% 100% at 50% 100%, rgba(169, 164, 151, 0.16), rgba(169, 164, 151, 0) 70%);
+}
+
+.fogB {
+  height: 60px;
+  opacity: 0.7;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes drift {
+    0% {
+      transform: translateX(-6%);
+    }
+
+    100% {
+      transform: translateX(6%);
+    }
+  }
+
+  @keyframes bat {
+    0%,
+    100% {
+      transform: translate(0, 0);
+    }
+
+    50% {
+      transform: translate(18px, -10px);
+    }
+  }
+
+  .fogA {
+    animation: drift 24s ease-in-out infinite alternate;
+  }
+
+  .fogB {
+    animation: drift 32s ease-in-out infinite alternate-reverse;
+  }
+
+  .batA {
+    animation: bat 4s ease-in-out infinite;
+  }
+
+  .batB {
+    animation: bat 5s ease-in-out infinite reverse;
+  }
+}

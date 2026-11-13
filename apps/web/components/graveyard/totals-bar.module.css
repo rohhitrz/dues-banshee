@@ -1,0 +1,78 @@
+/* Text colours: bone #ECE7DB, secondary #A9A497, spectral #7CE8C0, ember label #FFB27A.
+   Card background #14111F is darker than #221F2E, so each pair is at least 4.5:1. */
+.bar {
+  min-width: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.card {
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid #221f2e;
+  border-radius: 8px;
+  background: #14111f;
+}
+
+.label {
+  margin: 0 0 6px;
+  color: #a9a497;
+  font-family: var(--font-signage-sc, "IM Fell English SC"), Georgia, serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+}
+
+.figure {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.value {
+  color: #ece7db;
+  font-family: var(--font-figures, "JetBrains Mono"), ui-monospace, monospace;
+  font-size: 1.35rem;
+}
+
+.sub {
+  color: #a9a497;
+  font-family: var(--font-figures, "JetBrains Mono"), ui-monospace, monospace;
+  font-size: 0.8rem;
+}
+
+.rule {
+  color: #ffb27a;
+  font-family: var(--font-figures, "JetBrains Mono"), ui-monospace, monospace;
+  font-size: 0.8rem;
+}
+
+.missing {
+  color: #ffb27a;
+  font-size: 0.95rem;
+}
+
+.asOf {
+  margin: 10px 0 0;
+  color: #a9a497;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
