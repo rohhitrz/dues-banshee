@@ -199,15 +199,15 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
     - Check `git diff --staged`. Commit `feat(ledger): map rows to engine invoices with dedupe keys`, body `Spec: ledger-import, task 6`
     - _Requirements: 14.1, 14.2, 14.3_
 
-- [ ] 7. Set up `packages/db` with the schema and migrations
-  - [ ] 7.1 Create the package skeleton
+- [x] 7. Set up `packages/db` with the schema and migrations
+  - [x] 7.1 Create the package skeleton
     - `package.json`: name `@dues-banshee/db`, `type: module`, `exports: { ".": "./src/index.ts", "./testing": "./src/testing.ts" }`
     - Dependencies: `@dues-banshee/engine` and `@dues-banshee/ledger` (`workspace:*`), `drizzle-orm`, `@neondatabase/serverless`. Dev dependencies: `drizzle-kit`, `@electric-sql/pglite`, `tsx`. Pin the latest stable versions at install time and check them against the design's research notes
     - Scripts: `test: vitest run`, `typecheck: tsc --noEmit`, `lint: eslint src test scripts`, `db:generate: drizzle-kit generate`, `db:migrate: drizzle-kit migrate`, `db:seed: tsx scripts/seed.ts`, `db:reset-demo: tsx scripts/reset-demo.ts`
     - `drizzle.config.ts` with dialect `postgresql`, schema `./src/schema.ts`, out `./drizzle`, and `dbCredentials.url` from `process.env.DATABASE_URL`
     - `tsconfig.json` (`types: ["node"]`), `vitest.config.ts`, and `test/setup.ts` (no global `numRuns`)
     - _Requirements: 8.9, 1.1_
-  - [ ] 7.2 Implement `src/schema.ts`
+  - [x] 7.2 Implement `src/schema.ts`
     - Enums from Engine constants through the `tuple()` helper: `ladder_step`, `approval_step`, `supplier_category`, `supplier_activity`, plus `approval_status` (`pending`, `approved`, `rejected`)
     - All 11 tables with the columns, types and constraints in the design's Tables section:
       - every table: uuid ids, `created_at timestamptz`;
@@ -218,30 +218,30 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
       - `invoices`: unique on the dedupe key, composite FK to buyers, amount check from `MAX_PAISE`, positive-term check;
       - `config`: `unique(key, effective_from)`.
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6_
-  - [ ] 7.3 Implement `src/client.ts` and `src/testing.ts`, then generate the migration
+  - [x] 7.3 Implement `src/client.ts` and `src/testing.ts`, then generate the migration
     - `client.ts`: `createDb(url)` returns `{ db, close }` using `drizzle-orm/neon-serverless` with a `Pool`. Export `type Db`, satisfied by both the Neon and PGlite Drizzle instances
     - `testing.ts`: `createTestDb()` runs in-memory PGlite with `migrate()` from `drizzle-orm/pglite/migrator` on `./drizzle`. `cloneTestDb(template)` wraps `pglite.clone()` in a Drizzle instance
     - Run `pnpm --filter @dues-banshee/db db:generate` and commit the generated SQL under `packages/db/drizzle/`. Read the SQL and confirm every constraint from 7.2 is present
     - Re-export the client and schema from `src/index.ts`
     - _Requirements: 8.1, 8.9_
-  - [ ] 7.4 Write `test/schema.test.ts` (PGlite)
+  - [x] 7.4 Write `test/schema.test.ts` (PGlite)
     - Values from `pg_enum` ordered by `enumsortorder` equal `LADDER_STEPS`, `APPROVAL_STEP_LIST`, `SUPPLIER_CATEGORIES` and `SUPPLIER_ACTIVITIES` exactly, in order
     - `UDYAM-mh-00-0000000` and `UDYAM-MH-0-0000000` violate the check. `UDYAM-MH-00-0000000` is accepted
     - A raw duplicate (supplier, buyer, invoice_number_key) → unique violation. An invoice pointing at another supplier's buyer → FK violation. `amount_paise` 0 and `MAX_PAISE + 1` → check violation. `agreed_term_days` 0 → check violation
     - A `date` column round-trips as `"2026-09-02"`. `amount_paise` 10¹² round-trips as the number 1000000000000
     - _Requirements: 8.2, 8.3, 8.4, 8.5, 8.6_
-  - [ ] 7.5 Commit task 7
+  - [x] 7.5 Commit task 7
     - `git add packages/db pnpm-lock.yaml`
     - Check `git diff --staged` (`drizzle.config.ts` must read the URL from the environment, never contain one). Commit `feat(db): add Drizzle schema and initial migration`, body `Spec: ledger-import, task 7`
     - _Requirements: 14.1, 14.2, 14.3_
 
-- [ ] 8. Add supplier, bank-rate and idempotent invoice import queries
-  - [ ] 8.1 Implement `src/suppliers.ts` and `src/bank-rate.ts`
+- [x] 8. Add supplier, bank-rate and idempotent invoice import queries
+  - [x] 8.1 Implement `src/suppliers.ts` and `src/bank-rate.ts`
     - `getSupplier(db, id)` returns `SupplierFacts & { name, udyamNumber }`, omitting `udyamRegisteredOn` when null. `findSupplierIdByUdyam(db, udyamNumber)` returns an id or `null`
     - `getBankRate(db, today)`: check `today` with `isValidCalendarDate`, select the latest `effective_from <= today` for `BANK_RATE_KEY`, return `{ annualBps, asOf }`, or throw `config "rbi_bank_rate_bps": no row effective on or before <today>`
     - Re-export from `src/index.ts`
     - _Requirements: 9.1, 9.2, 9.3_
-  - [ ] 8.2 Implement `src/invoices.ts`
+  - [x] 8.2 Implement `src/invoices.ts`
     - `insertInvoiceRows(tx, supplierRow, rows)` (not exported from `index.ts`): the only writer of `invoices`. Its row type has no category or activity fields. It copies the Supplier_Snapshot from `supplierRow`. Inserts run in chunks of 500 with `ON CONFLICT (supplier_id, buyer_id, invoice_number_key) DO NOTHING RETURNING id`
     - `importInvoices(db, supplierId, rows)`, all in one transaction:
       1. assert every `dedupeKey.supplierId` matches;
@@ -253,7 +253,7 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
     - `toEngineInvoice(invoice, supplier)` maps fields only: snapshot category and activity, `udyamRegisteredOn` from the supplier, null optionals omitted
     - Re-export the public functions from `src/index.ts`
     - _Requirements: 8.7, 8.8, 10.1, 10.2, 10.3, 10.4, 10.5_
-  - [ ] 8.3 Write `test/queries.test.ts` (PGlite)
+  - [x] 8.3 Write `test/queries.test.ts` (PGlite)
     - `getBankRate` with config rows inserted in the test: the latest row on or before `today` wins, `asOf` equals its `effective_from`, it throws before the first row, and it throws on an invalid `today`
     - Import 3 rows, then import them again → `{ inserted: 3, skipped: 0 }` then `{ inserted: 0, skipped: 3 }`
     - **Rollback after a partial write.**
@@ -264,18 +264,18 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
     - `findStoredInvoices` returns the stored amount and dates for the existing keys only
     - `toEngineInvoice` returns exact fields, with `agreedTermDays`, `paidOn` and `udyamRegisteredOn` omitted when null (checked with `Object.hasOwn`)
     - _Requirements: 8.7, 8.8, 9.2, 9.3, 10.1, 10.2, 10.3, 10.4, 10.5, 10.9_
-  - [ ] 8.4 Write `test/arbitraries.ts` and `test/import.property.test.ts`
+  - [x] 8.4 Write `test/arbitraries.ts` and `test/import.property.test.ts`
     - Build `arbImportRows` and `N` as in the design's Generators section. Rows go through the Ledger's `mapRow` with the demo supplier's facts
     - `beforeAll`: a migrated template with one supplier. Each run: `cloneTestDb(template)`, import the list N times, assert the invoice count equals the number of distinct `dedupeKey.value`s and that `inserted === 0` after the first import, then close the clone. Use `numRuns: 50` on this assertion
     - **Property 2: Re-importing never adds invoices**
     - **Validates: Requirements 7.1, 7.2, 8.5, 10.1, 10.2, 10.8**
-  - [ ] 8.5 Commit task 8
+  - [x] 8.5 Commit task 8
     - `git add packages/db/src packages/db/test`
     - Check `git diff --staged`. Commit `feat(db): add idempotent invoice import and bank-rate lookup`, body `Spec: ledger-import, task 8`
     - _Requirements: 14.1, 14.2, 14.3_
 
-- [ ] 9. Add the demo seed and the demo reset
-  - [ ] 9.1 Implement `src/seed.ts` and `scripts/seed.ts`
+- [x] 9. Add the demo seed and the demo reset
+  - [x] 9.1 Implement `src/seed.ts` and `scripts/seed.ts`
     - Export `DEMO_SUPPLIER` ("Laxmi Precision Components (Demo)", `UDYAM-MH-00-0000000`, `micro`, `manufacturing`, registered 2024-04-15) and `DEMO_INVOICES`, the six rows of the 11.4 table, with `invoice_date` equal to the accepted date and `acceptance_date_defaulted` false
     - `seed(db)` runs in one transaction:
       1. insert the supplier with `ON CONFLICT (udyam_number) DO NOTHING`, then read it back;
@@ -284,12 +284,12 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
     - `scripts/seed.ts`: read `DATABASE_URL` (exit 1 if unset), `createDb`, `seed`, `close`
     - Re-export `seed`, `DEMO_SUPPLIER` and `DEMO_INVOICES` from `src/index.ts`
     - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.6, 9.1_
-  - [ ] 9.2 Implement `src/reset.ts` and `scripts/reset-demo.ts`
+  - [x] 9.2 Implement `src/reset.ts` and `scripts/reset-demo.ts`
     - `RESET_TABLES`: every table except `config`, as listed in the design. `resetDemo(db)` runs `TRUNCATE <tables> RESTART IDENTITY CASCADE` then `seed(tx)` in one transaction
     - `scripts/reset-demo.ts`: without `--yes` in `process.argv`, print the refusal message and exit 1 before creating a client. Exit 1 if `DATABASE_URL` is unset. Otherwise print the target host only (never user or password), run `resetDemo`, print `Demo data reset.`, and close the client. Export a `main(argv, env, deps)` so the test can call it without spawning a process
     - Add the script and its `--yes` usage to the repository README's database section
     - _Requirements: 11.1 (supports the design's demo reset)_
-  - [ ] 9.3 Write `test/seed.test.ts` (PGlite)
+  - [x] 9.3 Write `test/seed.test.ts` (PGlite)
     - Seeding twice gives identical contents (natural-column comparison as in the design) and the same row counts
     - Load each seeded invoice with `toEngineInvoice` and run the Engine at `today` 2026-11-12 with `getBankRate(db, "2026-11-12")`:
       - Sharma: due 2026-10-17, `accrualDays` 26, `interestPaise` 512794, tax bomb `armed` with `daysLeft` 139, `nextEscalationStep` `advance` `whatsapp_nudge`
@@ -301,57 +301,57 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
     - `getBankRate` after seed: 2026-10-07 and 2026-11-12 → `{ annualBps: 575, asOf: "2026-10-07" }`; 2026-10-06 → throws
     - Every seeded invoice's Supplier_Snapshot is `micro` / `manufacturing`
     - _Requirements: 8.7, 9.4, 11.1, 11.2, 11.3, 11.4, 11.5, 11.6_
-  - [ ] 9.4 Write `test/reset.test.ts` (PGlite)
+  - [x] 9.4 Write `test/reset.test.ts` (PGlite)
     - `RESET_TABLES` equals every table name from `schema.ts` except `config`, as sets
     - Seed, import 3 extra rows, add a second config row, then `resetDemo` → contents equal a fresh seeded clone. The extra config row survives
     - `resetDemo` with `seed` forced to throw (`vi.spyOn`) → rejects, and the 3 extra rows are still present
     - `main([], env, deps)` → exit code 1, the refusal message, and the `createDb` stub never called. `main(["--yes"], {}, deps)` → exit code 1 (no `DATABASE_URL`)
     - _Requirements: 11.1 (supports the design's demo reset)_
-  - [ ] 9.5 Commit task 9
+  - [x] 9.5 Commit task 9
     - `git add packages/db/src packages/db/scripts packages/db/test README.md`
     - Check `git diff --staged`. Commit `feat(db): add demo seed and guarded demo reset`, body `Spec: ledger-import, task 9`
     - _Requirements: 14.1, 14.2, 14.3_
 
-- [ ] 10. Add the Next.js app with one-click demo sign-in
-  - [ ] 10.1 Create the `apps/web` skeleton
+- [x] 10. Add the Next.js app with one-click demo sign-in
+  - [x] 10.1 Create the `apps/web` skeleton
     - `package.json`: name `web`, dependencies `next`, `react`, `react-dom`, `next-auth@5.0.0-beta.32` (pinned exactly, since it's a beta), `exceljs`, and `@dues-banshee/engine`, `ledger` and `db` (`workspace:*`). Dev dependencies `@types/react` and `@types/react-dom`. Pin the latest stable versions at install time
     - Scripts: `dev: next dev`, `build: next build`, `test: vitest run`, `typecheck: tsc --noEmit`, `lint: eslint .`
     - `next.config.ts` with `transpilePackages: ["@dues-banshee/engine", "@dues-banshee/ledger", "@dues-banshee/db"]`, `tsconfig.json` with the `@/*` path alias to the app root, `app/layout.tsx`, and `vitest.config.ts` (node environment, same alias)
     - Confirm `next build` accepts the root TypeScript version. If it doesn't, stop and report before changing versions
     - _Requirements: 12.1, 1.1_
-  - [ ] 10.2 Add `lib/db.ts`, `auth.config.ts`, `auth.ts` and the auth route
+  - [x] 10.2 Add `lib/db.ts`, `auth.config.ts`, `auth.ts` and the auth route
     - `lib/db.ts`: `getDb()` reads `DATABASE_URL` (throws if unset) and returns `createDb(url)`
     - `auth.config.ts`: as in the design. JWT session, `pages.signIn: "/signin"`, `providers: []`, `jwt` and `session` callbacks copying `supplierId`, no Db imports
     - `auth.ts`: `NextAuth({ ...authConfig, providers: [Credentials({ id: "demo", credentials: {}, authorize: authorizeDemo })] })`. `authorizeDemo` uses `getDb()` and `findSupplierIdByUdyam(DEMO_SUPPLIER.udyamNumber)`, closes the client in `finally`, and returns `{ id: "demo-user", name: "Demo owner", supplierId }` or `null`
     - `types/next-auth.d.ts` adds `supplierId` to `Session`, `User` and `JWT`. `app/api/auth/[...nextauth]/route.ts` exports `handlers`
     - _Requirements: 12.1, 12.3_
-  - [ ] 10.3 Add `proxy.ts` and its import ban
+  - [x] 10.3 Add `proxy.ts` and its import ban
     - `proxy.ts`: exactly the design's snippet. `const { auth } = NextAuth(authConfig)` from `./auth.config` only, with 401 JSON for `/api/*`, a redirect to `/signin` for pages, and the matcher for `/import`, `/graveyard`, `/debtor` and `/api/import`
     - `eslint.config.js`: a `no-restricted-imports` block for `apps/web/proxy.ts` and `apps/web/auth.config.ts` banning `./auth`, `@/auth`, `@/lib/db`, `./lib/db` and `@dues-banshee/db`
     - `apps/web/test/lint.test.ts`: a `proxy.ts` snippet importing `./auth` gives exactly one error, and the real `proxy.ts` and `auth.config.ts` give none
     - _Requirements: 12.4_
-  - [ ] 10.4 Add the sign-in page, the protected layout, `.env.example` and the README note
+  - [x] 10.4 Add the sign-in page, the protected layout, `.env.example` and the README note
     - `app/(site)/signin/page.tsx`: one `<form action={signInDemo}>` with a single `<button>Enter the graveyard (demo)</button>` and no inputs. `signInDemo` is a server action calling `signIn("demo", { redirectTo: "/import" })`. Show "Demo data is not seeded" when sign-in fails
     - `app/(app)/layout.tsx`: `auth()`, then `redirect("/signin")` when there is no `supplierId`. A placeholder `app/(app)/import/page.tsx` ("Import coming in task 12") so the redirect target exists
     - `apps/web/.env.example` with `DATABASE_URL=` and `AUTH_SECRET=` and no values
     - README: the demo sign-in is for judging only, and production would use phone OTP. Add local setup lines (`.env.local`, `db:migrate`, `db:seed`)
     - _Requirements: 12.1, 12.2, 12.6_
-  - [ ] 10.5 Write `apps/web/test/auth.test.ts`
+  - [x] 10.5 Write `apps/web/test/auth.test.ts`
     - With `vi.mock("@/lib/db")` returning a seeded PGlite clone: `authorizeDemo()` returns `supplierId` equal to the seeded demo supplier's id. On an unseeded clone it returns `null`. The mocked `close` is called both times
     - The `jwt` and `session` callbacks copy `supplierId` from user to token to session
     - _Requirements: 12.2, 12.3_
-  - [ ] 10.6 Commit task 10
+  - [x] 10.6 Commit task 10
     - `git add apps/web eslint.config.js pnpm-lock.yaml README.md` (the parent directory `apps/web` covers `app/(site)`, `app/(app)` and `app/api/auth/[...nextauth]`, so no bracketed path is typed)
     - Check `git diff --staged`: no `.env.local`, and `.env.example` has no values. Commit `feat(web): add Next.js app with one-click demo sign-in`, body `Spec: ledger-import, task 10`
     - _Requirements: 14.1, 14.2, 14.3_
 
-- [ ] 11. Add the import preview and commit routes
-  - [ ] 11.1 Implement `lib/import/limits.ts`, `read-xlsx.ts` and `read-upload.ts`
+- [x] 11. Add the import preview and commit routes
+  - [x] 11.1 Implement `lib/import/limits.ts`, `read-xlsx.ts` and `read-upload.ts`
     - `limits.ts` imports nothing. It exports `MAX_UPLOAD_BYTES = 4 * 1024 * 1024`, `MAX_DATA_ROWS = 5000`, `MULTIPART_OVERHEAD_BYTES = 64 * 1024`, and `uploadTooLargeMessage()` → `File is larger than 4 MB`
     - `read-xlsx.ts`: the first worksheet, `eachRow({ includeEmpty: false })`, `cellText` per the design's table (numbers → `String(value)`, dates → UTC `YYYY-MM-DD`, formulas → their result, recursively, rich text and hyperlinks → text, errors → the code), keeping worksheet row numbers
     - `read-upload.ts`: the checks in the design's table, in order (size → 413, `.csv` UTF-8 decode and `parseCsv`, `.xlsx` magic bytes and `readXlsx`, other → 415, row-count guard)
     - _Requirements: 5.2, 13.2_
-  - [ ] 11.2 Implement `lib/import/analyse.ts`
+  - [x] 11.2 Implement `lib/import/analyse.ts`
     - `analyseUpload(db, supplierId, file)`:
       1. `readUpload`;
       2. `getSupplier`;
@@ -361,12 +361,12 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
       6. classify `new` / `already_imported` (plus the `compareWithStored` warning) / `error`.
     - `amountText` is `formatINR(amountPaise, "full")`. Return `PreviewResponse` and `okRows`
     - _Requirements: 10.5, 10.6, 13.3, 13.4_
-  - [ ] 11.3 Implement the preview and commit routes
+  - [x] 11.3 Implement the preview and commit routes
     - Both: `auth()` from `@/auth`, 401 without `supplierId`. `Content-Length` over `MAX_UPLOAD_BYTES + MULTIPART_OVERHEAD_BYTES` → 413 before reading the body. Read `formData().get("file")`, `getDb()`, `close()` in `finally`, and take `supplierId` from the session only
     - Preview returns the `PreviewResponse`. Commit reruns `analyseUpload`, calls `importInvoices(db, supplierId, okRows)`, and returns `{ inserted, skipped, errors }`
     - Unexpected errors → 500 `Import failed. Nothing was saved.`, logging the error and row numbers but never cell contents
     - _Requirements: 10.1, 12.5, 13.3, 13.5, 13.6, 13.7_
-  - [ ] 11.4 Write `apps/web/test/read-upload.test.ts`
+  - [x] 11.4 Write `apps/web/test/read-upload.test.ts`
     - Build a workbook with exceljs in the test containing:
       - a header row;
       - an amount cell of 412000.6 with `numFmt "#,##0"`;
@@ -377,7 +377,7 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
     - 4 MB + 1 byte → 413. `.txt` → 415. Invalid UTF-8 CSV → 422. `.xlsx` without the `PK` header → 422. A CSV with 5,001 data rows → 422
     - `MAX_UPLOAD_BYTES === 4 * 1024 * 1024`
     - _Requirements: 5.2, 5.3, 13.2_
-  - [ ] 11.5 Write `apps/web/test/import-routes.test.ts`
+  - [x] 11.5 Write `apps/web/test/import-routes.test.ts`
     - Setup: `vi.mock("@/lib/db")` returns a seeded PGlite clone per test with `close` as a no-op, and `vi.mock("@/auth")` controls the session. Call the route handlers directly with `Request` objects carrying `FormData`
     - `auth` → `null`: preview and commit return 401, and the invoice count in the clone is unchanged
     - Sharma CSV after seed → `already_imported`, no warning
@@ -386,13 +386,13 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
     - Commit `FormData` with an extra `supplierId` naming a second supplier inserted in the clone → rows are written under the session's supplier, and the second supplier has 0 invoices
     - A `Content-Length` header over the limit → 413 without the body being read
     - _Requirements: 10.5, 10.6, 10.7, 10.9, 12.5, 13.2, 13.5, 13.7_
-  - [ ] 11.6 Commit task 11
+  - [x] 11.6 Commit task 11
     - `git add apps/web/lib apps/web/app/api apps/web/test` (none of these paths contain parentheses or brackets; `app/api` holds `[...nextauth]` and is staged through its parent)
     - Check `git diff --staged`. Commit `feat(web): add import preview and commit routes`, body `Spec: ledger-import, task 11`
     - _Requirements: 14.1, 14.2, 14.3_
 
-- [ ] 12. Build the import page
-  - [ ] 12.1 Replace the placeholder `app/(app)/import/page.tsx` with the client component
+- [x] 12. Build the import page
+  - [x] 12.1 Replace the placeholder `app/(app)/import/page.tsx` with the client component
     - A file input (`accept=".csv,.xlsx"`). On selection, compare `file.size` with `MAX_UPLOAD_BYTES` from `@/lib/import/limits`, and over the limit show `uploadTooLargeMessage()` without sending anything
     - A **Preview** button posts the file to `/api/import/preview` and shows file-level errors, or:
       - the summary counts and unused columns;
@@ -400,7 +400,7 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
     - **Import N new invoices** (disabled when N is 0) posts the same `File` object to `/api/import/commit` and shows the inserted, skipped and error counts
     - Real `<button>` and `<label>` elements and 44px targets. Minimal `import.module.css`, with no theme work
     - _Requirements: 13.1, 13.2, 13.4, 13.5, 13.6_
-  - [ ] 12.2 Manual browser check
+  - [x] 12.2 Manual browser check
     - With `.env.local` pointing at a Neon dev branch: run `db:migrate` and `db:seed`, then `pnpm --filter web dev` (in your own terminal; don't run it from the agent)
     - **Signed out** (a private window, or after clearing the `authjs.session-token` cookie):
       - visiting `http://localhost:3000/import` redirects to `/signin`;
@@ -411,19 +411,19 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
       - Choose a 5 MB file and confirm the browser blocks it with no network request.
     - Record each result in the commit body
     - _Requirements: 12.2, 12.4, 13.1, 13.2, 13.4, 13.5, 13.6_
-  - [ ] 12.3 Commit task 12
+  - [x] 12.3 Commit task 12
     - `git add 'apps/web/app/(app)/import'` (quoted: zsh treats the parentheses as a glob)
     - Check `git diff --staged`. Commit `feat(web): add import page with preview table`, body `Spec: ledger-import, task 12` plus the manual-check results
     - _Requirements: 14.1, 14.2, 14.3_
 
-- [ ] 13. Final checkpoint
-  - [ ] 13.1 Run the whole workspace from a clean install
+- [x] 13. Final checkpoint
+  - [x] 13.1 Run the whole workspace from a clean install
     - `pnpm install --frozen-lockfile && pnpm test && pnpm typecheck && pnpm lint` all exit 0
     - `pnpm --filter web build` exits 0 with dummy `AUTH_SECRET` and `DATABASE_URL` values set only in the shell, never written to a file
     - `git grep -nE "Math\.random|Date\.now|parseFloat" packages/ledger/src` finds nothing
     - Ask the user before fixing anything outside this spec's files
     - _Requirements: 1.1, 1.3, 1.4, 2.3_
-  - [ ] 13.2 Mark the spec complete and commit
+  - [x] 13.2 Mark the spec complete and commit
     - Tick every task in this file
     - `git add .kiro/specs/ledger-import/tasks.md`. Commit `chore(kiro): mark ledger-import tasks complete`, body `Spec: ledger-import, task 13`
     - _Requirements: 14.1, 14.2, 14.3_
