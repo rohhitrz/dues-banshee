@@ -7,6 +7,8 @@
 }
 
 .article {
+  --stone-min: 110px;
+  --stone-max: max(150px, min(300px, 28vh));
   display: flex;
   flex-direction: column;
   min-width: 44px;
@@ -20,13 +22,16 @@
   outline-offset: 3px;
 }
 
-/* A fixed-height strip keeps every stone standing on the same ground line, so plaques align. */
+/* Stone heights scale with the viewport so the first screen holds every stone and its plaque head. The
+   inline --stone-rank is the rank-based height from the view model (130 to 300), mapped linearly onto
+   --stone-min..--stone-max, so the order (taller = owes more) is kept and equal stones stay equal. A fixed-height strip keeps every
+   stone standing on the same ground line, so plaques align. */
 .ground {
   position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  height: 300px;
+  height: var(--stone-max);
   overflow: hidden;
   pointer-events: none;
 }
@@ -37,6 +42,7 @@
   flex-direction: column;
   align-items: center;
   width: 86px;
+  height: calc(var(--stone-min) + (var(--stone-max) - var(--stone-min)) * (var(--stone-rank) - 130) / 170);
   border: 1px solid #555b68;
   border-radius: 43px 43px 6px 6px;
   background: linear-gradient(170deg, #4a4f5c 0%, #2c303a 45%, #1d2028 100%);

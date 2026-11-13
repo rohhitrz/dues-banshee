@@ -337,7 +337,7 @@ For any tombstone view, `ariaLabel` equals `` `${buyerName}, ${principalText}, $
 | Mock | Built | Why |
 |---|---|---|
 | Hard-coded buyers ("Mahto Agro", 71 days…) and in-browser float interest `o * (1 + r)^(late/30)` | Engine outputs for stored data | Req 3.2, 3.5; product rule: every legal figure comes from the Engine with a rule ID. |
-| Stone height `130 + (max-130) * owed/top` (float division of money) | Rank-based height `130 + floor(170·rank/(distinct−1))` | Req 3.5 bans float division of money; rank keeps "taller = owes more" (Req 5.11). |
+| Stone height `130 + (max-130) * owed/top` (float division of money) | Rank-based height `130 + floor(170·rank/(distinct−1))` | Req 3.5 bans float division of money; rank keeps "taller = owes more" (Req 5.11). The rank height is mapped linearly onto 110 px to `max(150px, min(300px, 28vh))` in CSS, so the first screen holds every stone on a laptop; the order is unchanged. |
 | Moss `min(1, days/90)` continuous | Five buckets (0, 1–15, 16–45, 46–90, >90) | Integer, testable, monotone; same visual meaning. |
 | Ember dot hidden when promised; green dot for promise | Ember iff > 45 days; promise shown only as the wisp | Req 5.11–5.12 define each encoding independently. |
 | Tilt on stones > 60 days | Not built | Rotation could push labels into neighbours; cracks already encode > 60 days. |

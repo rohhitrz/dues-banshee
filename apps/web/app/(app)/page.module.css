@@ -1,16 +1,21 @@
+/* --page-gap and --controls-row are read by the totals bar and the time-travel control, which share one
+   row at wide widths (the control is pulled up by exactly the row height plus the gap). */
 .page {
+  --page-gap: 16px;
+  --controls-row: 44px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--page-gap);
   max-width: 1200px;
   margin: 0 auto;
-  padding: 24px 16px 48px;
+  padding: 16px 16px 48px;
 }
 
 .title {
   margin: 0;
   font-family: var(--font-fraunces), serif;
   font-weight: 300;
-  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  line-height: 1.15;
   color: #ece7db;
 }

@@ -13,7 +13,7 @@
 
 .card {
   min-width: 0;
-  padding: 14px 16px;
+  padding: 10px 14px;
   border: 1px solid #221f2e;
   border-radius: 8px;
   background: #14111f;
@@ -23,7 +23,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin: 0 0 8px;
+  margin: 0 0 4px;
 }
 .title {
   display: flex;
@@ -62,7 +62,8 @@
 .value {
   color: #ece7db;
   font-family: var(--font-figures, "JetBrains Mono"), ui-monospace, monospace;
-  font-size: 1.35rem;
+  font-size: 1.25rem;
+  line-height: 1.2;
 }
 
 .sub {
@@ -83,11 +84,21 @@
 }
 
 .asOf {
-  margin: 10px 0 0;
+  margin: 8px 0 0;
   color: #a9a497;
   font-size: 0.875rem;
 }
 
+/* At wide widths "Rules as of" sits in a row of fixed height that the time-travel control is pulled up
+   into, so the two share one line. */
+@media (min-width: 1100px) {
+  .asOf {
+    display: flex;
+    align-items: center;
+    min-height: var(--controls-row, 44px);
+    margin: 0;
+  }
+}
 @media (max-width: 900px) {
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

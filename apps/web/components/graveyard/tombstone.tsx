@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { CalendarDate } from "@dues-banshee/engine";
 import type { TombstoneView } from "@/lib/graveyard/build-graveyard";
 import { bankRateMissingText } from "./bank-rate-message";
@@ -28,7 +29,7 @@ export function Tombstone({ view, today }: TombstoneProps) {
       <article className={styles.article} tabIndex={0} aria-label={view.ariaLabel} data-state={view.state}>
         <div className={styles.ground} aria-hidden="true">
           {look.wisp ? <span className={styles.wisp} data-look="wisp" /> : null}
-          <div className={styles.stone} style={{ height: `${look.heightPx}px` }}>
+          <div className={styles.stone} style={{ "--stone-rank": look.heightPx } as CSSProperties}>
             <span className={styles.moss} data-moss={look.moss} />
             {look.cracked ? (
               <svg className={styles.cracks} data-look="cracks" viewBox="0 0 86 100" preserveAspectRatio="none">
