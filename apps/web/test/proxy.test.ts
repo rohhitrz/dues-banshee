@@ -2,11 +2,18 @@
 /// <reference types="node" />
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { NextRequest } from "next/server";
-import { describe, expect, it } from "vitest";
-import { config, proxyHandler, type ProxyRequest } from "../proxy";
+import { encode } from "next-auth/jwt";
+import { NextRequest, type NextFetchEvent } from "next/server";
+import { describe, expect, it, vi } from "vitest";
+import { config, proxy, proxyHandler, type ProxyRequest } from "../proxy";
 
 // Feature: dashboard-ui, Req 1.1, 1.4, 1.6, 12.5, 12.11: the proxy clears stale sessions without a redirect loop.
+
+// The real Auth.js wrapper reads the secret when it handles a request. Set before any request is made.
+const AUTH_SECRET = "test-secret-for-proxy-tests-only-0123456789";
+vi.hoisted(() => {
+  process.env["AUTH_SECRET"] = "test-secret-for-proxy-tests-only-0123456789";
+});
 
 const SIGNED_IN = { supplierId: "11111111-1111-4111-8111-111111111111" };
 const EPOCH = "Thu, 01 Jan 1970 00:00:00 GMT";
@@ -16,6 +23,31 @@ function fakeRequest(url: string, cookie: string | null, auth: ProxyRequest["aut
   const request = new NextRequest(url, cookie === null ? {} : { headers: { cookie } });
   return { nextUrl: request.nextUrl, headers: request.headers, auth };
 }
+
+/** Calls the exported `proxy` (real Auth.js wrapper) with a real request. */
+async function callProxy(url: string, cookie: string | null): Promise<Response> {
+  // A real request carries Host and, behind a proxy, X-Forwarded-Proto; Auth.js builds its own
+  // action URL from them and picks the plain or `__Secure-` cookie name from the protocol.
+  const target = new URL(url);
+  const headers: Record<string, string> = { host: target.host, "x-forwarded-proto": target.protocol.slice(0, -1) };
+  if (cookie !== null) headers["cookie"] = cookie;
+  const request = new NextRequest(url, { headers });
+  const res = await proxy(request, {} as NextFetchEvent);
+  if (!res) throw new Error("proxy returned no response");
+  return res;
+}
+
+/** A real session JWT, as Auth.js writes it, for the plain cookie name (http, not https). */
+const validSessionToken = (): Promise<string> =>
+  encode({ token: { supplierId: SIGNED_IN.supplierId }, secret: AUTH_SECRET, salt: "authjs.session-token" });
+
+/** Each Set-Cookie header as `{ name, value, raw }`. */
+const setCookies = (res: Response): { name: string; value: string; raw: string }[] =>
+  res.headers.getSetCookie().map((raw) => {
+    const [pair = ""] = raw.split(";", 1);
+    const at = pair.indexOf("=");
+    return { name: pair.slice(0, at), value: pair.slice(at + 1), raw };
+  });
 
 describe("proxy: /signin?error=SessionExpired", () => {
   const cookie = [
@@ -27,14 +59,13 @@ describe("proxy: /signin?error=SessionExpired", () => {
     "authjs.csrf-token=keep",
   ].join("; ");
 
-  it("passes through with no Location and expires every session cookie", () => {
-    const res = proxyHandler(fakeRequest("http://localhost:3000/signin?error=SessionExpired", cookie, null));
+  it("passes through with no Location and expires every session cookie", async () => {
+    const res = await callProxy("http://localhost:3000/signin?error=SessionExpired", cookie);
 
-    expect(res).toBeDefined();
-    expect(res?.status).toBe(200);
-    expect(res?.headers.get("location")).toBeNull();
-    expect(res?.headers.get("x-middleware-next")).toBe("1");
-    expect(res?.headers.getSetCookie()).toEqual([
+    expect(res.status).toBe(200);
+    expect(res.headers.get("location")).toBeNull();
+    expect(res.headers.get("x-middleware-next")).toBe("1");
+    expect(res.headers.getSetCookie()).toEqual([
       `authjs.session-token=; Path=/; Expires=${EPOCH}; Max-Age=0; HttpOnly; SameSite=lax`,
       `__Secure-authjs.session-token=; Path=/; Expires=${EPOCH}; Max-Age=0; Secure; HttpOnly; SameSite=lax`,
       `authjs.session-token.0=; Path=/; Expires=${EPOCH}; Max-Age=0; HttpOnly; SameSite=lax`,
@@ -43,17 +74,45 @@ describe("proxy: /signin?error=SessionExpired", () => {
     ]);
   });
 
-  it("removes the session cookies from the forwarded request and keeps the others", () => {
-    const res = proxyHandler(fakeRequest("http://localhost:3000/signin?error=SessionExpired", cookie, null));
+  it("removes the session cookies from the forwarded request and keeps the others", async () => {
+    const res = await callProxy("http://localhost:3000/signin?error=SessionExpired", cookie);
 
-    expect(res?.headers.get("x-middleware-request-cookie")).toBe("authjs.csrf-token=keep");
+    expect(res.headers.get("x-middleware-request-cookie")).toBe("authjs.csrf-token=keep");
   });
 
-  it("sets no cookies when none are stale", () => {
-    const res = proxyHandler(fakeRequest("http://localhost:3000/signin?error=SessionExpired", null, null));
+  it("sets no cookies when none are stale", async () => {
+    const res = await callProxy("http://localhost:3000/signin?error=SessionExpired", null);
 
-    expect(res?.headers.get("location")).toBeNull();
-    expect(res?.headers.getSetCookie()).toEqual([]);
+    expect(res.headers.get("location")).toBeNull();
+    expect(res.headers.getSetCookie()).toEqual([]);
+  });
+
+  it("ends a VALID session: every session-token Set-Cookie is expired and none has a value (real auth() wrapper)", async () => {
+    const jwt = await validSessionToken();
+    const half = Math.ceil(jwt.length / 2);
+    const names = [
+      "authjs.session-token",
+      "__Secure-authjs.session-token",
+      "authjs.session-token.0",
+      "authjs.session-token.1",
+    ];
+    const validCookie = [
+      `authjs.session-token=${jwt}`,
+      `__Secure-authjs.session-token=${jwt}`,
+      `authjs.session-token.0=${jwt.slice(0, half)}`,
+      `authjs.session-token.1=${jwt.slice(half)}`,
+    ].join("; ");
+
+    const res = await callProxy("http://localhost:3000/signin?error=SessionExpired", validCookie);
+
+    const sessionCookies = setCookies(res).filter(({ name }) => /authjs\.session-token/.test(name));
+    expect(sessionCookies.map(({ name }) => name)).toEqual(names);
+    for (const { value, raw } of sessionCookies) {
+      expect(value).toBe("");
+      expect(raw).toContain("Max-Age=0");
+      expect(raw).toContain(`Expires=${EPOCH}`);
+    }
+    expect(res.headers.get("x-middleware-request-cookie")).toBeNull();
   });
 });
 
@@ -92,6 +151,43 @@ describe("proxy: protected pages", () => {
 
   it("passes / when signed in", () => {
     expect(proxyHandler(fakeRequest("http://localhost:3000/", null, SIGNED_IN))).toBeUndefined();
+  });
+});
+
+describe("proxy: the real Auth.js wrapper", () => {
+  it("passes / through, not redirected, when the cookie holds a valid session", async () => {
+    const jwt = await validSessionToken();
+
+    const res = await callProxy("http://localhost:3000/", `authjs.session-token=${jwt}`);
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get("location")).toBeNull();
+    expect(res.headers.get("x-middleware-next")).toBe("1");
+  });
+
+  it("redirects / to /signin when the cookie was signed with another secret", async () => {
+    const jwt = await encode({ token: { supplierId: SIGNED_IN.supplierId }, secret: "another-secret-0123456789-abcdefghij", salt: "authjs.session-token" });
+
+    const res = await callProxy("http://localhost:3000/", `authjs.session-token=${jwt}`);
+
+    expect(res.status).toBe(307);
+    expect(res.headers.get("location")).toBe("http://localhost:3000/signin");
+  });
+
+  it("redirects / to /signin when there is no cookie", async () => {
+    const res = await callProxy("http://localhost:3000/", null);
+
+    expect(res.status).toBe(307);
+    expect(res.headers.get("location")).toBe("http://localhost:3000/signin");
+  });
+
+  it("does not clear cookies on /signin?error=CredentialsSignin", async () => {
+    const jwt = await validSessionToken();
+
+    const res = await callProxy("http://localhost:3000/signin?error=CredentialsSignin", `authjs.session-token=${jwt}`);
+
+    expect(res.headers.get("location")).toBeNull();
+    expect(setCookies(res).every(({ value }) => value !== "")).toBe(true);
   });
 });
 

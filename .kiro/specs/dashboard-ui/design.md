@@ -13,7 +13,7 @@ Key decisions:
 | Styling | CSS Modules (`*.module.css`), fonts through `next/font/google` | CSS Modules are what `apps/web` already uses (Req 9.9). `next/font` ships with Next, so there is **no new dependency**, and the fonts are self-hosted at build time (no runtime Google request). |
 | Tombstone look | Pure `tombstoneLook()` with ordinal (rank) height, bucketed moss | Satisfies "larger principal is not shorter" with no float division of money (Req 3.5, 5.11). |
 | Missing supplier / bank rate | Typed errors `SupplierNotFoundError`, `BankRateNotFoundError` in `packages/db` | The page must tell "stale session" and "no bank rate" apart from "DB is down" without matching error strings. |
-| Stale-session cookie clearing | The page redirects once to `/signin?error=SessionExpired`; `proxy.ts` deletes the Auth.js session cookie on that request | Server Components cannot write cookies in Next.js; the proxy can. One redirect, no loop (see Decisions 3 and 4). |
+| Stale-session cookie clearing | The page redirects once to `/signin?error=SessionExpired`; `proxy.ts` deletes the Auth.js session cookie on that request, before the Auth.js `auth()` wrapper runs | Server Components cannot write cookies in Next.js; the proxy can. The wrapper would re-set the cookie, so the clearing bypasses it. One redirect, no loop (see Decisions 3 and 4). |
 
 New dependencies: none.
 
@@ -182,14 +182,16 @@ export function mossLevel(days: number): 0|1|2|3|4;                   // 0 | 1�
 export const config = { matcher: ["/", "/signin", "/import/:path*", "/graveyard/:path*", "/debtor/:path*", "/api/import/:path*"] };
 ```
 
-Handler order:
+The exported `proxy` is a plain function that checks first, then delegates:
+1. `pathname === "/signin"` and `searchParams.get("error") === "SessionExpired"`: return the cookie-clearing `NextResponse.next()` directly, WITHOUT calling the `auth()`-wrapped handler. The response has the request cookie header stripped of, and response `Set-Cookie` expiring, every cookie matching `/^(__Secure-)?authjs\.session-token(\.\d+)?$/` (Auth.js chunks large tokens).
+2. Every other request goes to `auth(proxyHandler)` unchanged. In `proxyHandler`:
+   1. `pathname === "/signin"`: never redirect, pass through.
+   2. `req.auth?.supplierId` present: pass through.
+   3. `/api/*`: 401 JSON. Else redirect to `/signin`.
 
-1. `pathname === "/signin"`: never redirect. If `searchParams.get("error") === "SessionExpired"`, return `NextResponse.next()` with request cookie header stripped of, and response `Set-Cookie` expiring, every cookie matching `/^(__Secure-)?authjs\.session-token(\.\d+)?$/` (Auth.js chunks large tokens). Otherwise pass through.
-2. `req.auth?.supplierId` present: pass through.
-3. `/api/*`: 401 JSON. Else redirect to `/signin`.
+Why the bypass: with `next-auth@5.0.0-beta.32` the `auth()` wrapper appends its own session `Set-Cookie` after the handler's response, and `@auth/core` re-encodes a JWT that is still valid. Clearing inside the wrapped handler therefore sent an expiring cookie followed by a fresh one, and the session survived. The check in `proxy` runs before the wrapper, so nothing is appended after the expiring cookies.
 
-The handler is exported as `proxyHandler` so tests can call it with a fake request. `next/server` is a bare package and passes the existing ESLint allowlist; it imports no DB code (Decision 4, Req 1.6).
-
+`proxyHandler` is exported so tests can call it with a fake request. `next/server` is a bare package and passes the existing ESLint allowlist; it imports no DB code (Decision 4, Req 1.6).
 ### Sign-in changes
 
 - `actions.ts`: `redirectTo: "/"` (Req 1.7). Error branches unchanged.
@@ -363,7 +365,7 @@ All tests are required; none are optional (Req 12.10). Vitest, `environment: "no
 | `test/labels.test.ts` | Exact label for each of the 5 steps and 7 wait reasons (Req 12.12). |
 | `test/today.test.ts` | Every input in Req 12.4 with injected `nowMs`, plus 18:29:59Z / 18:30:00Z boundary (Req 4.2). |
 | `test/graveyard-page.test.tsx` | Mocks `@/auth`, `next/navigation`, `@/lib/db`, `@dues-banshee/db` reads. Signed-out → `redirect("/signin")` (Req 12.5); signed-in render contains the Sharma `LPC/26-27/0412` tombstone; `?today=2027-03-10` shows "Demo date: 10 Mar 2027"; no chip without `today` (Req 12.6); load failure with an error carrying message, stack and `select * from invoices` text → markup contains none of them and has a retry link to `/` (Req 12.7); `getBankRate` rejecting with `BankRateNotFoundError` → the markup contains the tombstone list and Totals, every interest slot and Interest_Accrued show "Bank rate not configured for 12 Nov 2026", the "Rules as of" line is replaced by the same text, the LoadError message "We couldn't load your graveyard just now" is absent, and the page function resolves without throwing (so `error.tsx` is never reached) (Req 12.8, 2.5, 11.3); `getBankRate` rejecting with a plain `Error` → LoadError (contrast case); two signed-in renders with no `today`, `Date.now` mocked (`vi.spyOn(Date, "now")`) to `2026-11-12T18:29:59Z` and then `2026-11-12T19:00:00Z`, call the mocked `getBankRate` with Today `2026-11-12` and `2026-11-13` respectively (and, with `getBankRate` rejecting `BankRateNotFoundError`, render "Bank rate not configured for 12 Nov 2026" and "…13 Nov 2026"), proving Today is read per request (Req 4.1, 4.2, 4.6); `SupplierNotFoundError` → `redirect` called exactly once with `/signin?error=SessionExpired` and no markup (Req 12.11). |
-| `test/proxy.test.ts` | Mocks `next-auth` so `auth(h)` returns `h`; calls `proxyHandler` with fake requests: `/signin?error=SessionExpired` with stale cookie → no `Location` header, `Set-Cookie` expires `authjs.session-token` and its chunks; `/signin` without session → passes (no loop); `/` without session → redirect `/signin`; `/` with session → passes (Req 12.11, 1.4). |
+| `test/proxy.test.ts` | Uses the REAL `auth()` wrapper (`next-auth` is not mocked), a test `AUTH_SECRET` and a session JWT made with `encode()` from `next-auth/jwt` that carries a `supplierId`. Calls the exported `proxy` with real `NextRequest`s: `/signin?error=SessionExpired` with that valid cookie, a chunked `.0`/`.1` pair and the `__Secure-` name → every session-token `Set-Cookie` is expired and none has a value; `/` with the valid cookie → passes through (proves the real wrapper still decodes sessions); `/` with no cookie, or a cookie signed with another secret → redirect `/signin`; `/signin` with another error value → no cookie clearing. Calls `proxyHandler` with fake requests for `/signin` (no loop), `/` and `/api/import` (Req 12.11, 1.4). |
 | `test/signin.test.tsx` (existing) | Only line 33 (success-redirect assertion) and the line-28 title change (Decision 2, Req 9.8). New cases for SessionExpired go in `test/signin-session-expired.test.tsx`. |
 | `test/app-shell.test.tsx` | Links and Sign out present only with `supplierId`; footer always; sign-out action calls `signOut({ redirectTo: "/signin" })` (Req 9.1–9.4). |
 | `test/not-found.test.tsx` | Link to `/`. |
@@ -378,6 +380,6 @@ Gate: `pnpm --filter web test`, `typecheck`, `lint` and `packages/db` tests pass
 
 1. **Req 9.7 scope.** 9.7 applies to the restyle only. The `signInDemo` success target `/` (Req 1.7) and the SessionExpired message (Req 1.3) are exempt, as recorded in Req 9.7. Existing messages and error targets do not change.
 2. **`test/signin.test.tsx`.** Exactly two lines change (Req 9.8): line 33 (`redirectTo: "/import"` → `redirectTo: "/"`) and the line-28 test title ("…lands on /import" → "…lands on /"). No other line changes. Line 54's `new Error("NEXT_REDIRECT /import")` mock stays: it is only a non-AuthError being rethrown.
-3. **Redirect loops.** Prevented as designed: the proxy's `/signin` branch runs first and never redirects away from `/signin`; `/signin` never redirects signed-in users; a stale session costs exactly one redirect (`/` → `/signin?error=SessionExpired`), and the proxy clears the session cookie on that request, so the next visit to `/` is a plain signed-out redirect.
+3. **Redirect loops.** Prevented as designed: the proxy's `/signin` branch runs first and never redirects away from `/signin`; `/signin` never redirects signed-in users; a stale session costs exactly one redirect (`/` → `/signin?error=SessionExpired`), and the proxy clears the session cookie on that request, so the next visit to `/` is a plain signed-out redirect. The clearing happens in the exported `proxy` before the `auth()` wrapper, not inside the wrapped handler: the wrapper appends its own session `Set-Cookie` after the handler's response and re-encodes a still-valid JWT, which would undo the clearing. The `/signin` branch of `proxyHandler` therefore only passes through.
 4. **`proxy.ts` imports.** Only `next-auth`, `next/server` (for `NextResponse`, needed to clear the cookie, since Server Components cannot write cookies) and `auth.config.ts` (Req 1.6). Side effect: opening `/signin?error=SessionExpired` signs the visitor out, which is harmless for the demo.
 5. **`<Today>` display format.** "Bank rate not configured for <Today>" uses `D MMM YYYY` ("12 Nov 2026"), matching the Demo_Date_Chip and "Rules as of".
