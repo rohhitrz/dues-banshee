@@ -73,6 +73,7 @@
 }
 
 .rule {
+  white-space: nowrap;
   color: #ffb27a;
   font-family: var(--font-figures, "JetBrains Mono"), ui-monospace, monospace;
   font-size: 0.8rem;

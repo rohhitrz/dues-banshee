@@ -184,8 +184,11 @@
   color: #ffb27a;
 }
 
+/* A rule ID never splits across lines; the plaque is at least 124px wide inside, and the longest ID
+   (MSMED-SCOPE) with its margin is under 90px, so nowrap cannot overflow it. */
 .rule {
   margin-left: 8px;
+  white-space: nowrap;
   color: #ffb27a;
   font-family: var(--font-figures, "JetBrains Mono"), ui-monospace, monospace;
   font-size: 0.75rem;
