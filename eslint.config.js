@@ -39,6 +39,13 @@ const globalThisBans = (pkg, extraNames = []) =>
   }));
 
 /**
+ * Regex body for the bare-package part of the allowlist: exactly `next`, `next-auth`, or either followed by
+ * `/` and one or more segments. A segment is non-empty, has no `/` or `\`, and is never `.` or `..`, so
+ * `next/../../auth` and `next/./x` are rejected. A trailing `/` is rejected too (the segment is required).
+ */
+const PACKAGE_SPECIFIER = String.raw`(?:next|next-auth)(?:\/(?!\.{1,2}(?:\/|$))[^\/\\]+)*`;
+
+/**
  * Import allowlist as no-restricted-syntax selectors (no-restricted-imports cannot see `export ... from`,
  * `require`, `import()` or `import x = require()`). `allowed` is a regex body matched against the whole
  * specifier. Type-only imports are ImportDeclarations too, so they are held to the same list.
@@ -60,6 +67,11 @@ const edgeImportAllowlist = (file, allowed) => {
         { selector: `TSExternalModuleReference:not([expression.value=/^(?:${allowed})$/])`, message },
         { selector: "TSImportType", message },
         { selector: "CallExpression[callee.name='require']", message },
+        // Other ways to load a module that skip the import list above.
+        { selector: "MemberExpression[object.name='module'][property.name='require']", message },
+        { selector: "MemberExpression[object.name='require'][property.name='resolve']", message },
+        { selector: "CallExpression[callee.name='createRequire']", message },
+        { selector: "MemberExpression[property.name='createRequire']", message },
         { selector: "ImportExpression", message: "dynamic import() is not allowed here: it would bypass the import allowlist." },
       ],
     },
@@ -125,6 +137,6 @@ export default tseslint.config(
   // proxy.ts and auth.config.ts are bundled for the edge-style proxy. They may only decode the
   // JWT cookie, so they get an ALLOWLIST of imports: anything not listed (auth.ts, db code, `@/`
   // aliases, other relative paths, workspace packages, other bare packages) fails lint.
-  edgeImportAllowlist("apps/web/proxy.ts", String.raw`next(\/.*)?|next-auth(\/.*)?|\.\/auth\.config`),
-  edgeImportAllowlist("apps/web/auth.config.ts", String.raw`next(\/.*)?|next-auth(\/.*)?`),
+  edgeImportAllowlist("apps/web/proxy.ts", String.raw`${PACKAGE_SPECIFIER}|\.\/auth\.config`),
+  edgeImportAllowlist("apps/web/auth.config.ts", PACKAGE_SPECIFIER),
 );

@@ -38,7 +38,7 @@ describe("apps/web proxy import allowlist", () => {
     const code = 'import authConfig from "./auth.config";\nexport const v = authConfig;\n';
     expect(await lintText(code, "apps/web/proxy.ts")).toEqual([]);
   });
-  it.each(["next/server", "next", "next-auth", "next-auth/jwt"])("passes %s in proxy.ts and auth.config.ts", async (spec) => {
+  it.each(["next/server", "next", "next-auth", "next-auth/jwt", "next-auth/providers/credentials"])("passes %s in proxy.ts and auth.config.ts", async (spec) => {
     const code = `import * as m from "${spec}";\nexport const v = m;\n`;
     expect(await lintText(code, "apps/web/proxy.ts")).toEqual([]);
     expect(await lintText(code, "apps/web/auth.config.ts")).toEqual([]);
@@ -51,6 +51,39 @@ describe("apps/web proxy import allowlist", () => {
       expect(ids(await lintText(code, "apps/web/auth.config.ts"))).toEqual([[2, RULE]]);
     },
   );
+  // Path traversal through an allowed package prefix would reach auth.ts or db code.
+  it.each([
+    "next/../../auth",
+    "next-auth/../../lib/db",
+    "next/./../auth",
+    "next/..",
+    "next/.",
+    "next/server/../../../auth",
+    "next/",
+    "next//server",
+    "next\\server",
+    "next-auth/..\\..\\auth",
+  ])("fails the traversal specifier %s in proxy.ts and auth.config.ts", async (spec) => {
+    const code = `import * as m from ${JSON.stringify(spec)};\nexport const v = m;\n`;
+    expect(ids(await lintText(code, "apps/web/proxy.ts"))).toEqual([[2, RULE]]);
+    expect(ids(await lintText(code, "apps/web/auth.config.ts"))).toEqual([[2, RULE]]);
+  });
+  it("passes dotted names that are not . or .. segments", async () => {
+    const code = 'import * as m from "next/..hidden/a.b";\nexport const v = m;\n';
+    expect(await lintText(code, "apps/web/proxy.ts")).toEqual([]);
+  });
+  it.each([
+    ["module.require", 'const m = module.require("./auth");\nexport const v = m;'],
+    ["an aliased module.require", 'const r = module.require;\nexport const v = r;'],
+    ["createRequire", 'export const v = createRequire(import.meta.url)("./auth");'],
+    ["module.createRequire", 'export const v = module.createRequire(import.meta.url);'],
+    ["require.resolve", 'export const v = require.resolve("./auth");'],
+  ])("fails %s in proxy.ts and auth.config.ts", async (_name, code) => {
+    for (const file of ["apps/web/proxy.ts", "apps/web/auth.config.ts"]) {
+      const messages = (await lintText(`${code}\n`, file)).filter((m) => m.ruleId === RULE);
+      expect(ids(messages)).toEqual([[2, RULE]]);
+    }
+  });
   it("fails ./auth.config inside auth.config.ts", async () => {
     const messages = await lintText('import { authConfig } from "./auth.config";\nexport const v = authConfig;\n', "apps/web/auth.config.ts");
     expect(ids(messages)).toEqual([[2, RULE]]);
