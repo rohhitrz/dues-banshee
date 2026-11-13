@@ -9,6 +9,12 @@ export const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
 /** Largest number of data rows (rows after the header row) in one import. */
 export const MAX_DATA_ROWS = 5000;
 
+/** The header may sit up to this many rows down (Tally title rows), on top of the data rows. */
+export const HEADER_SCAN_ROWS = 20;
+/** Largest declared uncompressed size of one worksheet XML part in an XLSX, read from the zip directory. */
+export const MAX_SHEET_XML_BYTES = 50 * 1024 * 1024;
+/** Cells read per XLSX row. Later columns are ignored, so a stray cell in column XFD costs nothing. */
+export const MAX_COLUMNS = 64;
 /** Allowance for multipart framing when checking `Content-Length` before the body is read. */
 export const MULTIPART_OVERHEAD_BYTES = 64 * 1024;
 
@@ -18,4 +24,7 @@ export function uploadTooLargeMessage(): string {
 
 export function tooManyRowsMessage(): string {
   return `File has more than ${MAX_DATA_ROWS} rows`;
+}
+export function sheetTooLargeMessage(): string {
+  return `Worksheet is larger than ${MAX_SHEET_XML_BYTES / 1024 / 1024} MB uncompressed`;
 }

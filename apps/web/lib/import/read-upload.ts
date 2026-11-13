@@ -1,13 +1,18 @@
 import { parseCsv, type RawTable } from "@dues-banshee/ledger";
-import { MAX_DATA_ROWS, MAX_UPLOAD_BYTES, tooManyRowsMessage, uploadTooLargeMessage } from "./limits";
-import { readXlsx } from "./read-xlsx";
+import {
+  HEADER_SCAN_ROWS,
+  MAX_DATA_ROWS,
+  MAX_UPLOAD_BYTES,
+  sheetTooLargeMessage,
+  tooManyRowsMessage,
+  uploadTooLargeMessage,
+} from "./limits";
+import { readXlsx, SheetTooLargeError, TooManyRowsError } from "./read-xlsx";
 
 export type ReadUploadResult =
   | { ok: true; table: RawTable }
   | { ok: false; status: number; message: string };
 
-/** The header may sit up to this many rows down (Tally title rows), on top of the data rows. */
-const HEADER_SCAN_ROWS = 20;
 
 /** "PK\x03\x04", the start of every zip archive and so of every XLSX file. */
 const ZIP_MAGIC = [0x50, 0x4b, 0x03, 0x04] as const;
@@ -39,7 +44,9 @@ export async function readUpload(file: File | null): Promise<ReadUploadResult> {
     if (!hasZipMagic(bytes)) return fail(422, "Not a valid XLSX file");
     try {
       table = await readXlsx(bytes);
-    } catch {
+    } catch (error) {
+      if (error instanceof SheetTooLargeError) return fail(422, sheetTooLargeMessage());
+      if (error instanceof TooManyRowsError) return fail(422, tooManyRowsMessage());
       return fail(422, "Not a valid XLSX file");
     }
   } else {

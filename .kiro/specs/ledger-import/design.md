@@ -535,6 +535,10 @@ An ESLint `no-restricted-imports` rule on `apps/web/proxy.ts` and `apps/web/auth
 | `null` / `undefined` | `""` |
 
 The worksheet's row numbers are kept, so error messages match the row numbers Excel shows.
+**XLSX work limits.** exceljs inflates and parses the whole sheet on `load`, so the work is bounded before and during reading. The streaming reader was not used: it would change how dates, formulas and shared strings are read for a 4 MB file, and the two checks below bound the work without that.
+- `MAX_SHEET_XML_BYTES` = 50 MB. `declaredSheetXmlBytes` reads the declared uncompressed size of each `xl/worksheets/*.xml` entry from the zip central directory, without inflating. A larger declared size (or a zip64 size field) is rejected with 422 `Worksheet is larger than 50 MB uncompressed`. Why 50 MB: a 5,020-row sheet is well under 5 MB of XML even with styled cells, so 50 MB leaves 10x headroom for real Tally exports, while still capping a zip bomb that fits in the 4 MB upload (deflate can reach about 1000:1) to an amount of XML exceljs can parse in a few seconds. Limit: the declared size is the writer's claim, so this stops honest oversize files and cheap bombs, not a forged header.
+- Row cap. `readXlsx` throws `TooManyRowsError` from inside `eachRow` as soon as it has read `MAX_DATA_ROWS + 20` rows, so later rows are never converted. `read-upload.ts` maps it to 422 `File has more than 5000 rows`.
+- `MAX_COLUMNS` = 64. Each row reads at most 64 cells, so a cell in column XFD (16,384) costs at most 64 iterations per row. Behaviour chosen: cells beyond column 64 are ignored. They are not listed as unused columns, because reporting them would mean reading them (and `unusedColumns` is built from the header row inside `@dues-banshee/ledger`). A real ledger has far fewer than 64 columns.
 
 **analyse.ts.**
 

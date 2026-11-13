@@ -1,8 +1,9 @@
 import { buildImport, type RawTable, type SupplierFacts } from "@dues-banshee/ledger";
 import ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
-import { MAX_DATA_ROWS, MAX_UPLOAD_BYTES } from "@/lib/import/limits";
+import { MAX_COLUMNS, MAX_DATA_ROWS, MAX_UPLOAD_BYTES, sheetTooLargeMessage, tooManyRowsMessage } from "@/lib/import/limits";
 import { readUpload } from "@/lib/import/read-upload";
+import { declaredSheetXmlBytes, readXlsx, SheetTooLargeError, TooManyRowsError } from "@/lib/import/read-xlsx";
 
 const SUPPLIER: SupplierFacts = {
   id: "supplier-1",
@@ -117,5 +118,76 @@ describe("5,001 data rows (Requirement 13.2)", () => {
     const parsed = buildImport(table, SUPPLIER);
     if (!parsed.ok) throw new Error(`buildImport failed: ${JSON.stringify(parsed.fileErrors)}`);
     expect(parsed.rows.length > MAX_DATA_ROWS).toBe(false);
+  });
+});
+
+describe("readXlsx limits", () => {
+  const build = async (fill: (sheet: ExcelJS.Worksheet) => void): Promise<Uint8Array> => {
+    const workbook = new ExcelJS.Workbook();
+    fill(workbook.addWorksheet("Sales"));
+    return new Uint8Array(await workbook.xlsx.writeBuffer());
+  };
+
+  it("stops at the row cap instead of converting every row", async () => {
+    const bytes = await build((sheet) => {
+      for (let i = 1; i <= 200; i += 1) sheet.addRow([`INV-${i}`, "A", 1]);
+    });
+    const error = await readXlsx(bytes, { maxRows: 10 }).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(TooManyRowsError);
+    expect((error as TooManyRowsError).rowsRead).toBe(11);
+  });
+
+  it("returns 422 with the row message when an XLSX has too many rows", async () => {
+    const bytes = await build((sheet) => {
+      for (let i = 1; i <= MAX_DATA_ROWS + 25; i += 1) sheet.addRow([i]);
+    });
+    const result = await readUpload(new File([bytes as BlobPart], "big.xlsx"));
+    expect(result).toEqual({ ok: false, status: 422, message: tooManyRowsMessage() });
+  });
+
+  it("ignores cells beyond MAX_COLUMNS and stays fast with a cell in column XFD", async () => {
+    const bytes = await build((sheet) => {
+      sheet.addRow(["Invoice No", "Party Name", "Amount", "Invoice Date"]);
+      for (let i = 1; i <= 5000; i += 1) sheet.addRow([`INV-${i}`, "Sharma Traders", 1000, "2026-09-02"]);
+      sheet.getCell("XFD3").value = "stray";
+    });
+    const started = performance.now();
+    const result = await readUpload(new File([bytes as BlobPart], "wide.xlsx"));
+    const elapsed = performance.now() - started;
+    if (!result.ok) throw new Error(result.message);
+    expect(result.table).toHaveLength(5001);
+    expect(result.table.every((r) => r.cells.length <= MAX_COLUMNS)).toBe(true);
+    expect(result.table.find((r) => r.rowNumber === 3)?.cells).toHaveLength(MAX_COLUMNS);
+    expect(result.table.find((r) => r.rowNumber === 3)?.cells.includes("stray")).toBe(false);
+    expect(elapsed).toBeLessThan(5000);
+  });
+
+  it("rejects a declared sheet size over the limit before inflating", async () => {
+    const bytes = await build((sheet) => {
+      sheet.addRow(["x"]);
+    });
+    expect(declaredSheetXmlBytes(bytes)).toBeGreaterThan(0);
+    await expect(readXlsx(bytes, { maxSheetXmlBytes: 10 })).rejects.toBeInstanceOf(SheetTooLargeError);
+  });
+
+  it("returns 422 with the size message for a zip declaring a huge sheet", async () => {
+    const bytes = await build((sheet) => {
+      sheet.addRow(["x"]);
+    });
+    // Patch the central-directory uncompressed size of the sheet entry to 60 MB.
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    let patched = false;
+    for (let i = 0; i + 46 < bytes.length; i += 1) {
+      if (view.getUint32(i, true) !== 0x02014b50) continue;
+      const nameLength = view.getUint16(i + 28, true);
+      const name = new TextDecoder().decode(bytes.subarray(i + 46, i + 46 + nameLength));
+      if (name === "xl/worksheets/sheet1.xml") {
+        view.setUint32(i + 24, 60 * 1024 * 1024, true);
+        patched = true;
+      }
+    }
+    expect(patched).toBe(true);
+    const result = await readUpload(new File([bytes as BlobPart], "bomb.xlsx"));
+    expect(result).toEqual({ ok: false, status: 422, message: sheetTooLargeMessage() });
   });
 });
