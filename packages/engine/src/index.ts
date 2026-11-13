@@ -24,7 +24,7 @@ export type {
   EscalationDecision,
   InrStyle,
 } from "./types";
-export { RULE_IDS } from "./rule-ids";
+export { RULE_IDS, RULE_SOURCES } from "./rule-ids";
 export type { RuleId } from "./rule-ids";
 export { ValidationError } from "./validation-error";
 export { coverage } from "./coverage";
