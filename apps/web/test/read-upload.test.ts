@@ -1,9 +1,10 @@
 import { buildImport, type RawTable, type SupplierFacts } from "@dues-banshee/ledger";
 import ExcelJS from "exceljs";
+import JSZip from "jszip";
 import { describe, expect, it } from "vitest";
-import { MAX_COLUMNS, MAX_DATA_ROWS, MAX_UPLOAD_BYTES, sheetTooLargeMessage, tooManyRowsMessage } from "@/lib/import/limits";
+import { MAX_COLUMNS, MAX_DATA_ROWS, MAX_UPLOAD_BYTES, MAX_XLSX_INFLATED_BYTES, sheetTooLargeMessage, tooManyRowsMessage } from "@/lib/import/limits";
 import { readUpload } from "@/lib/import/read-upload";
-import { declaredSheetXmlBytes, readXlsx, SheetTooLargeError, TooManyRowsError } from "@/lib/import/read-xlsx";
+import { readXlsx, SheetTooLargeError, TooManyRowsError } from "@/lib/import/read-xlsx";
 
 const SUPPLIER: SupplierFacts = {
   id: "supplier-1",
@@ -161,33 +162,84 @@ describe("readXlsx limits", () => {
     expect(result.table.find((r) => r.rowNumber === 3)?.cells.includes("stray")).toBe(false);
     expect(elapsed).toBeLessThan(5000);
   });
+});
 
-  it("rejects a declared sheet size over the limit before inflating", async () => {
-    const bytes = await build((sheet) => {
-      sheet.addRow(["x"]);
-    });
-    expect(declaredSheetXmlBytes(bytes)).toBeGreaterThan(0);
-    await expect(readXlsx(bytes, { maxSheetXmlBytes: 10 })).rejects.toBeInstanceOf(SheetTooLargeError);
-  });
+describe("readXlsx inflated-size cap (all zip entries, real bytes)", () => {
+  const MiB = 1024 * 1024;
+  const over = 21 * MiB;
+  const slow = 30_000;
 
-  it("returns 422 with the size message for a zip declaring a huge sheet", async () => {
-    const bytes = await build((sheet) => {
-      sheet.addRow(["x"]);
-    });
-    // Patch the central-directory uncompressed size of the sheet entry to 60 MB.
-    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-    let patched = false;
-    for (let i = 0; i + 46 < bytes.length; i += 1) {
-      if (view.getUint32(i, true) !== 0x02014b50) continue;
-      const nameLength = view.getUint16(i + 28, true);
-      const name = new TextDecoder().decode(bytes.subarray(i + 46, i + 46 + nameLength));
-      if (name === "xl/worksheets/sheet1.xml") {
-        view.setUint32(i + 24, 60 * 1024 * 1024, true);
-        patched = true;
-      }
-    }
-    expect(patched).toBe(true);
+  const validXlsx = async (): Promise<Uint8Array> => {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Sales");
+    sheet.addRow(["Invoice No", "Party Name", "Amount", "Invoice Date"]);
+    sheet.addRow(["INV-1", "Sharma Traders", 1000, "2026-09-02"]);
+    return new Uint8Array(await workbook.xlsx.writeBuffer());
+  };
+  const filler = (size: number): Uint8Array => new Uint8Array(size).fill(0x61);
+  const zipped = (zip: JSZip): Promise<Uint8Array> =>
+    zip.generateAsync({ type: "uint8array", compression: "DEFLATE" });
+  /** A valid workbook plus one extra entry of `size` repeated bytes. It deflates to a few tens of KB. */
+  const withEntry = async (name: string, size: number): Promise<Uint8Array> => {
+    const zip = await JSZip.loadAsync(await validXlsx());
+    zip.file(name, filler(size));
+    return zipped(zip);
+  };
+
+  it.each([
+    ["xl/sharedStrings.xml", "xl/sharedStrings.xml"],
+    ["a worksheet named with a leading slash", "/xl/worksheets/sheet1.xml"],
+    ["docProps/custom.xml", "docProps/custom.xml"],
+  ])("rejects 21 MiB in %s", async (_label, name) => {
+    const bytes = await withEntry(name, over);
+    expect(bytes.length).toBeLessThan(MAX_UPLOAD_BYTES);
+    await expect(readXlsx(bytes)).rejects.toBeInstanceOf(SheetTooLargeError);
     const result = await readUpload(new File([bytes as BlobPart], "bomb.xlsx"));
     expect(result).toEqual({ ok: false, status: 422, message: sheetTooLargeMessage() });
+  }, slow);
+
+  it("rejects a hidden second entry when the end-of-directory record claims only one entry", async () => {
+    const zip = new JSZip();
+    zip.file("a.xml", "<a/>");
+    zip.file("b.xml", filler(over));
+    const bytes = await zipped(zip);
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const eocd = bytes.length - 22; // no zip comment, so the record is the last 22 bytes
+    expect(view.getUint32(eocd, true)).toBe(0x06054b50);
+    expect(view.getUint16(eocd + 10, true)).toBe(2);
+    view.setUint16(eocd + 8, 1, true); // entries on this disk
+    view.setUint16(eocd + 10, 1, true); // total entries
+    await expect(readXlsx(bytes)).rejects.toBeInstanceOf(SheetTooLargeError);
+  }, slow);
+
+  it("still parses the valid XLSX rows", async () => {
+    const table = await readXlsx(await validXlsx());
+    expect(table).toEqual([
+      { rowNumber: 1, cells: ["Invoice No", "Party Name", "Amount", "Invoice Date"] },
+      { rowNumber: 2, cells: ["INV-1", "Sharma Traders", "1000", "2026-09-02"] },
+    ]);
   });
+
+  it("parses a valid sheet when the inflated total is one byte under the cap", async () => {
+    const zip = await JSZip.loadAsync(await validXlsx());
+    let existing = 0;
+    for (const entry of Object.values(zip.files)) {
+      if (!entry.dir) existing += (await entry.async("uint8array")).length;
+    }
+    const extra = MAX_XLSX_INFLATED_BYTES - 1 - existing;
+    expect(extra).toBeGreaterThan(0);
+    zip.file("docProps/custom.xml", filler(extra));
+    const table = await readXlsx(await zipped(zip));
+    expect(table.map((r) => r.rowNumber)).toEqual([1, 2]);
+  }, slow);
+
+  it("rejects when the inflated total is exactly one byte over the cap", async () => {
+    const zip = await JSZip.loadAsync(await validXlsx());
+    let existing = 0;
+    for (const entry of Object.values(zip.files)) {
+      if (!entry.dir) existing += (await entry.async("uint8array")).length;
+    }
+    zip.file("docProps/custom.xml", filler(MAX_XLSX_INFLATED_BYTES + 1 - existing));
+    await expect(readXlsx(await zipped(zip))).rejects.toBeInstanceOf(SheetTooLargeError);
+  }, slow);
 });

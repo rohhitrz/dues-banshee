@@ -1,6 +1,7 @@
 import ExcelJS from "exceljs";
 import type { RawRow, RawTable } from "@dues-banshee/ledger";
-import { HEADER_SCAN_ROWS, MAX_COLUMNS, MAX_DATA_ROWS, MAX_SHEET_XML_BYTES } from "./limits";
+import JSZip from "jszip";
+import { HEADER_SCAN_ROWS, MAX_COLUMNS, MAX_DATA_ROWS, MAX_XLSX_INFLATED_BYTES } from "./limits";
 
 const pad = (n: number, width: number): string => String(n).padStart(width, "0");
 
@@ -39,51 +40,74 @@ export class TooManyRowsError extends Error {
     super("too many rows");
   }
 }
-export type ReadXlsxLimits = { maxSheetXmlBytes?: number; maxRows?: number; maxColumns?: number };
-const SHEET_PART = /^xl\/worksheets\/[^/]+\.xml$/;
+export type ReadXlsxLimits = { maxRows?: number; maxColumns?: number };
+
+/** The part of jszip's stream helper used here. `internalStream` is public API but missing from jszip's typings. */
+type EntryStream = {
+  on(event: "data", listener: (chunk: Uint8Array) => void): EntryStream;
+  on(event: "error", listener: (error: Error) => void): EntryStream;
+  on(event: "end", listener: () => void): EntryStream;
+  pause(): EntryStream;
+  resume(): EntryStream;
+};
+type StreamableEntry = JSZip.JSZipObject & { internalStream(type: "uint8array"): EntryStream };
+
 /**
- * Largest declared uncompressed size of a worksheet part, read from the zip central directory
- * without inflating anything. A zip64 entry (size field 0xFFFFFFFF) counts as infinite.
- * shortcut: the declared size is the writer's claim; jszip still inflates what is really there,
- * so a lying header is only bounded by the 4 MB upload cap and its deflate ratio.
+ * Inflates every non-directory entry of the zip, counting the bytes that really come out, and
+ * throws `SheetTooLargeError` as soon as the running total passes `maxBytes`. Sizes and the entry
+ * count in the zip headers are never read. jszip's own entry list is the list exceljs inflates
+ * (exceljs loads the same jszip), so a hidden entry, a lying entry count or an odd entry name
+ * cannot dodge the check. Each entry is streamed, so at most one inflate chunk is held beyond the cap.
  */
-export function declaredSheetXmlBytes(bytes: Uint8Array): number {
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  let eocd = -1;
-  for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 22 - 0xffff); i -= 1) {
-    if (view.getUint32(i, true) === 0x06054b50) {
-      eocd = i;
-      break;
-    }
+async function assertInflatedWithin(bytes: Uint8Array, maxBytes: number): Promise<void> {
+  const zip = await JSZip.loadAsync(bytes);
+  const entries: StreamableEntry[] = [];
+  zip.forEach((_path, entry) => {
+    if (!entry.dir) entries.push(entry as StreamableEntry);
+  });
+  let total = 0;
+  for (const entry of entries) {
+    await new Promise<void>((resolve, reject) => {
+      let settled = false;
+      const stream = entry.internalStream("uint8array");
+      stream
+        .on("data", (chunk) => {
+          if (settled) return;
+          total += chunk.length;
+          if (total > maxBytes) {
+            settled = true;
+            stream.pause();
+            reject(new SheetTooLargeError());
+          }
+        })
+        .on("error", (error) => {
+          if (settled) return;
+          settled = true;
+          reject(error);
+        })
+        .on("end", () => {
+          if (settled) return;
+          settled = true;
+          resolve();
+        })
+        .resume();
+    });
   }
-  if (eocd < 0) throw new Error("no zip directory");
-  const entries = view.getUint16(eocd + 10, true);
-  let offset = view.getUint32(eocd + 16, true);
-  let largest = 0;
-  for (let n = 0; n < entries; n += 1) {
-    if (offset + 46 > bytes.length || view.getUint32(offset, true) !== 0x02014b50) throw new Error("bad zip directory");
-    const size = view.getUint32(offset + 24, true);
-    const nameLength = view.getUint16(offset + 28, true);
-    const extraLength = view.getUint16(offset + 30, true);
-    const commentLength = view.getUint16(offset + 32, true);
-    const name = new TextDecoder().decode(bytes.subarray(offset + 46, offset + 46 + nameLength));
-    if (SHEET_PART.test(name)) largest = Math.max(largest, size === 0xffffffff ? Infinity : size);
-    offset += 46 + nameLength + extraLength + commentLength;
-  }
-  return largest;
 }
+
 /**
  * Reads the first worksheet of an XLSX file into a Raw_Table. Row numbers are the
  * worksheet's own, so they match the numbers Excel shows. Rejects when the bytes
- * are not a loadable workbook, with `SheetTooLargeError` before anything is inflated
- * and `TooManyRowsError` as soon as the row cap is passed.
- * Cells beyond `maxColumns` are ignored.
+ * are not a loadable workbook, with `SheetTooLargeError` when the zip inflates past
+ * `MAX_XLSX_INFLATED_BYTES` (checked before exceljs parses anything) and `TooManyRowsError`
+ * as soon as the row cap is passed. Cells beyond `maxColumns` are ignored.
+ * shortcut: the row and column caps apply inside `eachRow`, after exceljs has loaded the sheet;
+ * the inflated-size cap is what bounds that work.
  */
 export async function readXlsx(bytes: Uint8Array, limits: ReadXlsxLimits = {}): Promise<RawTable> {
-  const maxSheetXmlBytes = limits.maxSheetXmlBytes ?? MAX_SHEET_XML_BYTES;
   const maxRows = limits.maxRows ?? MAX_DATA_ROWS + HEADER_SCAN_ROWS;
   const maxColumns = limits.maxColumns ?? MAX_COLUMNS;
-  if (declaredSheetXmlBytes(bytes) > maxSheetXmlBytes) throw new SheetTooLargeError();
+  await assertInflatedWithin(bytes, MAX_XLSX_INFLATED_BYTES);
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(bytes as unknown as Parameters<typeof workbook.xlsx.load>[0]);
   const sheet = workbook.worksheets[0];
