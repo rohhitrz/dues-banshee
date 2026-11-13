@@ -50,7 +50,7 @@ Out of scope: the debtor séance screen (debtor-ui), ladder actions and approval
 3. IF `session.supplierId` matches no stored supplier (for example after the nightly demo reset recreates the supplier with a new id), THEN THE Graveyard_Page SHALL end the Auth.js session, redirect to `/signin?error=SessionExpired` and render no Graveyard data, and THE `/signin` page SHALL show "The demo was reset. Enter the graveyard again."
 4. WHILE a session exists whose `supplierId` matches no stored supplier, THE `/signin` page SHALL render in place without redirecting away, so that no redirect loop can occur.
 5. WHEN a request reaches a path that no route serves, THE Not_Found_Page SHALL render inside the App_Shell with a link to `/`.
-6. THE `proxy.ts` module SHALL import only `next-auth` and `auth.config.ts`, and SHALL NOT import `auth.ts`, `packages/db` or any module that imports either of them.
+6. THE `proxy.ts` module SHALL import only `next-auth`, `next/server` and `auth.config.ts`, and SHALL NOT import `auth.ts`, `packages/db` or any module that imports either of them.
 7. WHEN `signInDemo` succeeds, THE `signInDemo` server action SHALL redirect to `/` (the Graveyard_Page) instead of `/import`, and SHALL keep its error redirects to `/signin?error=<flag>` and its messages unchanged.
 
 ### Requirement 2: Loading data for the Session_Supplier
@@ -162,8 +162,8 @@ Out of scope: the debtor séance screen (debtor-ui), ladder actions and approval
 4. THE App_Shell SHALL show the footer line "Reminders a supplier sends to its own buyers. Not legal advice." on every page it wraps, including `/signin`.
 5. THE `/signin` page SHALL render inside the App_Shell with the colours and typefaces of `ui-theme.md`, and keep the one-click "Enter the graveyard (demo)" button.
 6. THE `/import` page SHALL render inside the App_Shell with the colours and typefaces of `ui-theme.md`.
-7. THE restyle of `/signin` and `/import` SHALL change only styling and markup wrappers, and SHALL keep each page's form fields, button labels, server actions, API routes, redirect targets and messages unchanged.
-8. THE existing tests in `apps/web/test` SHALL pass after the restyle with one exception: the `/signin` test assertion for the `signInDemo` success redirect target SHALL change from `/import` to `/` (Requirement 1 criterion 7), and no other line of any existing test file SHALL change.
+7. THE restyle of `/signin` and `/import` SHALL change only styling and markup wrappers, and SHALL keep each page's form fields, button labels, server actions, API routes, redirect targets and messages unchanged. This criterion applies to the restyle only: the `signInDemo` success redirect target `/` (Requirement 1 criterion 7) and the SessionExpired message (Requirement 1 criterion 3) are exempt from it.
+8. THE existing tests in `apps/web/test` SHALL pass after the restyle with one exception of exactly two lines of `apps/web/test/signin.test.tsx` (Requirement 1 criterion 7): the `signInDemo` success-redirect assertion on line 33 SHALL change from `redirectTo: "/import"` to `redirectTo: "/"`, and the line-28 test title that names `/import` SHALL change to name `/`. No other line of any existing test file SHALL change.
 9. THE `apps/web` styling SHALL use CSS Modules, the approach `apps/web` already uses.
 
 ### Requirement 10: Theme, motion and accessibility
@@ -213,7 +213,7 @@ Out of scope: the debtor séance screen (debtor-ui), ladder actions and approval
 5. THE test suite SHALL assert that a signed-out request to `/` redirects to `/signin`.
 6. THE test suite SHALL assert that a signed-in render of `/` contains the Sharma Traders `LPC/26-27/0412` Tombstone, shows the Demo_Date_Chip text "Demo date: 10 Mar 2027" with `?today=2027-03-10`, and contains no Demo_Date_Chip without a `today` query value.
 7. WHEN the test suite simulates a Graveyard data-load failure whose error carries a known message, stack trace and SQL text, THE test suite SHALL assert that the Error_Page output contains none of them and contains a retry link to `/`.
-8. THE test suite SHALL assert that, with no Bank_Rate effective on or before Today, every interest figure and Interest_Accrued render as "Bank rate not configured for <Today>".
+8. THE test suite SHALL assert that, with no Bank_Rate effective on or before Today, every interest figure and Interest_Accrued render as "Bank rate not configured for <Today>", and that the Graveyard_Page renders the Graveyard with no LoadError and no Error_Page.
 9. THE test suite SHALL assert that an Invoice_Record whose `acceptedOn` is after Today is absent from the Tombstone_View list and adds nothing to any Total.
 10. THE `apps/web` tests, typecheck and lint SHALL pass with zero failures and zero errors, and every test task in this spec SHALL be required, with none marked optional.
 11. THE test suite SHALL assert that a request to `/` with a session whose `supplierId` is not in the database ends at `/signin` after at most one redirect, shows "The demo was reset. Enter the graveyard again.", and clears the session cookie.
