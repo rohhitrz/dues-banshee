@@ -10,7 +10,7 @@ import { DEMO_NOT_SEEDED_ERROR, SIGN_IN_FAILED_ERROR } from "./messages";
  */
 export async function signInDemo(): Promise<void> {
   try {
-    await signIn("demo", { redirectTo: "/import" });
+    await signIn("demo", { redirectTo: "/" });
   } catch (error) {
     // Next's redirect() throws NEXT_REDIRECT to navigate. Only auth failures are handled here.
     if (error instanceof CredentialsSignin) redirect(`/signin?error=${DEMO_NOT_SEEDED_ERROR}`);

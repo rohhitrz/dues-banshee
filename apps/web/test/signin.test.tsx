@@ -25,12 +25,12 @@ afterEach(() => {
 });
 
 describe("signInDemo", () => {
-  it("signs in as the demo supplier and lands on /import", async () => {
+  it("signs in as the demo supplier and lands on /", async () => {
     mocks.signIn.mockResolvedValue(undefined);
 
     await signInDemo();
 
-    expect(mocks.signIn).toHaveBeenCalledWith("demo", { redirectTo: "/import" });
+    expect(mocks.signIn).toHaveBeenCalledWith("demo", { redirectTo: "/" });
     expect(mocks.redirect).not.toHaveBeenCalled();
   });
 
