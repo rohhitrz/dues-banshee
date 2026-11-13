@@ -42,3 +42,4 @@ export {
 export { formatINR, parseINR } from "./format-inr";
 export { validateInvoice, SUPPLIER_CATEGORIES, SUPPLIER_ACTIVITIES } from "./validate";
 export { isValidCalendarDate, fromEpochDay } from "./calendar-date";
+export { formatDisplayDate } from "./display-date";

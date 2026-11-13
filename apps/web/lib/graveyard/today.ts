@@ -37,13 +37,8 @@ export function resolveToday(nowMs: number, raw: string | string[] | undefined):
   return { today: istDate(nowMs), override: null };
 }
 
-const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
-
-/** "2027-03-10" -> "10 Mar 2027". Input must be a valid Calendar_Date; day has no leading zero. */
-export function formatDisplayDate(d: CalendarDate): string {
-  const month = MONTH_NAMES[parseInt(d.slice(5, 7), 10) - 1];
-  return `${parseInt(d.slice(8, 10), 10)} ${month} ${d.slice(0, 4)}`;
-}
+/** Moved into the Engine (escalation-ladder task 2.1); re-exported so dashboard-ui callers stay unchanged. */
+export { formatDisplayDate } from "@dues-banshee/engine";
 
 export const TIME_TRAVEL_PRESETS: readonly { readonly label: string; readonly today: CalendarDate | null }[] = [
   { label: "Today", today: null },
