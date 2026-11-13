@@ -63,7 +63,7 @@ const arbFraction: fc.Arbitrary<number> = fc
 
 const arbNonFinite: fc.Arbitrary<number> = fc.constantFrom(Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY);
 
-/** Amounts that are not integers in 1..1e13. */
+/** Amounts that are not integers in 1..1e12. */
 const arbBadAmount: fc.Arbitrary<number> = fc.oneof(
   fc.integer({ min: -1_000_000, max: 0 }),
   fc.integer({ min: MAX_PAISE + 1, max: Number.MAX_SAFE_INTEGER }),
@@ -138,7 +138,7 @@ describe("Property 2: Invalid input is rejected with the field name", () => {
     );
   });
 
-  it("rejects an amountPaise outside 1..1e13 or non-integer", () => {
+  it("rejects an amountPaise outside 1..1e12 or non-integer", () => {
     fc.assert(
       fc.property(arbValidInputs, arbBadAmount, (valid, bad) => {
         expectInvoiceRejected(valid, corrupt(valid.invoice, "amountPaise", bad), "amountPaise");

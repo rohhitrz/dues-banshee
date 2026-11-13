@@ -78,7 +78,7 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
 
 - [x] 4. Add input validation and shared test generators
   - [x] 4.1 Implement `src/validate.ts`
-    - `assertCalendarDate(field, value)`, `assertPaise(field, value)`, `validateInvoice` (fields in declaration order: `id` non-empty, `amountPaise` integer 1..1e13, `acceptedOn`, `agreedTermDays` positive integer if present, `supplierCategory` and `supplierActivity` in their enums, `udyamRegisteredOn` valid date if present, `paidOn` valid and not before `acceptedOn`), `validateBankRate` (`annualBps` integer 0..5000, `asOf` date), `validateHistory` (indexed field paths such as `history[2].promisedDate`, valid `LadderStep`, promise `amountPaise` positive safe integer; `recordedOn ≤ promisedDate` not enforced), `validateLadderConfig` (`stepGapDays` positive integer)
+    - `assertCalendarDate(field, value)`, `assertPaise(field, value)`, `validateInvoice` (fields in declaration order: `id` non-empty, `amountPaise` integer 1..1e12, `acceptedOn`, `agreedTermDays` positive integer if present, `supplierCategory` and `supplierActivity` in their enums, `udyamRegisteredOn` valid date if present, `paidOn` valid and not before `acceptedOn`), `validateBankRate` (`annualBps` integer 0..5000, `asOf` date), `validateHistory` (indexed field paths such as `history[2].promisedDate`, valid `LadderStep`, promise `amountPaise` positive safe integer; `recordedOn ≤ promisedDate` not enforced), `validateLadderConfig` (`stepGapDays` positive integer)
     - Export `MAX_PAISE = 1_00_000_00_00_000` from a single place (the design lists it under `statutory-interest.ts`; define it here and re-export it there to avoid a cycle)
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8_
   - [x] 4.2 Create `test/arbitraries.ts` and `test/fixtures.ts`
@@ -86,7 +86,7 @@ Commit rules for every task (from `.kiro/steering/git-workflow.md`, Requirement 
     - `arbitraries.ts`: `arbCalendarDate`, `arbInvalidDateString`, `arbCoveredInvoice`, `arbNonCoveredInvoice`, `arbInvoice`, `arbBankRate`, `arbToday(inv)`, `arbHistory(inv)`, `arbLadderConfig`, plus the late-registration pairing for Property 5 and the 15 Feb–31 Mar acceptance branch for Property 11, with the ranges and biases in the design's Generators section
     - _Requirements: 1.4_
   - [x] 4.3 Write unit tests for validation in `test/validate.test.ts`
-    - One case per rule: `2026-02-30` names the field; `amountPaise` 0, 1.5 and 1e13 + 1 name `amountPaise`; `agreedTermDays` 0 names `agreedTermDays`; `paidOn` before `acceptedOn` names `paidOn`; `annualBps` -1 and 5001 name `annualBps`; `stepGapDays` 0 names `stepGapDays`; `supplierActivity` `"retail"` names `supplierActivity`; bad `udyamRegisteredOn` names `udyamRegisteredOn`; bad history entry reports `history[i].<field>`
+    - One case per rule: `2026-02-30` names the field; `amountPaise` 0, 1.5 and 1e12 + 1 name `amountPaise`; `agreedTermDays` 0 names `agreedTermDays`; `paidOn` before `acceptedOn` names `paidOn`; `annualBps` -1 and 5001 name `annualBps`; `stepGapDays` 0 names `stepGapDays`; `supplierActivity` `"retail"` names `supplierActivity`; bad `udyamRegisteredOn` names `udyamRegisteredOn`; bad history entry reports `history[i].<field>`
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8_
   - [x] 4.4 Commit task 4
     - `git add` the touched files by path, check `git diff --staged`

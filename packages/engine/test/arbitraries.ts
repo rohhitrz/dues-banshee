@@ -136,7 +136,7 @@ export const arbInvalidDateString: fc.Arbitrary<string> = fc
 // Invoices
 // ---------------------------------------------------------------------------
 
-/** Amounts 1..1e13 paise, weighted towards small and typical invoices, with the maximum included. */
+/** Amounts 1..1e12 paise, weighted towards small and typical invoices, with the maximum included. */
 const arbAmountPaise: fc.Arbitrary<Paise> = fc.oneof(
   { weight: 3, arbitrary: fc.integer({ min: 1, max: 100_000 }) },
   { weight: 4, arbitrary: fc.integer({ min: 100_000, max: 10_000_000_000 }) },

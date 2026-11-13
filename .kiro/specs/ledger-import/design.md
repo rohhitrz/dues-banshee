@@ -742,7 +742,7 @@ Every reason quotes the raw input with `JSON.stringify`. Exceptions escape the L
 | credit days | `not a number of days: "…"` |
 | required cell | `is required` |
 | duplicate row | `Duplicate of row N` |
-| Engine | the Engine's own `reason`, unchanged (e.g. `must be an integer between 1 and 10000000000000 paise`) |
+| Engine | the Engine's own `reason`, unchanged (e.g. `must be an integer between 1 and 1000000000000 paise`) |
 
 The credit-balance reason starts with the exact text required by 3.3 and ends with the quoted input required by 3.1.
 

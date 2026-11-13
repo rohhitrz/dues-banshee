@@ -458,7 +458,7 @@ Design decisions:
 - **Plain aliases instead of branded types** for `CalendarDate` and `Paise`. Callers pass JSON from the database and the LLM tool layer, and every public function validates at runtime anyway. Brands would add casts at every call site without adding safety.
 - **`kind` discriminant on history events.** The requirements describe step events and promise events by shape. An explicit `kind` makes the union safe to narrow and to validate.
 - **Results are plain JSON** (no class instances, no `undefined` values with `exactOptionalPropertyTypes`), so they can be logged as agent tool outputs and stored as eval fixtures unchanged.
-- `MAX_PAISE = 1_00_000_00_00_000` (1e13) bounds `amountPaise`. Interest and formatter inputs are bounded by `Number.MAX_SAFE_INTEGER`.
+- `MAX_PAISE = 1_00_000_00_00_000` (1e12) bounds `amountPaise`. Interest and formatter inputs are bounded by `Number.MAX_SAFE_INTEGER`.
 
 ## Correctness Properties
 
@@ -474,7 +474,7 @@ Each property below is implemented as one fast-check property test in `packages/
 
 ### Property 2: Invalid input is rejected with the field name
 
-*For any* otherwise valid input in which exactly one field is made invalid (a malformed or impossible date in `acceptedOn`, `paidOn`, `udyamRegisteredOn`, `today` or `asOf`; `amountPaise` outside 1..1e13 or non-integer; `agreedTermDays` ≤ 0 or non-integer; `paidOn` before `acceptedOn`; `annualBps` outside 0..5000 or non-integer; `stepGapDays` ≤ 0 or non-integer; `supplierActivity` not in the enum), every public function that takes that field throws a `ValidationError` whose `field` equals the name of the corrupted field.
+*For any* otherwise valid input in which exactly one field is made invalid (a malformed or impossible date in `acceptedOn`, `paidOn`, `udyamRegisteredOn`, `today` or `asOf`; `amountPaise` outside 1..1e12 or non-integer; `agreedTermDays` ≤ 0 or non-integer; `paidOn` before `acceptedOn`; `annualBps` outside 0..5000 or non-integer; `stepGapDays` ≤ 0 or non-integer; `supplierActivity` not in the enum), every public function that takes that field throws a `ValidationError` whose `field` equals the name of the corrupted field.
 
 **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8**
 
@@ -590,10 +590,10 @@ Each property below is implemented as one fast-check property test in `packages/
 
 - `arbCalendarDate(min, max)`: `fc.integer` over epoch days mapped through `fromEpochDay`. Default window 2020-01-01 to 2035-12-31, biased with `fc.oneof` to month ends, 28/29 Feb, 31 Mar and 1 Apr.
 - `arbInvalidDateString`: `fc.oneof` of random strings, wrong widths (`2026-1-5`), month 00/13, day 00/32, 29 Feb in non-leap years, 31 Apr/Jun/Sep/Nov.
-- `arbCoveredInvoice`: category `micro | small`, activity `manufacturing | services`, amount `fc.integer({ min: 1, max: 1e13 })` biased to small values and the max, `agreedTermDays` optional `fc.integer({ min: 1, max: 120 })` (crossing 45), `udyamRegisteredOn` optional within ±400 days of `acceptedOn`, `paidOn` optional at `acceptedOn + 0..800` days.
+- `arbCoveredInvoice`: category `micro | small`, activity `manufacturing | services`, amount `fc.integer({ min: 1, max: 1e12 })` biased to small values and the max, `agreedTermDays` optional `fc.integer({ min: 1, max: 120 })` (crossing 45), `udyamRegisteredOn` optional within ±400 days of `acceptedOn`, `paidOn` optional at `acceptedOn + 0..800` days.
 - `arbNonCoveredInvoice`: category `medium | unregistered` with any activity, or `micro | small` with `trading`.
 - `arbInvoice`: `fc.oneof(arbCoveredInvoice, arbNonCoveredInvoice)`.
-- `arbBankRate`: `annualBps` `fc.integer({ min: 0, max: 1000 })` biased to 0, 1, 575; `asOf` any date. Interest properties cap Accrual_Days at 3,650 so results stay below `MAX_SAFE_INTEGER` (worst case 1e13 × 1.025^122 ≈ 2e14). The overflow error path has its own unit test.
+- `arbBankRate`: `annualBps` `fc.integer({ min: 0, max: 1000 })` biased to 0, 1, 575; `asOf` any date. Interest properties cap Accrual_Days at 3,650 so results stay below `MAX_SAFE_INTEGER` (worst case 1e12 × 1.025^122 ≈ 2e13). The overflow error path has its own unit test.
 - `arbToday(inv)`: `acceptedOn − 30 .. acceptedOn + 900` days, biased to `due`, `due + 1`, `due + 30·m`, the Tax_Bomb_Date and the day after it.
 - `arbHistory(inv)`: up to 8 events; steps drawn from `LADDER_STEPS` with dates from `acceptedOn` onward; promises with `recordedOn ≤ promisedDate` and amounts 1..A.
 - `arbLadderConfig`: `stepGapDays` `fc.integer({ min: 1, max: 30 })`.
