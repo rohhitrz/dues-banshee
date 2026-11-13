@@ -1,7 +1,9 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 import { GraveyardEmpty } from "@/components/graveyard/graveyard-empty";
 import { LoadError } from "@/components/graveyard/load-error";
+import { GraveyardPendingProvider } from "@/components/graveyard/pending-context";
 import { TimeTravel } from "@/components/graveyard/time-travel";
 import { Tombstone } from "@/components/graveyard/tombstone";
 import { TotalsBar } from "@/components/graveyard/totals-bar";
@@ -34,7 +36,11 @@ function currentLinks(html: string): string[] {
 
 describe("TimeTravel", () => {
   it("marks Today as current when there is no override and shows no chip", () => {
-    const html = renderToStaticMarkup(<TimeTravel override={null} />);
+    const html = renderToStaticMarkup(
+      <GraveyardPendingProvider>
+        <TimeTravel override={null} />
+      </GraveyardPendingProvider>,
+    );
     expect(currentLinks(html)).toEqual(["Today"]);
     expect(html).not.toContain("Demo date");
     expect(html).toContain('href="/?today=2027-03-10"');
@@ -42,13 +48,21 @@ describe("TimeTravel", () => {
   });
 
   it("marks the matching preset and shows the chip with an override", () => {
-    const html = renderToStaticMarkup(<TimeTravel override="2027-03-10" />);
+    const html = renderToStaticMarkup(
+      <GraveyardPendingProvider>
+        <TimeTravel override="2027-03-10" />
+      </GraveyardPendingProvider>,
+    );
     expect(currentLinks(html)).toEqual(["10 Mar 2027 (tax-bomb week)"]);
     expect(html).toContain("Demo date: 10 Mar 2027");
   });
 
   it("marks no preset for another valid date but still shows the chip", () => {
-    const html = renderToStaticMarkup(<TimeTravel override="2026-12-01" />);
+    const html = renderToStaticMarkup(
+      <GraveyardPendingProvider>
+        <TimeTravel override="2026-12-01" />
+      </GraveyardPendingProvider>,
+    );
     expect(currentLinks(html)).toEqual([]);
     expect(html).toContain("Demo date: 1 Dec 2026");
   });

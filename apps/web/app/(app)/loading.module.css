@@ -1,0 +1,85 @@
+/* Same frame as page.module.css so the real page replaces this one without a jump. Every pulse is
+   declared only under prefers-reduced-motion: no-preference; under reduce the text alone says what is happening. */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+.title {
+  margin: 0;
+  font-family: var(--font-fraunces), serif;
+  font-weight: 300;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  color: #ece7db;
+}
+.status {
+  margin: 0;
+  color: #ffb27a;
+  font-family: var(--font-signage, "IM Fell English"), Georgia, serif;
+  font-size: 1.25rem;
+}
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.card {
+  min-height: 92px;
+  border: 1px solid #221f2e;
+  border-radius: 8px;
+  background: #14111f;
+}
+.stones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+  min-height: 300px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.stone {
+  width: 86px;
+  border: 1px solid #2c303a;
+  border-radius: 43px 43px 6px 6px;
+  background: #1d2028;
+}
+@media (max-width: 900px) {
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 480px) {
+  .cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes loading-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+  .status,
+  .card,
+  .stone {
+    animation: loading-pulse 1.8s ease-in-out infinite;
+  }
+}

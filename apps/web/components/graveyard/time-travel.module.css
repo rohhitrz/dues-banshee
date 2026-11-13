@@ -57,3 +57,35 @@
   font-family: var(--font-figures, "JetBrains Mono"), ui-monospace, monospace;
   font-size: 0.875rem;
 }
+.link[aria-disabled="true"] {
+  border-color: #3a3550;
+  color: #a9a497;
+  cursor: progress;
+}
+.link[aria-disabled="true"][aria-current="page"] {
+  border-color: #3a3550;
+  background: #14111f;
+}
+/* One line is always reserved, so the status text appearing never moves the data below it. */
+.status {
+  flex-basis: 100%;
+  min-height: 1.5rem;
+  margin: 0;
+  color: #ffb27a;
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+}
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes pending-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.55;
+    }
+  }
+  .status:not(:empty) {
+    animation: pending-pulse 1.6s ease-in-out infinite;
+  }
+}

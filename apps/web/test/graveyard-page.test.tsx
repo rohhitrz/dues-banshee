@@ -28,7 +28,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/auth", () => ({ auth: mocks.auth }));
-vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
+vi.mock("next/navigation", () => ({ redirect: mocks.redirect, useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("@/lib/db", () => ({ getDb: mocks.getDb }));
 vi.mock("@dues-banshee/db", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@dues-banshee/db")>()),

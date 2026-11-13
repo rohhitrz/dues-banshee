@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { GraveyardEmpty } from "@/components/graveyard/graveyard-empty";
 import { LoadError } from "@/components/graveyard/load-error";
+import { GraveyardPendingProvider, PendingDim } from "@/components/graveyard/pending-context";
 import { TimeTravel } from "@/components/graveyard/time-travel";
 import { TombstoneGrid } from "@/components/graveyard/tombstone-grid";
 import { TotalsBar } from "@/components/graveyard/totals-bar";
@@ -50,7 +51,9 @@ export default async function GraveyardPage({
     return (
       <main className={styles.page}>
         <h1 className={styles.title}>Graveyard of dues</h1>
-        <TimeTravel override={override} />
+        <GraveyardPendingProvider>
+          <TimeTravel override={override} />
+        </GraveyardPendingProvider>
         <LoadError todayRaw={raw} />
       </main>
     );
@@ -60,13 +63,19 @@ export default async function GraveyardPage({
   return (
     <main className={styles.page}>
       <h1 className={styles.title}>Graveyard of dues</h1>
-      <TotalsBar totals={view.totals} rulesAsOf={view.rulesAsOf} today={view.today} />
-      <TimeTravel override={override} />
-      {view.tombstones.length === 0 ? (
-        <GraveyardEmpty />
-      ) : (
-        <TombstoneGrid tombstones={view.tombstones} today={view.today} />
-      )}
+      <GraveyardPendingProvider>
+        <PendingDim>
+          <TotalsBar totals={view.totals} rulesAsOf={view.rulesAsOf} today={view.today} />
+        </PendingDim>
+        <TimeTravel override={override} />
+        <PendingDim>
+          {view.tombstones.length === 0 ? (
+            <GraveyardEmpty />
+          ) : (
+            <TombstoneGrid tombstones={view.tombstones} today={view.today} />
+          )}
+        </PendingDim>
+      </GraveyardPendingProvider>
     </main>
   );
 }

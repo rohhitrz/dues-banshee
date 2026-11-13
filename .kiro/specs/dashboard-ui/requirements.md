@@ -96,6 +96,11 @@ Out of scope: the debtor séance screen (debtor-ui), ladder actions and approval
 7. WHILE a Demo_Override is active, THE Graveyard_Page SHALL show the Demo_Date_Chip with the Demo_Override date (for example "Demo date: 10 Mar 2027" for `2027-03-10`).
 8. WHILE no Demo_Override is active, THE Graveyard_Page SHALL hide the Demo_Date_Chip.
 9. THE Graveyard_Page SHALL show the Time_Travel_Control as three links to `/`: "10 Mar 2027 (tax-bomb week)" setting `?today=2027-03-10`, "1 Apr 2027 (after 31 March)" setting `?today=2027-04-01`, and "Today" with no `today` query value. The preset that matches the current Today_Resolver result SHALL be marked as the current one with `aria-current`.
+10. WHEN the user activates a Time_Travel_Control preset with a plain click, THE Time_Travel_Control SHALL start the navigation to that preset's link inside a React transition (`startTransition` with `router.push`) and SHALL leave the link a real link that works without JavaScript and that keeps the browser's default for modified clicks (new tab, new window). The client SHALL NOT decide Today: the server resolves it from the URL as in criterion 6.
+11. WHILE that navigation is pending, THE Time_Travel_Control SHALL replace the clicked preset's text with "Summoning…", SHALL set `aria-disabled="true"` on all three presets, SHALL ignore further clicks on them so no second navigation starts, and SHALL show the line "The banshee is turning back the clock…" in an element with `role="status"` and `aria-live="polite"`.
+12. WHILE that navigation is pending, THE Graveyard_Page SHALL dim the Totals and the tombstone grid and set `aria-busy="true"` on them, SHALL keep their data in place, and SHALL NOT change their layout.
+13. WHILE `/` is loading for the first time, including right after sign-in, THE `app/(app)/loading.tsx` SHALL show a skeleton inside the App_Shell with the text "Raising the dead…" in an element with `role="status"`, and every decorative part of the skeleton SHALL be `aria-hidden`.
+14. Any pulse or fade of the pending state or the skeleton SHALL be declared only under `prefers-reduced-motion: no-preference`. Under `reduce`, the texts of criteria 11 and 13 alone SHALL show the state.
 
 ### Requirement 5: Tombstones
 

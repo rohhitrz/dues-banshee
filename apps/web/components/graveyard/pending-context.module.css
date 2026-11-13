@@ -1,0 +1,16 @@
+/* Dimming is a plain opacity change: layout, size and text stay as they are. Any fade is declared only
+   under prefers-reduced-motion: no-preference; under reduce the block just dims. */
+.dim {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+.dim[aria-busy="true"] {
+  opacity: 0.55;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .dim {
+    transition: opacity 0.2s ease;
+  }
+}
