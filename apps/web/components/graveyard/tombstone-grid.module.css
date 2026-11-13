@@ -5,6 +5,9 @@
   overflow: hidden;
 }
 
+/* The top padding is the sky band: it holds the moon (top 24px, 56px tall), the bats and the stars. The
+   tallest stone is 300px (the ground strip in tombstone.module.css), so its top sits at this padding at
+   every width and stays below the moon (80px) with 40px to spare. Keep this at or above 104px. */
 .grid {
   position: relative;
   z-index: 1;
@@ -12,6 +15,6 @@
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 20px 16px;
   margin: 0;
-  padding: 16px 16px 136px;
+  padding: 120px 16px 136px;
   list-style: none;
 }
