@@ -1,5 +1,10 @@
 {
-  "pbtResults": {},
+  "pbtResults": {
+    "8.4 Write `test/arbitraries.ts` and `test/import.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794512392367
+    }
+  },
   "executionHistory": {
     "1.1 Change `packages/engine/src/validate.ts` and `src/index.ts`": [
       {
@@ -377,6 +382,512 @@
         "executionId": "1cb62562-aa86-4d90-ab70-e6b10beeb207",
         "chatSessionId": "sess_4829e8f5-4d3c-4fab-8830-6078f19532d7",
         "timestamp": 1794508720599
+      }
+    ],
+    "7.1 Create the package skeleton": [
+      {
+        "executionId": "1e5f5ea4-57ab-49ec-8d42-2d92600f9f8b",
+        "chatSessionId": "sess_73ac80b5-3af0-4fb7-8ad4-b0061a05382a",
+        "timestamp": 1794510860894
+      },
+      {
+        "executionId": "1e5f5ea4-57ab-49ec-8d42-2d92600f9f8b",
+        "chatSessionId": "sess_73ac80b5-3af0-4fb7-8ad4-b0061a05382a",
+        "timestamp": 1794511254252
+      }
+    ],
+    "7.2 Implement `src/schema.ts`": [
+      {
+        "executionId": "1e5f5ea4-57ab-49ec-8d42-2d92600f9f8b",
+        "chatSessionId": "sess_73ac80b5-3af0-4fb7-8ad4-b0061a05382a",
+        "timestamp": 1794511257411
+      },
+      {
+        "executionId": "1e5f5ea4-57ab-49ec-8d42-2d92600f9f8b",
+        "chatSessionId": "sess_73ac80b5-3af0-4fb7-8ad4-b0061a05382a",
+        "timestamp": 1794511324511
+      }
+    ],
+    "7.3 Implement `src/client.ts` and `src/testing.ts`, then generate the migration": [
+      {
+        "executionId": "1e5f5ea4-57ab-49ec-8d42-2d92600f9f8b",
+        "chatSessionId": "sess_73ac80b5-3af0-4fb7-8ad4-b0061a05382a",
+        "timestamp": 1794511328313
+      },
+      {
+        "executionId": "1e5f5ea4-57ab-49ec-8d42-2d92600f9f8b",
+        "chatSessionId": "sess_73ac80b5-3af0-4fb7-8ad4-b0061a05382a",
+        "timestamp": 1794511513018
+      }
+    ],
+    "7.4 Write `test/schema.test.ts` (PGlite)": [
+      {
+        "executionId": "1e5f5ea4-57ab-49ec-8d42-2d92600f9f8b",
+        "chatSessionId": "sess_73ac80b5-3af0-4fb7-8ad4-b0061a05382a",
+        "timestamp": 1794511516403
+      },
+      {
+        "executionId": "1e5f5ea4-57ab-49ec-8d42-2d92600f9f8b",
+        "chatSessionId": "sess_73ac80b5-3af0-4fb7-8ad4-b0061a05382a",
+        "timestamp": 1794511649792
+      }
+    ],
+    "7.5 Commit task 7": [
+      {
+        "executionId": "1e5f5ea4-57ab-49ec-8d42-2d92600f9f8b",
+        "chatSessionId": "sess_73ac80b5-3af0-4fb7-8ad4-b0061a05382a",
+        "timestamp": 1794511654825
+      },
+      {
+        "executionId": "1e5f5ea4-57ab-49ec-8d42-2d92600f9f8b",
+        "chatSessionId": "sess_73ac80b5-3af0-4fb7-8ad4-b0061a05382a",
+        "timestamp": 1794511692847
+      }
+    ],
+    "7. Set up `packages/db` with the schema and migrations": [
+      {
+        "executionId": "1e5f5ea4-57ab-49ec-8d42-2d92600f9f8b",
+        "chatSessionId": "sess_73ac80b5-3af0-4fb7-8ad4-b0061a05382a",
+        "timestamp": 1794511692882
+      }
+    ],
+    "8.1 Implement `src/suppliers.ts` and `src/bank-rate.ts`": [
+      {
+        "executionId": "04175396-328e-4cd0-acdb-d3897940cb4b",
+        "chatSessionId": "sess_ea15a551-a1fb-4276-9954-a8716cd86855",
+        "timestamp": 1794511811046
+      },
+      {
+        "executionId": "04175396-328e-4cd0-acdb-d3897940cb4b",
+        "chatSessionId": "sess_ea15a551-a1fb-4276-9954-a8716cd86855",
+        "timestamp": 1794512090431
+      }
+    ],
+    "8.2 Implement `src/invoices.ts`": [
+      {
+        "executionId": "04175396-328e-4cd0-acdb-d3897940cb4b",
+        "chatSessionId": "sess_ea15a551-a1fb-4276-9954-a8716cd86855",
+        "timestamp": 1794512090581
+      },
+      {
+        "executionId": "04175396-328e-4cd0-acdb-d3897940cb4b",
+        "chatSessionId": "sess_ea15a551-a1fb-4276-9954-a8716cd86855",
+        "timestamp": 1794512266624
+      }
+    ],
+    "8.3 Write `test/queries.test.ts` (PGlite)": [
+      {
+        "executionId": "04175396-328e-4cd0-acdb-d3897940cb4b",
+        "chatSessionId": "sess_ea15a551-a1fb-4276-9954-a8716cd86855",
+        "timestamp": 1794512267532
+      },
+      {
+        "executionId": "04175396-328e-4cd0-acdb-d3897940cb4b",
+        "chatSessionId": "sess_ea15a551-a1fb-4276-9954-a8716cd86855",
+        "timestamp": 1794512581762
+      }
+    ],
+    "8.4 Write `test/arbitraries.ts` and `test/import.property.test.ts`": [
+      {
+        "executionId": "04175396-328e-4cd0-acdb-d3897940cb4b",
+        "chatSessionId": "sess_ea15a551-a1fb-4276-9954-a8716cd86855",
+        "timestamp": 1794512273046
+      },
+      {
+        "executionId": "04175396-328e-4cd0-acdb-d3897940cb4b",
+        "chatSessionId": "sess_ea15a551-a1fb-4276-9954-a8716cd86855",
+        "timestamp": 1794512582264
+      }
+    ],
+    "8.5 Commit task 8": [
+      {
+        "executionId": "04175396-328e-4cd0-acdb-d3897940cb4b",
+        "chatSessionId": "sess_ea15a551-a1fb-4276-9954-a8716cd86855",
+        "timestamp": 1794512587391
+      },
+      {
+        "executionId": "04175396-328e-4cd0-acdb-d3897940cb4b",
+        "chatSessionId": "sess_ea15a551-a1fb-4276-9954-a8716cd86855",
+        "timestamp": 1794512630438
+      }
+    ],
+    "8. Add supplier, bank-rate and idempotent invoice import queries": [
+      {
+        "executionId": "04175396-328e-4cd0-acdb-d3897940cb4b",
+        "chatSessionId": "sess_ea15a551-a1fb-4276-9954-a8716cd86855",
+        "timestamp": 1794512630472
+      }
+    ],
+    "9.1 Implement `src/seed.ts` and `scripts/seed.ts`": [
+      {
+        "executionId": "fbd6f2b8-7fa2-434c-a160-8133e1bcf7a5",
+        "chatSessionId": "sess_3f29fbda-ff5d-42f1-bea6-584dcc1b7fbb",
+        "timestamp": 1794512670009
+      },
+      {
+        "executionId": "fbd6f2b8-7fa2-434c-a160-8133e1bcf7a5",
+        "chatSessionId": "sess_3f29fbda-ff5d-42f1-bea6-584dcc1b7fbb",
+        "timestamp": 1794512764890
+      }
+    ],
+    "9.2 Implement `src/reset.ts` and `scripts/reset-demo.ts`": [
+      {
+        "executionId": "fbd6f2b8-7fa2-434c-a160-8133e1bcf7a5",
+        "chatSessionId": "sess_3f29fbda-ff5d-42f1-bea6-584dcc1b7fbb",
+        "timestamp": 1794512771858
+      },
+      {
+        "executionId": "fbd6f2b8-7fa2-434c-a160-8133e1bcf7a5",
+        "chatSessionId": "sess_3f29fbda-ff5d-42f1-bea6-584dcc1b7fbb",
+        "timestamp": 1794512886908
+      }
+    ],
+    "9.3 Write `test/seed.test.ts` (PGlite)": [
+      {
+        "executionId": "fbd6f2b8-7fa2-434c-a160-8133e1bcf7a5",
+        "chatSessionId": "sess_3f29fbda-ff5d-42f1-bea6-584dcc1b7fbb",
+        "timestamp": 1794512771908
+      },
+      {
+        "executionId": "fbd6f2b8-7fa2-434c-a160-8133e1bcf7a5",
+        "chatSessionId": "sess_3f29fbda-ff5d-42f1-bea6-584dcc1b7fbb",
+        "timestamp": 1794512887444
+      }
+    ],
+    "9.4 Write `test/reset.test.ts` (PGlite)": [
+      {
+        "executionId": "fbd6f2b8-7fa2-434c-a160-8133e1bcf7a5",
+        "chatSessionId": "sess_3f29fbda-ff5d-42f1-bea6-584dcc1b7fbb",
+        "timestamp": 1794512891447
+      },
+      {
+        "executionId": "fbd6f2b8-7fa2-434c-a160-8133e1bcf7a5",
+        "chatSessionId": "sess_3f29fbda-ff5d-42f1-bea6-584dcc1b7fbb",
+        "timestamp": 1794512984783
+      }
+    ],
+    "9.5 Commit task 9": [
+      {
+        "executionId": "fbd6f2b8-7fa2-434c-a160-8133e1bcf7a5",
+        "chatSessionId": "sess_3f29fbda-ff5d-42f1-bea6-584dcc1b7fbb",
+        "timestamp": 1794512988387
+      },
+      {
+        "executionId": "fbd6f2b8-7fa2-434c-a160-8133e1bcf7a5",
+        "chatSessionId": "sess_3f29fbda-ff5d-42f1-bea6-584dcc1b7fbb",
+        "timestamp": 1794513032830
+      }
+    ],
+    "9. Add the demo seed and the demo reset": [
+      {
+        "executionId": "fbd6f2b8-7fa2-434c-a160-8133e1bcf7a5",
+        "chatSessionId": "sess_3f29fbda-ff5d-42f1-bea6-584dcc1b7fbb",
+        "timestamp": 1794513032873
+      }
+    ],
+    "10.1 Create the `apps/web` skeleton": [
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513066626
+      },
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513073041
+      },
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513169582
+      }
+    ],
+    "10.2 Add `lib/db.ts`, `auth.config.ts`, `auth.ts` and the auth route": [
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513066674
+      },
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513170119
+      },
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513350393
+      }
+    ],
+    "10.3 Add `proxy.ts` and its import ban": [
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513066715
+      },
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513350447
+      },
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513410708
+      }
+    ],
+    "10.4 Add the sign-in page, the protected layout, `.env.example` and the README note": [
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513066756
+      },
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513411297
+      },
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513478909
+      }
+    ],
+    "10.5 Write `apps/web/test/auth.test.ts`": [
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513066796
+      },
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513479442
+      },
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513531943
+      }
+    ],
+    "10.6 Commit task 10": [
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513066831
+      },
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513532197
+      },
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513574850
+      }
+    ],
+    "11.1 Implement `lib/import/limits.ts`, `read-xlsx.ts` and `read-upload.ts`": [
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513066865
+      },
+      {
+        "executionId": "21deac8b-3102-4213-8c34-37e9842dcd5f",
+        "chatSessionId": "sess_283fb638-2363-48b1-b987-63cdf2468d3e",
+        "timestamp": 1794515349474
+      },
+      {
+        "executionId": "21deac8b-3102-4213-8c34-37e9842dcd5f",
+        "chatSessionId": "sess_283fb638-2363-48b1-b987-63cdf2468d3e",
+        "timestamp": 1794515456971
+      }
+    ],
+    "11.2 Implement `lib/import/analyse.ts`": [
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513066899
+      },
+      {
+        "executionId": "21deac8b-3102-4213-8c34-37e9842dcd5f",
+        "chatSessionId": "sess_283fb638-2363-48b1-b987-63cdf2468d3e",
+        "timestamp": 1794515471747
+      },
+      {
+        "executionId": "21deac8b-3102-4213-8c34-37e9842dcd5f",
+        "chatSessionId": "sess_283fb638-2363-48b1-b987-63cdf2468d3e",
+        "timestamp": 1794515561405
+      }
+    ],
+    "11.3 Implement the preview and commit routes": [
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513066935
+      },
+      {
+        "executionId": "21deac8b-3102-4213-8c34-37e9842dcd5f",
+        "chatSessionId": "sess_283fb638-2363-48b1-b987-63cdf2468d3e",
+        "timestamp": 1794515565453
+      },
+      {
+        "executionId": "21deac8b-3102-4213-8c34-37e9842dcd5f",
+        "chatSessionId": "sess_283fb638-2363-48b1-b987-63cdf2468d3e",
+        "timestamp": 1794515631646
+      }
+    ],
+    "11.4 Write `apps/web/test/read-upload.test.ts`": [
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513066970
+      },
+      {
+        "executionId": "21deac8b-3102-4213-8c34-37e9842dcd5f",
+        "chatSessionId": "sess_283fb638-2363-48b1-b987-63cdf2468d3e",
+        "timestamp": 1794515471801
+      },
+      {
+        "executionId": "21deac8b-3102-4213-8c34-37e9842dcd5f",
+        "chatSessionId": "sess_283fb638-2363-48b1-b987-63cdf2468d3e",
+        "timestamp": 1794515561913
+      }
+    ],
+    "11.5 Write `apps/web/test/import-routes.test.ts`": [
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513067002
+      },
+      {
+        "executionId": "21deac8b-3102-4213-8c34-37e9842dcd5f",
+        "chatSessionId": "sess_283fb638-2363-48b1-b987-63cdf2468d3e",
+        "timestamp": 1794515635082
+      },
+      {
+        "executionId": "21deac8b-3102-4213-8c34-37e9842dcd5f",
+        "chatSessionId": "sess_283fb638-2363-48b1-b987-63cdf2468d3e",
+        "timestamp": 1794515728408
+      }
+    ],
+    "11.6 Commit task 11": [
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513067045
+      },
+      {
+        "executionId": "21deac8b-3102-4213-8c34-37e9842dcd5f",
+        "chatSessionId": "sess_283fb638-2363-48b1-b987-63cdf2468d3e",
+        "timestamp": 1794515731458
+      },
+      {
+        "executionId": "21deac8b-3102-4213-8c34-37e9842dcd5f",
+        "chatSessionId": "sess_283fb638-2363-48b1-b987-63cdf2468d3e",
+        "timestamp": 1794515772095
+      }
+    ],
+    "12.1 Replace the placeholder `app/(app)/import/page.tsx` with the client component": [
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513067077
+      },
+      {
+        "executionId": "4f3c777d-cb77-456f-962b-ce386cbfb0f3",
+        "chatSessionId": "sess_a3dd5417-8d0f-46d7-96a8-1d5e67c23289",
+        "timestamp": 1794515804505
+      },
+      {
+        "executionId": "4f3c777d-cb77-456f-962b-ce386cbfb0f3",
+        "chatSessionId": "sess_a3dd5417-8d0f-46d7-96a8-1d5e67c23289",
+        "timestamp": 1794515890288
+      }
+    ],
+    "12.2 Manual browser check": [
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513067106
+      },
+      {
+        "executionId": "8dd0804a-8ac5-4886-a8e6-3ad3c3de942b",
+        "chatSessionId": "sess_a3dd5417-8d0f-46d7-96a8-1d5e67c23289",
+        "timestamp": 1794571824290
+      },
+      {
+        "executionId": "8dd0804a-8ac5-4886-a8e6-3ad3c3de942b",
+        "chatSessionId": "sess_a3dd5417-8d0f-46d7-96a8-1d5e67c23289",
+        "timestamp": 1794571833302
+      }
+    ],
+    "12.3 Commit task 12": [
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513067136
+      },
+      {
+        "executionId": "8dd0804a-8ac5-4886-a8e6-3ad3c3de942b",
+        "chatSessionId": "sess_a3dd5417-8d0f-46d7-96a8-1d5e67c23289",
+        "timestamp": 1794571836824
+      },
+      {
+        "executionId": "8dd0804a-8ac5-4886-a8e6-3ad3c3de942b",
+        "chatSessionId": "sess_a3dd5417-8d0f-46d7-96a8-1d5e67c23289",
+        "timestamp": 1794571840631
+      }
+    ],
+    "13.1 Run the whole workspace from a clean install": [
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513067170
+      },
+      {
+        "executionId": "7dd11044-d88f-4d81-ac93-1525ea585cd6",
+        "chatSessionId": "sess_b86ad14e-5312-4a4a-9120-1a745c670b06",
+        "timestamp": 1794571941436
+      },
+      {
+        "executionId": "7dd11044-d88f-4d81-ac93-1525ea585cd6",
+        "chatSessionId": "sess_b86ad14e-5312-4a4a-9120-1a745c670b06",
+        "timestamp": 1794572079002
+      }
+    ],
+    "13.2 Mark the spec complete and commit": [
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513067203
+      },
+      {
+        "executionId": "7dd11044-d88f-4d81-ac93-1525ea585cd6",
+        "chatSessionId": "sess_b86ad14e-5312-4a4a-9120-1a745c670b06",
+        "timestamp": 1794572083048
+      }
+    ],
+    "10. Add the Next.js app with one-click demo sign-in": [
+      {
+        "executionId": "a53a909a-6c4d-4b9e-9660-8f635a29c469",
+        "chatSessionId": "sess_ef282861-4d28-4590-a09b-8355c413d734",
+        "timestamp": 1794513574890
+      }
+    ],
+    "11. Add the import preview and commit routes": [
+      {
+        "executionId": "21deac8b-3102-4213-8c34-37e9842dcd5f",
+        "chatSessionId": "sess_283fb638-2363-48b1-b987-63cdf2468d3e",
+        "timestamp": 1794515772128
+      }
+    ],
+    "12. Build the import page": [
+      {
+        "executionId": "8dd0804a-8ac5-4886-a8e6-3ad3c3de942b",
+        "chatSessionId": "sess_a3dd5417-8d0f-46d7-96a8-1d5e67c23289",
+        "timestamp": 1794571840678
       }
     ]
   }
