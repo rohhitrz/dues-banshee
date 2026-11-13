@@ -1,6 +1,7 @@
 import { isValidCalendarDate, type BankRate, type CalendarDate } from "@dues-banshee/engine";
 import { and, desc, eq, lte } from "drizzle-orm";
 import type { Db } from "./client";
+import { BankRateNotFoundError } from "./errors";
 import { config } from "./schema";
 
 /** `config.key` of the RBI bank rate, stored in basis points (MSMED-16). */
@@ -8,8 +9,8 @@ export const BANK_RATE_KEY = "rbi_bank_rate_bps";
 
 /**
  * Returns the bank rate in force on `today`: the row with the latest `effective_from` on or before
- * `today`, with `asOf` set to that date. Throws if `today` isn't a valid Calendar_Date or no row
- * is effective by then.
+ * `today`, with `asOf` set to that date. Throws a plain `Error` if `today` isn't a valid
+ * Calendar_Date, and `BankRateNotFoundError` if no row is effective by then.
  */
 export async function getBankRate(db: Db, today: CalendarDate): Promise<BankRate> {
   if (!isValidCalendarDate(today)) {
@@ -21,6 +22,6 @@ export async function getBankRate(db: Db, today: CalendarDate): Promise<BankRate
     .where(and(eq(config.key, BANK_RATE_KEY), lte(config.effectiveFrom, today)))
     .orderBy(desc(config.effectiveFrom))
     .limit(1);
-  if (!row) throw new Error(`config "${BANK_RATE_KEY}": no row effective on or before ${today}`);
+  if (!row) throw new BankRateNotFoundError(`config "${BANK_RATE_KEY}": no row effective on or before ${today}`);
   return { annualBps: row.valueInt, asOf: row.effectiveFrom };
 }

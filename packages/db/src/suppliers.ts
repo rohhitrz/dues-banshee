@@ -1,17 +1,18 @@
 import type { SupplierFacts } from "@dues-banshee/ledger";
 import { eq } from "drizzle-orm";
 import type { Db } from "./client";
+import { SupplierNotFoundError } from "./errors";
 import { suppliers } from "./schema";
 
 export type Supplier = SupplierFacts & { name: string; udyamNumber: string };
 
 /**
  * Loads a supplier as the Ledger's `SupplierFacts` plus its name and Udyam number.
- * `udyamRegisteredOn` is omitted when the column is null. Throws when no supplier has `id`.
+ * `udyamRegisteredOn` is omitted when the column is null. Throws `SupplierNotFoundError` when no supplier has `id`.
  */
 export async function getSupplier(db: Db, id: string): Promise<Supplier> {
   const [row] = await db.select().from(suppliers).where(eq(suppliers.id, id)).limit(1);
-  if (!row) throw new Error(`supplier ${id} not found`);
+  if (!row) throw new SupplierNotFoundError(`supplier ${id} not found`);
   return {
     id: row.id,
     name: row.name,
