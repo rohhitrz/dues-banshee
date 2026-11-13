@@ -1,0 +1,98 @@
+.page {
+  min-height: 100vh;
+  padding: 24px;
+  background: #0c0a14;
+  color: #ece7db;
+}
+
+.title {
+  margin: 0 0 16px;
+  font-weight: 300;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.fileLabel {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 12px;
+}
+
+.fileInput {
+  min-height: 44px;
+  font: inherit;
+  color: inherit;
+}
+
+.button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 24px;
+  border: 1px solid #7ce8c0;
+  border-radius: 6px;
+  background: transparent;
+  color: #7ce8c0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.button:hover:not(:disabled),
+.button:focus-visible {
+  background: #7ce8c0;
+  color: #07080b;
+}
+
+.button:disabled {
+  border-color: #a9a497;
+  color: #a9a497;
+  cursor: not-allowed;
+}
+
+.fileName,
+.summary {
+  margin: 12px 0;
+  color: #a9a497;
+}
+
+.error {
+  margin: 12px 0;
+  color: #ff8a3d;
+}
+
+.error p {
+  margin: 0 0 4px;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  margin: 16px 0;
+}
+
+.table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.9rem;
+}
+
+.table th,
+.table td {
+  padding: 8px;
+  border-bottom: 1px solid #3a3648;
+  text-align: left;
+  vertical-align: top;
+}
+
+.note {
+  color: #a9a497;
+}
+
+.notes {
+  margin: 0;
+  padding-left: 16px;
+}
