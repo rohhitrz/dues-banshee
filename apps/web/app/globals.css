@@ -1,0 +1,56 @@
+/* Theme tokens from .kiro/steering/ui-theme.md ("moonlit graveyard").
+   Text on the ground: bone #ECE7DB and secondary #A9A497 both pass 4.5:1 on #0C0A14 (Req 10.4).
+   Font variables (--font-*) are set on <html> by next/font in app/layout.tsx. */
+:root {
+  --sky-top: #1b1530;
+  --sky-mid: #0c0a14;
+  --sky-bottom: #07080b;
+  --ground: #0c0a14;
+  --bone: #ece7db;
+  --secondary: #a9a497;
+  --spectral: #7ce8c0;
+  --ember: #ff8a3d;
+  --ember-label: #ffb27a;
+  --moonlight: #f3ebd3;
+
+  --font-body: var(--font-inter, Inter), system-ui, sans-serif;
+  --font-heading: var(--font-fraunces, Fraunces), Georgia, serif;
+  --font-signage: var(--font-im-fell, "IM Fell English"), Georgia, serif;
+  --font-signage-sc: var(--font-im-fell-sc, "IM Fell English SC"), Georgia, serif;
+  --font-figures: var(--font-jetbrains-mono, "JetBrains Mono"), ui-monospace, monospace;
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--sky-bottom);
+  background-image: linear-gradient(var(--sky-top), var(--sky-mid) 45%, var(--sky-bottom));
+  background-attachment: fixed;
+  color: var(--bone);
+  font-family: var(--font-body);
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading);
+  font-weight: 300;
+}
+
+a {
+  color: var(--spectral);
+}
