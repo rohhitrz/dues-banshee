@@ -12,17 +12,19 @@ export default async function SignInPage({
   const message = signInErrorMessage((await searchParams).error);
   return (
     <main className={styles.page}>
-      <h1 className={styles.title}>Dues Banshee</h1>
-      <form action={signInDemo} className={styles.form}>
-        <button type="submit" className={styles.button}>
-          Enter the graveyard (demo)
-        </button>
-      </form>
-      {message === null ? null : (
-        <p role="alert" className={styles.error}>
-          {message}
-        </p>
-      )}
+      <div className={styles.card}>
+        <h1 className={styles.title}>Dues Banshee</h1>
+        <form action={signInDemo} className={styles.form}>
+          <button type="submit" className={styles.button}>
+            Enter the graveyard (demo)
+          </button>
+        </form>
+        {message === null ? null : (
+          <p role="alert" className={styles.error}>
+            {message}
+          </p>
+        )}
+      </div>
     </main>
   );
 }

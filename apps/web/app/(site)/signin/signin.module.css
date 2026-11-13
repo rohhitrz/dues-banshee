@@ -1,27 +1,54 @@
+/* Moonlit-graveyard theme (ui-theme.md, design/Main.dc.html).
+   The App_Shell supplies the sky gradient, header and footer; this page only centres a card.
+   Contrast on the card (#14111f): bone #ece7db and ember label #ffb27a pass 4.5:1; spectral
+   #7ce8c0 passes 4.5:1. Font variables come from the root layout. */
 .page {
-  min-height: 100vh;
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  color: #ece7db;
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+}
+
+.card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 24px;
-  padding: 24px;
-  background: linear-gradient(#0c0a14, #07080b);
-  color: #ece7db;
+  width: 100%;
+  max-width: 420px;
+  min-width: 0;
+  padding: 40px 24px;
+  border: 1px solid #3a3648;
+  border-radius: 12px;
+  background: rgba(20, 17, 31, 0.85);
+  box-shadow: 0 0 48px rgba(124, 232, 192, 0.08);
+  text-align: center;
 }
 
 .title {
   margin: 0;
+  font-family: var(--font-fraunces, Fraunces), Georgia, serif;
   font-weight: 300;
+  font-size: clamp(2rem, 8vw, 3rem);
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+  color: #ece7db;
 }
 
 .form {
   display: flex;
+  width: 100%;
+  justify-content: center;
 }
 
 .button {
+  min-width: 44px;
   min-height: 44px;
-  padding: 0 24px;
+  max-width: 100%;
+  padding: 10px 24px;
   border: 1px solid #7ce8c0;
   border-radius: 6px;
   background: transparent;
@@ -36,7 +63,38 @@
   color: #07080b;
 }
 
+.button:focus-visible {
+  outline: 3px solid #7ce8c0;
+  outline-offset: 3px;
+}
+
 .error {
   margin: 0;
-  color: #ff8a3d;
+  max-width: 100%;
+  color: #ffb27a;
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .card {
+    animation: rise 600ms ease-out both;
+  }
+
+  .button {
+    transition:
+      background-color 150ms ease,
+      color 150ms ease;
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
 }
