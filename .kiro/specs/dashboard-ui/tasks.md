@@ -10,24 +10,24 @@ Commit rule for every top-level task (git-workflow.md): one Conventional Commit 
 
 ## Tasks
 
-- [ ] 1. Add label maps and the Today_Resolver
+- [x] 1. Add label maps and the Today_Resolver
   - Commit: `feat(web): add graveyard labels and IST today resolver`
-  - [ ] 1.1 Implement `apps/web/lib/graveyard/labels.ts`
+  - [x] 1.1 Implement `apps/web/lib/graveyard/labels.ts`
     - `STEP_TEXT` (`satisfies Record<LadderStep, string>`), `WAIT_TEXT` (`satisfies Record<WaitReason, string>`), `nextStepLabel`, `stateText` (Req 5.3 texts; `not_covered` → `Outside MSMED (<WAIT_TEXT[reason]>)`)
     - _Requirements: 5.3, 5.6, 5.7, 5.8, 5.9_
-  - [ ] 1.2 Write `apps/web/test/labels.test.ts` with exact labels
+  - [x] 1.2 Write `apps/web/test/labels.test.ts` with exact labels
     - Exact `nextStepLabel` for each of the 5 `LadderStep`s and 7 `WaitReason`s; exact `stateText` for all six states (armed with N = 139)
     - _Requirements: 5.3, 5.7, 5.8, 12.12_
-  - [ ] 1.3 Write property test `apps/web/test/labels.property.test.ts`
+  - [x] 1.3 Write property test `apps/web/test/labels.property.test.ts`
     - **Property 7: Label maps are exhaustive and exact**
     - **Validates: Requirements 5.7, 5.8, 5.9**
-  - [ ] 1.4 Implement `apps/web/lib/graveyard/today.ts`
+  - [x] 1.4 Implement `apps/web/lib/graveyard/today.ts`
     - `DEMO_MIN`, `DEMO_MAX`, `istDate`, `resolveToday(nowMs, raw)`, `formatDisplayDate`, `TIME_TRAVEL_PRESETS`; first array value only; strict regex + Engine `isValidCalendarDate` + range; no clock read inside
     - _Requirements: 4.1, 4.3, 4.4, 4.5, 4.9_
-  - [ ] 1.5 Write `apps/web/test/today.test.ts` with injected instants
+  - [x] 1.5 Write `apps/web/test/today.test.ts` with injected instants
     - 2026-11-12T18:29:59Z → `2026-11-12`; 18:30:00Z and 19:00:00Z → `2026-11-13`; `2027-03-10`, `2024-01-01`, `2027-12-31` unchanged with override set; repeated value → first; `2026-2-3`, `2026-02-30`, `13/11/2026`, ` 2027-03-10 `, `2023-12-31`, `2028-01-01`, `""` → IST date with `override: null`; `formatDisplayDate("2027-03-10")` → `"10 Mar 2027"`
     - _Requirements: 4.2, 4.3, 4.4, 4.5, 12.4_
-  - [ ] 1.6 Write property test `apps/web/test/today.property.test.ts`
+  - [x] 1.6 Write property test `apps/web/test/today.property.test.ts`
     - **Property 6: Today_Resolver returns a valid date and falls back correctly**
     - **Validates: Requirements 4.1, 4.3, 4.4, 4.5**
 
