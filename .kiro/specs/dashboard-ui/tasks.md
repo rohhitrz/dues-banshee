@@ -31,12 +31,12 @@ Commit rule for every top-level task (git-workflow.md): one Conventional Commit 
     - **Property 6: Today_Resolver returns a valid date and falls back correctly**
     - **Validates: Requirements 4.1, 4.3, 4.4, 4.5**
 
-- [ ] 2. Add tombstone look rules
+- [x] 2. Add tombstone look rules
   - Commit: `feat(web): add data-encoding tombstone look rules`
-  - [ ] 2.1 Implement `apps/web/lib/graveyard/look.ts`
+  - [x] 2.1 Implement `apps/web/lib/graveyard/look.ts`
     - `heightsByRank` (distinct-principal rank, `130 + floor(170 * rank / max(1, distinct - 1))`, integer comparison of paise only), `mossLevel` buckets (0 | 1–15 | 16–45 | 46–90 | >90), `cracked > 60`, `ember > 45`, `wisp` (unpaid on Today and a promise dated on or after Today)
     - _Requirements: 3.5, 5.11, 5.12_
-  - [ ] 2.2 Write `apps/web/test/look.test.ts` with exact boundaries
+  - [x] 2.2 Write `apps/web/test/look.test.ts` with exact boundaries
     - Moss at 0, 1, 15, 16, 45, 46, 90, 91; cracks at 60/61; ember at 45/46; equal principals → equal height; wisp with promise on Today, before Today, and on a paid invoice
     - _Requirements: 5.11, 5.12_
 
