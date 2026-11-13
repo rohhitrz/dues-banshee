@@ -87,7 +87,7 @@ export interface GraveyardInvoiceRecord {
 export function listGraveyardInvoices(db: Db, supplierId: string): Promise<GraveyardInvoiceRecord[]>;
 ```
 
-`listGraveyardInvoices` runs three reads, each filtered by `invoices.supplier_id = supplierId`: invoices ⋈ buyers (on the composite `(buyer_id, supplier_id)` key) ⋈ suppliers; `escalation_events` ⋈ invoices; `promises` ⋈ invoices. The join through `invoices` on `supplier_id` is what keeps other suppliers' rows out (Req 2.3). History events are ordered by date, then id, so output is deterministic. All three are exported from `packages/db/src/index.ts`.
+`listGraveyardInvoices` runs three reads, each filtered by `invoices.supplier_id = supplierId`: invoices ⋈ buyers (on the composite `(buyer_id, supplier_id)` key) ⋈ suppliers; `escalation_events` ⋈ invoices; `promises` ⋈ invoices. The join through `invoices` on `supplier_id` is what keeps other suppliers' rows out (Req 2.3). History is ordered so output is deterministic: step events by `occurred_on` then `id`, promises by `recorded_on` then `id`. All three are exported from `packages/db/src/index.ts`.
 
 ### Today_Resolver (`lib/graveyard/today.ts`)
 
@@ -351,9 +351,23 @@ For any tombstone view, `ariaLabel` equals `` `${buyerName}, ${principalText}, $
 
 All tests are required; none are optional (Req 12.10). Vitest, `environment: "node"`, `renderToStaticMarkup` for components, `vi.mock` with `vi.hoisted` state, as in `test/signin.test.tsx` and `test/auth.test.ts`.
 
-### Property tests (fast-check, `apps/web/test/graveyard.property.test.ts`)
+### Property tests (fast-check, one file per property in `apps/web/test/`)
 
 - `fast-check` (`^4.10.2`) is already a root devDependency, so `apps/web` adds nothing.
+- One file per property, so parallel tasks do not edit the same file:
+
+  | Property | File |
+  |---|---|
+  | 1. Builder is deterministic and non-mutating | `test/graveyard-deterministic.property.test.ts` |
+  | 2. Views agree with the Engine | `test/graveyard-engine.property.test.ts` |
+  | 3. Sort order is a function of the set, not the input order | `test/graveyard-sort.property.test.ts` |
+  | 4. Totals are sums over the views | `test/graveyard-totals.property.test.ts` |
+  | 5. Future-accepted invoices are invisible | `test/graveyard-future.property.test.ts` |
+  | 6. Today_Resolver returns a valid date and falls back correctly | `test/today.property.test.ts` |
+  | 7. Label maps are exhaustive and exact | `test/labels.property.test.ts` |
+  | 8. Tombstone look encodes the data monotonically | `test/graveyard-look.property.test.ts` |
+  | 9. Aria-label shape | `test/graveyard-aria.property.test.ts` |
+
 - One `fc.assert` per property above, `{ numRuns: 100 }` minimum.
 - Each test is tagged: `// Feature: dashboard-ui, Property N: <title>`.
 
