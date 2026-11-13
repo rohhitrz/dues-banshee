@@ -21,6 +21,6 @@ Verify against current law before launch. These are reminders a supplier sends t
 
 ## Agent behaviour
 - Only state a legal consequence if its rule ID applies to the invoice's facts.
-- Phrase as information ("as per MSMED s.16…"), never as a threat.
+- State the consequence as information; the Basis line cites the section. Never write section numbers in message text. Never phrase it as a threat.
 - If an invoice carries the `registered_after_supply` caveat, say the claim may be contested; don't assert it as certain.
 - Note: the MSMED (Amendment) Act 2026 (assent 13 Aug 2026) changes dispute resolution and penalties once notified; it does not change s.15 or s.16. Show "rules as of <date>" in the UI.
