@@ -507,6 +507,7 @@ An ESLint `no-restricted-imports` rule on `apps/web/proxy.ts` and `apps/web/auth
 
 - **Browser.** The import page imports `MAX_UPLOAD_BYTES` and checks `file.size` when a file is chosen. A larger file shows `File is larger than 4 MB` and is never uploaded.
 - **Server, before reading the body.** The route checks `Content-Length` against `MAX_UPLOAD_BYTES + 64 KiB` (multipart overhead), returning 413 without reading the body.
+- **Server, while reading.** `Content-Length` is advisory and can be missing or false, so `route-guard.ts` reads `request.body` as a stream before `formData()`, counting bytes. It cancels the reader and returns 413 as soon as the total passes `MAX_UPLOAD_BYTES + MULTIPART_OVERHEAD_BYTES` (64 KiB, the same multipart allowance as the `Content-Length` check), so a large extra form field can't get past the limit either. `FormData` is then built from the buffered bytes. A missing body is treated as "no file".
 - **Server, after reading.** `read-upload.ts` checks `file.size > MAX_UPLOAD_BYTES` (413).
 - **Message.** Both checks show `File is larger than ${MAX_UPLOAD_BYTES / 1024 / 1024} MB`.
 

@@ -27,6 +27,38 @@ function declaredLength(request: Request): number | null {
   return Number(header);
 }
 
+/** Marks a body that grew past the limit while it was being read. */
+class BodyTooLargeError extends Error {}
+
+/**
+ * Reads the body as a stream and stops at the first chunk that takes the running total past the limit,
+ * so a missing or false `Content-Length` can't make the server buffer an oversized body.
+ * Returns null when there is no body.
+ */
+async function readBodyWithLimit(request: Request, limit: number): Promise<Uint8Array<ArrayBuffer> | null> {
+  if (!request.body) return null;
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > limit) {
+      await reader.cancel().catch(() => undefined);
+      throw new BodyTooLargeError();
+    }
+    chunks.push(value);
+  }
+  const buffer = new Uint8Array(new ArrayBuffer(total));
+  let offset = 0;
+  for (const chunk of chunks) {
+    buffer.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return buffer;
+}
+
 /**
  * Logs the failure without cell contents: the error's name and Postgres code/constraint (when present),
  * never its message or detail, which can quote the failing row. Row numbers are safe.
@@ -46,7 +78,8 @@ function logImportFailure(route: string, error: unknown, rowNumbers: readonly nu
 
 /**
  * The guard shared by the preview and commit routes:
- * session check (401), `Content-Length` check before the body is read (413), file extraction,
+ * session check (401), `Content-Length` check before the body is read (413), a byte-counted body read (413),
+ * file extraction,
  * a database client that is always closed, and the 500 response for unexpected errors.
  * Requirements 12.5, 13.3, 13.5, 13.6, 13.7.
  */
@@ -69,9 +102,15 @@ export async function handleImportRequest(
   try {
     let file: File | null = null;
     try {
-      const value = (await request.formData()).get("file");
-      if (value instanceof File) file = value;
-    } catch {
+      const bytes = await readBodyWithLimit(request, MAX_UPLOAD_BYTES + MULTIPART_OVERHEAD_BYTES);
+      if (bytes) {
+        const contentType = request.headers.get("content-type") ?? "";
+        const form = await new Response(bytes, { headers: { "content-type": contentType } }).formData();
+        const value = form.get("file");
+        if (value instanceof File) file = value;
+      }
+    } catch (error) {
+      if (error instanceof BodyTooLargeError) return json({ error: uploadTooLargeMessage() }, 413);
       // Not a readable multipart body: treated as "no file", which analyseUpload reports.
     }
 

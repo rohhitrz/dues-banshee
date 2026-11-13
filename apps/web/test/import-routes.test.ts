@@ -203,6 +203,40 @@ describe("import routes: size and row limits (Requirements 13.2, 13.5)", () => {
     expect(mocks.close).not.toHaveBeenCalled();
   });
 
+  // A streamed body has no Content-Length, so only the byte-counting read can enforce the limit.
+  async function streamed(route: string, form: FormData): Promise<Request> {
+    const source = new Response(form);
+    const bytes = new Uint8Array(await source.arrayBuffer());
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        for (let i = 0; i < bytes.length; i += 16 * 1024) controller.enqueue(bytes.subarray(i, i + 16 * 1024));
+        controller.close();
+      },
+    });
+    const request = new Request(`http://localhost/api/import/${route}`, {
+      method: "POST",
+      body,
+      headers: { "content-type": source.headers.get("content-type") ?? "" },
+      duplex: "half",
+    } as RequestInit);
+    expect(request.headers.get("content-length")).toBeNull();
+    return request;
+  }
+  const big = "x".repeat(MAX_UPLOAD_BYTES + MULTIPART_OVERHEAD_BYTES + 1024);
+  for (const [name, route] of [
+    ["preview", preview],
+    ["commit", commit],
+  ] as const) {
+    it(`${name}: returns 413 for an oversized body with no Content-Length`, async () => {
+      expect((await route(await streamed(name, formWith(big)))).status).toBe(413);
+    });
+    it(`${name}: returns 413 for a small file plus a large text field with no Content-Length`, async () => {
+      expect((await route(await streamed(name, formWith(csv(NEW_ROW), { note: big })))).status).toBe(413);
+    });
+    it(`${name}: accepts a small upload with no Content-Length`, async () => {
+      expect((await route(await streamed(name, formWith(csv(NEW_ROW))))).status).toBe(200);
+    });
+  }
   it("returns 422 from preview and commit for a CSV with 5,001 data rows, and writes nothing", async () => {
     const rows: string[] = [];
     for (let i = 1; i <= MAX_DATA_ROWS + 1; i += 1) rows.push(`INV-${i},Patel Metals,1000,2026-09-02,45`);
