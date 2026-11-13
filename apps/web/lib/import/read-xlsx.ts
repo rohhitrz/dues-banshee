@@ -55,16 +55,14 @@ type StreamableEntry = JSZip.JSZipObject & { internalStream(type: "uint8array"):
 /**
  * Inflates every non-directory entry of the zip, counting the bytes that really come out, and
  * throws `SheetTooLargeError` as soon as the running total passes `maxBytes`. Sizes and the entry
- * count in the zip headers are never read. jszip's own entry list is the list exceljs inflates
- * (exceljs loads the same jszip), so a hidden entry, a lying entry count or an odd entry name
- * cannot dodge the check. Each entry is streamed, so at most one inflate chunk is held beyond the cap.
+ * count in the zip headers are never read. The entries are `Object.values(zip.files)`, the list
+ * exceljs iterates and inflates (exceljs loads the same jszip), so a hidden entry, a lying entry
+ * count or an odd entry name (even an empty one) cannot dodge the check. Each entry is streamed, so at most one inflate chunk is held beyond the cap.
  */
 async function assertInflatedWithin(bytes: Uint8Array, maxBytes: number): Promise<void> {
   const zip = await JSZip.loadAsync(bytes);
-  const entries: StreamableEntry[] = [];
-  zip.forEach((_path, entry) => {
-    if (!entry.dir) entries.push(entry as StreamableEntry);
-  });
+  // Not zip.forEach: it skips an entry whose name is "", which exceljs still inflates.
+  const entries = Object.values(zip.files).filter((entry) => !entry.dir) as StreamableEntry[];
   let total = 0;
   for (const entry of entries) {
     await new Promise<void>((resolve, reject) => {

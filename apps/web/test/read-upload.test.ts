@@ -1,3 +1,4 @@
+import { deflateRawSync } from "node:zlib";
 import { buildImport, type RawTable, type SupplierFacts } from "@dues-banshee/ledger";
 import ExcelJS from "exceljs";
 import JSZip from "jszip";
@@ -242,4 +243,167 @@ describe("readXlsx inflated-size cap (all zip entries, real bytes)", () => {
     zip.file("docProps/custom.xml", filler(MAX_XLSX_INFLATED_BYTES + 1 - existing));
     await expect(readXlsx(await zipped(zip))).rejects.toBeInstanceOf(SheetTooLargeError);
   }, slow);
+});
+
+/** CRC-32 of `data`, as stored in a zip entry header. */
+function crc32(data: Uint8Array): number {
+  let crc = 0xffffffff;
+  for (const byte of data) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit += 1) crc = crc & 1 ? (crc >>> 1) ^ 0xedb88320 : crc >>> 1;
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+type RawZipEntry = { name: string; data: Uint8Array; method?: 0 | 8 };
+
+/**
+ * Writes a zip by hand. jszip drops an entry named "" when it generates a zip, so a zip that
+ * contains one can only be made this way. `method` 8 deflates the data, 0 stores it.
+ */
+function rawZip(entries: RawZipEntry[]): Uint8Array {
+  const encoder = new TextEncoder();
+  const chunks: Uint8Array[] = [];
+  const central: Uint8Array[] = [];
+  let offset = 0;
+  const push = (chunk: Uint8Array): void => {
+    chunks.push(chunk);
+    offset += chunk.length;
+  };
+  for (const entry of entries) {
+    const name = encoder.encode(entry.name);
+    const method = entry.method ?? 8;
+    const body = method === 8 ? new Uint8Array(deflateRawSync(entry.data)) : entry.data;
+    const crc = crc32(entry.data);
+    const local = new DataView(new ArrayBuffer(30));
+    local.setUint32(0, 0x04034b50, true);
+    local.setUint16(4, 20, true);
+    local.setUint16(8, method, true);
+    local.setUint32(14, crc, true);
+    local.setUint32(18, body.length, true);
+    local.setUint32(22, entry.data.length, true);
+    local.setUint16(26, name.length, true);
+    const header = new DataView(new ArrayBuffer(46));
+    header.setUint32(0, 0x02014b50, true);
+    header.setUint16(4, 20, true);
+    header.setUint16(6, 20, true);
+    header.setUint16(10, method, true);
+    header.setUint32(16, crc, true);
+    header.setUint32(20, body.length, true);
+    header.setUint32(24, entry.data.length, true);
+    header.setUint16(28, name.length, true);
+    header.setUint32(42, offset, true);
+    central.push(new Uint8Array(header.buffer), name);
+    push(new Uint8Array(local.buffer));
+    push(name);
+    push(body);
+  }
+  const centralStart = offset;
+  for (const chunk of central) push(chunk);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true);
+  end.setUint16(8, entries.length, true);
+  end.setUint16(10, entries.length, true);
+  end.setUint32(12, offset - centralStart, true);
+  end.setUint32(16, centralStart, true);
+  push(new Uint8Array(end.buffer));
+  const out = new Uint8Array(offset);
+  let at = 0;
+  for (const chunk of chunks) {
+    out.set(chunk, at);
+    at += chunk.length;
+  }
+  return out;
+}
+
+describe("readXlsx zip edge cases", () => {
+  const MiB = 1024 * 1024;
+  const slow = 30_000;
+  const EXPECTED_TABLE = [
+    { rowNumber: 1, cells: ["Invoice No", "Party Name", "Amount", "Invoice Date"] },
+    { rowNumber: 2, cells: ["INV-1", "Sharma Traders", "1000", "2026-09-02"] },
+  ];
+
+  const validZip = async (): Promise<JSZip> => {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Sales");
+    sheet.addRow(["Invoice No", "Party Name", "Amount", "Invoice Date"]);
+    sheet.addRow(["INV-1", "Sharma Traders", 1000, "2026-09-02"]);
+    return JSZip.loadAsync(await workbook.xlsx.writeBuffer());
+  };
+  /** The entries of a valid workbook, ready for `rawZip`. */
+  const validEntries = async (): Promise<RawZipEntry[]> => {
+    const zip = await validZip();
+    const entries: RawZipEntry[] = [];
+    for (const entry of Object.values(zip.files)) {
+      if (!entry.dir) entries.push({ name: entry.name, data: await entry.async("uint8array") });
+    }
+    return entries;
+  };
+
+  it("counts an entry named \"\" that zip.forEach skips: a 21 MiB one is SheetTooLargeError and a 422", async () => {
+    const bytes = rawZip([...(await validEntries()), { name: "", data: new Uint8Array(21 * MiB).fill(0x61) }]);
+    expect(bytes.length).toBeLessThan(MAX_UPLOAD_BYTES);
+    const zip = await JSZip.loadAsync(bytes);
+    let visited = 0;
+    zip.forEach(() => {
+      visited += 1;
+    });
+    expect(Object.values(zip.files).some((entry) => entry.name === "" && !entry.dir)).toBe(true);
+    expect(visited).toBe(Object.values(zip.files).length - 1); // forEach really does skip it
+    await expect(readXlsx(bytes)).rejects.toBeInstanceOf(SheetTooLargeError);
+    const result = await readUpload(new File([bytes as BlobPart], "bomb.xlsx"));
+    expect(result).toEqual({ ok: false, status: 422, message: sheetTooLargeMessage() });
+  }, slow);
+
+  it("parses a workbook that also has a zero-byte entry", async () => {
+    const zip = await validZip();
+    zip.file("docProps/empty.xml", new Uint8Array(0));
+    const bytes = await zip.generateAsync({ type: "uint8array", compression: "DEFLATE" });
+    expect(await readXlsx(bytes)).toEqual(EXPECTED_TABLE);
+    expect(await readOk(new File([bytes as BlobPart], "ledger.xlsx"))).toEqual(EXPECTED_TABLE);
+  });
+
+  it("parses a workbook whose entries are STORE (uncompressed)", async () => {
+    const zip = await validZip();
+    const bytes = await zip.generateAsync({ type: "uint8array", compression: "STORE" });
+    expect(await readXlsx(bytes)).toEqual(EXPECTED_TABLE);
+    expect(await readOk(new File([bytes as BlobPart], "ledger.xlsx"))).toEqual(EXPECTED_TABLE);
+  });
+
+  it("returns the invalid-file 422, not a throw, when one entry's deflate bytes are corrupted", async () => {
+    const zip = await validZip();
+    const bytes = await zip.generateAsync({ type: "uint8array", compression: "DEFLATE" });
+    // jszip writes sizes in the local header (no data descriptor), so the first entry's data is easy to find.
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    expect(view.getUint32(0, true)).toBe(0x04034b50);
+    expect(view.getUint16(8, true)).toBe(8); // deflate
+    const compressedSize = view.getUint32(18, true);
+    const dataStart = 30 + view.getUint16(26, true) + view.getUint16(28, true);
+    expect(compressedSize).toBeGreaterThan(0);
+    // 0xFF starts a deflate block of the reserved type 3, which no inflater accepts.
+    bytes.fill(0xff, dataStart, dataStart + compressedSize);
+    await expect(readXlsx(bytes)).rejects.toThrow();
+    const result = await readUpload(new File([bytes as BlobPart], "corrupt.xlsx"));
+    expect(result).toEqual({ ok: false, status: 422, message: "Not a valid XLSX file" });
+  });
+
+  it("returns the invalid-file 422 for random bytes named .xlsx, with or without the PK header", async () => {
+    let seed = 12345;
+    const random = (size: number): Uint8Array => {
+      const out = new Uint8Array(size);
+      for (let i = 0; i < size; i += 1) {
+        seed = (Math.imul(seed, 1103515245) + 12345) >>> 0;
+        out[i] = seed >>> 24;
+      }
+      return out;
+    };
+    const plain = random(4096);
+    const withMagic = random(4096);
+    withMagic.set([0x50, 0x4b, 0x03, 0x04]);
+    for (const bytes of [plain, withMagic]) {
+      const result = await readUpload(new File([bytes as BlobPart], "noise.xlsx"));
+      expect(result).toEqual({ ok: false, status: 422, message: "Not a valid XLSX file" });
+    }
+  });
 });
