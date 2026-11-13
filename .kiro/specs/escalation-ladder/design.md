@@ -91,7 +91,7 @@ export const RULE_SOURCES: Readonly<Record<RuleId, string>> = Object.freeze({
   "MSMED-15": "MSMED Act 2006, s.15", "MSMED-16": "MSMED Act 2006, s.16", "MSMED-18": "MSMED Act 2006, s.18",
   "IT-43BH": "Income-tax Act 1961, s.43B(h); Income-tax Act 2025, s.37(2)(g)",
   "MSMED-SCOPE": "MSMED Act s.2(n); MoMSME OM 02.07.2021", "MSMED-ODR": "MoMSME",
-  "MSMED-2B": "MSMED Act 2006, s.2(b)",
+  "MSMED-2B": "MSMED Act 2006, s.2(b) and Explanation",
 });
 // display-date.ts
 export function formatDisplayDate(d: CalendarDate): string; // "2026-10-07" → "7 Oct 2026"
