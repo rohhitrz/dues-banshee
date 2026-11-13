@@ -30,7 +30,9 @@ Out of scope: the debtor séance screen (debtor-ui), ladder actions and approval
 - **Tombstone_View**: the Graveyard_View entry for one Invoice_Record.
 - **Tombstone_State**: one of `resurrected` (paid on or before Today), `not_covered` (Engine reports MSMED-SCOPE non-coverage), `not_due` (Today is on or before the Engine due date), `exploded` (Engine tax-bomb status `exploded`), `armed` (Engine tax-bomb status `armed`), `overdue` (overdue with no tax-bomb status from the Engine), chosen in that order of precedence.
 - **Days_Overdue**: the number of days from the Engine due date to Today when Today is after the due date and the invoice is unpaid on Today; otherwise 0. This equals the Engine `accrualDays`.
-- **Next_Step_Label**: a read-only text derived from `nextEscalationStep`: "Next: <step name>" for an advance, or "Waiting: <reason>" for a wait.
+- **Next_Step_Label**: a read-only text derived from the Engine `nextEscalationStep` decision: "Next: <step text>" for an `advance`, where <step text> is the Step_Text of the decision's `LadderStep`, or "Waiting: <reason text>" for a `wait`, where <reason text> is the Wait_Text of the decision's `WaitReason`.
+- **Step_Text**: the human text for one Engine `LadderStep` (`packages/engine/src/types.ts`), defined in Requirement 5 criterion 7.
+- **Wait_Text**: the human text for one Engine `WaitReason` (`CoveredWaitReason | NonCoverageReason`, `packages/engine/src/types.ts`), defined in Requirement 5 criterion 8.
 - **Totals**: Outstanding, Interest_Accrued, Deductions_At_Risk, Exploded_Count and Paid_Count, all computed from Engine outputs in the Graveyard_View.
 - **Not_Found_Page**: the themed page Next.js shows for an unknown route.
 - **Error_Page**: the themed page shown when loading the Graveyard fails.
@@ -45,11 +47,11 @@ Out of scope: the debtor séance screen (debtor-ui), ladder actions and approval
 
 1. IF a request reaches `/` and the session has no `supplierId`, THEN THE Graveyard_Page SHALL redirect to `/signin` and render no Graveyard data.
 2. WHEN a request with a session `supplierId` reaches `/`, THE Graveyard_Page SHALL render the Graveyard for the Session_Supplier.
-3. IF the session `supplierId` matches no stored supplier (for example after a demo reset), THEN THE Graveyard_Page SHALL redirect to `/signin` and render no Graveyard data.
-4. WHEN a signed-in request reaches `/graveyard`, THE Graveyard_Page SHALL redirect to `/`, carry over the `today` query value unchanged if one is present, and add no `today` query value if none is present.
+3. IF `session.supplierId` matches no stored supplier (for example after the nightly demo reset recreates the supplier with a new id), THEN THE Graveyard_Page SHALL end the Auth.js session, redirect to `/signin?error=SessionExpired` and render no Graveyard data, and THE `/signin` page SHALL show "The demo was reset. Enter the graveyard again."
+4. WHILE a session exists whose `supplierId` matches no stored supplier, THE `/signin` page SHALL render in place without redirecting away, so that no redirect loop can occur.
 5. WHEN a request reaches a path that no route serves, THE Not_Found_Page SHALL render inside the App_Shell with a link to `/`.
 6. THE `proxy.ts` module SHALL import only `next-auth` and `auth.config.ts`, and SHALL NOT import `auth.ts`, `packages/db` or any module that imports either of them.
-7. THE `signInDemo` server action SHALL keep its success redirect target `/import`, its error redirects to `/signin?error=<flag>` and its messages, so that the existing `/signin` tests pass without edits.
+7. WHEN `signInDemo` succeeds, THE `signInDemo` server action SHALL redirect to `/` (the Graveyard_Page) instead of `/import`, and SHALL keep its error redirects to `/signin?error=<flag>` and its messages unchanged.
 
 ### Requirement 2: Loading data for the Session_Supplier
 
@@ -62,7 +64,6 @@ Out of scope: the debtor séance screen (debtor-ui), ladder actions and approval
 3. THE `packages/db` package SHALL provide one read-only function that returns every Invoice_Record for a given supplier id, with buyer names and escalation history, and that returns no invoice, buyer or escalation row of any other supplier. THE Graveyard_Page SHALL load Invoice_Records only through this function, and SHALL add it to `packages/db` if no such function exists.
 4. WHEN the data is loaded, THE Graveyard_Page SHALL pass the data to the Graveyard_Builder and SHALL render no due date, money figure, state or count that is not taken from the returned Graveyard_View.
 5. IF `getBankRate` finds no Bank_Rate effective on or before Today, THEN THE Graveyard_Page SHALL still render the Graveyard instead of the Error_Page, SHALL show "Bank rate not configured for <Today>" in place of every Tombstone interest figure and in place of Interest_Accrued, and SHALL show every other Graveyard_View figure unchanged.
-6. IF `getSupplier` finds no supplier for `session.supplierId`, THEN THE Graveyard_Page SHALL redirect to `/signin` and render no invoice data.
 
 ### Requirement 3: Pure view-model builder
 
@@ -108,9 +109,12 @@ Out of scope: the debtor séance screen (debtor-ui), ladder actions and approval
 4. WHILE the Tombstone_State is `armed` or `exploded`, THE Tombstone SHALL also show "Overdue N days, interest accruing", where N is Days_Overdue.
 5. IF the Engine reports the caveat `registered_after_supply` for the Invoice_Record, THEN THE Tombstone SHALL show the badge "Registered on Udyam after supply: claim may be contested".
 6. THE Tombstone SHALL show the Next_Step_Label and SHALL contain no button or control that triggers an escalation step.
-7. THE Tombstone SHALL show the Engine rule ID beside each legal figure it shows: `MSMED-15` beside the due date, `MSMED-16` beside the statutory interest, `IT-43BH` beside the `armed` or `exploded` state text, and `MSMED-SCOPE` beside the `not_covered` state text. A legal figure that has no Engine rule ID SHALL NOT be shown.
-8. THE Tombstone SHALL encode data in its look. Of two Tombstones, the one with the larger principal SHALL NOT be shorter. Moss SHALL be absent when Days_Overdue is 0 and SHALL NOT decrease as Days_Overdue increases. Cracks SHALL show if and only if Days_Overdue is above 60. An ember dot SHALL show if and only if Days_Overdue is above 45.
-9. IF the Invoice_Record is unpaid on Today and its escalation history holds a promise to pay with a promised date on or after Today, THEN THE Tombstone SHALL show a rising wisp. Otherwise THE Tombstone SHALL show no wisp.
+7. THE Graveyard_Builder SHALL map every Engine `LadderStep` to its Step_Text as follows: `whatsapp_nudge` → "WhatsApp nudge", `whatsapp_paylink` → "WhatsApp + UPI link", `voice_call` → "Voice call", `legal_notice` → "Legal notice", `odr_pack` → "MSME ODR pack".
+8. THE Graveyard_Builder SHALL map every Engine `WaitReason` to its Wait_Text as follows: `paid` → "Paid", `not_overdue` → "Not due yet", `promise_active` → "Promise to pay active", `cooldown` → "Gap since last step", `ladder_complete` → "All steps done", `medium_or_unregistered` → "Not a Udyam micro/small supplier", `trader` → "Trader, outside MSMED".
+9. THE Step_Text map SHALL be typed as `Record<LadderStep, string>` and THE Wait_Text map as `Record<WaitReason, string>` (using `satisfies`), so that adding an Engine `LadderStep` or `WaitReason` without a text fails the `apps/web` typecheck.
+10. THE Tombstone SHALL show the Engine rule ID beside each legal figure it shows: `MSMED-15` beside the due date, `MSMED-16` beside the statutory interest, `IT-43BH` beside the `armed` or `exploded` state text, and `MSMED-SCOPE` beside the `not_covered` state text. A legal figure that has no Engine rule ID SHALL NOT be shown.
+11. THE Tombstone SHALL encode data in its look. Of two Tombstones, the one with the larger principal SHALL NOT be shorter. Moss SHALL be absent when Days_Overdue is 0 and SHALL NOT decrease as Days_Overdue increases. Cracks SHALL show if and only if Days_Overdue is above 60. An ember dot SHALL show if and only if Days_Overdue is above 45.
+12. IF the Invoice_Record is unpaid on Today and its escalation history holds a promise to pay with a promised date on or after Today, THEN THE Tombstone SHALL show a rising wisp. Otherwise THE Tombstone SHALL show no wisp.
 
 ### Requirement 6: Sort order
 
@@ -159,7 +163,7 @@ Out of scope: the debtor séance screen (debtor-ui), ladder actions and approval
 5. THE `/signin` page SHALL render inside the App_Shell with the colours and typefaces of `ui-theme.md`, and keep the one-click "Enter the graveyard (demo)" button.
 6. THE `/import` page SHALL render inside the App_Shell with the colours and typefaces of `ui-theme.md`.
 7. THE restyle of `/signin` and `/import` SHALL change only styling and markup wrappers, and SHALL keep each page's form fields, button labels, server actions, API routes, redirect targets and messages unchanged.
-8. THE existing tests in `apps/web/test` SHALL pass with no edits to the test files after the restyle.
+8. THE existing tests in `apps/web/test` SHALL pass after the restyle with one exception: the `/signin` test assertion for the `signInDemo` success redirect target SHALL change from `/import` to `/` (Requirement 1 criterion 7), and no other line of any existing test file SHALL change.
 9. THE `apps/web` styling SHALL use CSS Modules, the approach `apps/web` already uses.
 
 ### Requirement 10: Theme, motion and accessibility
@@ -212,3 +216,5 @@ Out of scope: the debtor séance screen (debtor-ui), ladder actions and approval
 8. THE test suite SHALL assert that, with no Bank_Rate effective on or before Today, every interest figure and Interest_Accrued render as "Bank rate not configured for <Today>".
 9. THE test suite SHALL assert that an Invoice_Record whose `acceptedOn` is after Today is absent from the Tombstone_View list and adds nothing to any Total.
 10. THE `apps/web` tests, typecheck and lint SHALL pass with zero failures and zero errors, and every test task in this spec SHALL be required, with none marked optional.
+11. THE test suite SHALL assert that a request to `/` with a session whose `supplierId` is not in the database ends at `/signin` after at most one redirect, shows "The demo was reset. Enter the graveyard again.", and clears the session cookie.
+12. THE test suite SHALL assert the exact Next_Step_Label for every Engine `LadderStep` and every Engine `WaitReason` listed in Requirement 5 criteria 7 and 8, and that Sharma Traders `LPC/26-27/0412` at Today `2026-11-12` shows "Next: WhatsApp nudge".
