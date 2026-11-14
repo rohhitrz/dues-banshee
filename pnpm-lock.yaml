@@ -29,6 +29,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@dues-banshee/agent':
+        specifier: workspace:*
+        version: link:../../packages/agent
       '@dues-banshee/db':
         specifier: workspace:*
         version: link:../../packages/db

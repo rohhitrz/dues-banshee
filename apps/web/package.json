@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@dues-banshee/agent": "workspace:*",
     "@dues-banshee/db": "workspace:*",
     "@dues-banshee/engine": "workspace:*",
     "@dues-banshee/ledger": "workspace:*",
