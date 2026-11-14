@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { APPROVAL_STEP_LIST, LADDER_STEPS, isApprovalStep, nextEscalationStep } from "../src/index";
+import {
+  APPROVAL_STEP_LIST,
+  DEFAULT_LADDER_CONFIG,
+  LADDER_STEPS,
+  isApprovalStep,
+  nextEscalationStep,
+} from "../src/index";
 import type { EscalationHistory, Invoice, LadderStep } from "../src/types";
 import { sharmaTradersInvoice } from "./fixtures";
 
@@ -333,5 +339,16 @@ describe("exported ladder constants are immutable", () => {
       ruleIds: ["MSMED-15"],
     });
     expect(isApprovalStep("legal_notice")).toBe(true);
+  });
+});
+
+describe("DEFAULT_LADDER_CONFIG", () => {
+  it("is the frozen 7-day config that nextEscalationStep uses when none is passed", () => {
+    expect(DEFAULT_LADDER_CONFIG).toStrictEqual({ stepGapDays: 7 });
+    expect(Object.isFrozen(DEFAULT_LADDER_CONFIG)).toBe(true);
+    const history: EscalationHistory = [stepEvent("whatsapp_nudge", "2026-10-18")];
+    expect(nextEscalationStep(sharmaTradersInvoice, history, "2026-10-24")).toStrictEqual(
+      nextEscalationStep(sharmaTradersInvoice, history, "2026-10-24", DEFAULT_LADDER_CONFIG),
+    );
   });
 });

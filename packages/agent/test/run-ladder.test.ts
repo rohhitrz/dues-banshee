@@ -256,6 +256,20 @@ describe("runLadder on the Demo_Seed at 2026-11-12", () => {
       [BANSAL, MEHTA, KUMAR, SHARMA, GUPTA, VERMA].map(idOf).sort(),
     );
     const sharmaEngine = engineRows.find((r) => r.invoiceId === idOf(SHARMA));
+    expect(sharmaEngine?.input).toEqual({
+      invoice: {
+        id: idOf(SHARMA),
+        amountPaise: 41_200_000,
+        acceptedOn: "2026-09-02",
+        agreedTermDays: 45,
+        supplierCategory: "micro",
+        supplierActivity: "manufacturing",
+        udyamRegisteredOn: DEMO_SUPPLIER.udyamRegisteredOn,
+      },
+      history: [],
+      today: TODAY,
+      config: { stepGapDays: 7 },
+    });
     expect(sharmaEngine?.output).toEqual({
       action: "advance",
       applicable: true,
@@ -344,11 +358,25 @@ describe("runLadder on the Demo_Seed at 2026-11-12", () => {
     const badRows = (await toolRows(t, "next_escalation_step")).filter((r) => r.invoiceId === bad.id);
     expect(badRows).toHaveLength(1);
     expect(badRows[0]?.output).toEqual({
-      error: "validation_error",
+      error: "ValidationError",
       field: "paidOn",
-      reason: "must not be before acceptedOn",
+      message: "paidOn: must not be before acceptedOn",
     });
-    expect((badRows[0]?.input as { today: string }).today).toEqual(TODAY);
+    expect(badRows[0]?.input).toEqual({
+      invoice: {
+        id: bad.id,
+        amountPaise: 1_000_000,
+        acceptedOn: "2026-03-01",
+        agreedTermDays: 30,
+        supplierCategory: "micro",
+        supplierActivity: "manufacturing",
+        udyamRegisteredOn: DEMO_SUPPLIER.udyamRegisteredOn,
+        paidOn: "2026-01-01",
+      },
+      history: [],
+      today: TODAY,
+      config: { stepGapDays: 7 },
+    });
     expect(await toolRows(t, "next_escalation_step")).toHaveLength(7);
     expect((await draftRows(t)).some((d) => d.invoiceId === bad.id)).toBe(false);
   });

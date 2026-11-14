@@ -60,6 +60,9 @@ export function isApprovalStep(step: LadderStep): boolean {
 /** Minimum days between two consecutive ladder steps. */
 export const DEFAULT_STEP_GAP_DAYS = 7;
 
+/** The ladder config `nextEscalationStep` uses when the caller passes none. Frozen. */
+export const DEFAULT_LADDER_CONFIG: LadderConfig = Object.freeze({ stepGapDays: DEFAULT_STEP_GAP_DAYS });
+
 type CoveredWait = Extract<EscalationDecision, { action: "wait"; reason: CoveredWaitReason }>;
 type Advance = Extract<EscalationDecision, { action: "advance" }>;
 
@@ -79,7 +82,7 @@ export function nextEscalationStep(
   invoice: Invoice,
   history: EscalationHistory,
   today: CalendarDate,
-  config: LadderConfig = { stepGapDays: DEFAULT_STEP_GAP_DAYS },
+  config: LadderConfig = DEFAULT_LADDER_CONFIG,
 ): EscalationDecision {
   validateInvoice(invoice);
   assertCalendarDate("today", today);

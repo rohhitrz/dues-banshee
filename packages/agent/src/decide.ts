@@ -9,7 +9,7 @@ import {
   updatePendingBody,
 } from "@dues-banshee/db";
 import type { Db, DraftWithContext, LadderRecord } from "@dues-banshee/db";
-import { RULE_IDS, nextEscalationStep } from "@dues-banshee/engine";
+import { DEFAULT_LADDER_CONFIG, RULE_IDS, nextEscalationStep } from "@dues-banshee/engine";
 import type { CalendarDate, EscalationDecision, RuleId } from "@dues-banshee/engine";
 import { buildFactSheet } from "./core/fact-sheet";
 import { buildFinalText } from "./core/final-text";
@@ -70,11 +70,11 @@ async function recompute(
   const [record] = await listLadderRecords(db, supplierId, ctx.draft.invoiceId);
   if (record === undefined) return null;
   const history = engineHistory(record);
-  const decision = nextEscalationStep(record.invoice, history, today);
+  const decision = nextEscalationStep(record.invoice, history, today, DEFAULT_LADDER_CONFIG);
   await logToolCall(db, {
     tool: "next_escalation_step",
     invoiceId: record.invoice.id,
-    input: { invoice: record.invoice, history, today },
+    input: { invoice: record.invoice, history, today, config: DEFAULT_LADDER_CONFIG },
     output: decision,
   });
   return { record, decision };

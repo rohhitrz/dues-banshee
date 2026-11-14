@@ -1,6 +1,6 @@
 import { getSupplier, insertDraft, listLadderRecords, logToolCall } from "@dues-banshee/db";
 import type { Db, LadderRecord } from "@dues-banshee/db";
-import { ValidationError, dueDate, nextEscalationStep } from "@dues-banshee/engine";
+import { DEFAULT_LADDER_CONFIG, ValidationError, dueDate, nextEscalationStep } from "@dues-banshee/engine";
 import type { CalendarDate, EscalationDecision, WaitReason } from "@dues-banshee/engine";
 import { draftStep } from "./draft-step";
 import { loadBankRate } from "./load-bank-rate";
@@ -49,7 +49,7 @@ export async function runLadder(
     let decision: EscalationDecision;
     let due: CalendarDate | null = null;
     try {
-      decision = nextEscalationStep(record.invoice, history, today);
+      decision = nextEscalationStep(record.invoice, history, today, DEFAULT_LADDER_CONFIG);
       if (decision.action === "advance") {
         const d = dueDate(record.invoice);
         due = d.applicable ? d.dueDate : null;
@@ -59,8 +59,8 @@ export async function runLadder(
       await logToolCall(db, {
         tool: "next_escalation_step",
         invoiceId,
-        input: { invoice: record.invoice, history, today },
-        output: { error: "validation_error", field: err.field, reason: err.reason },
+        input: { invoice: record.invoice, history, today, config: DEFAULT_LADDER_CONFIG },
+        output: { error: "ValidationError", field: err.field, message: err.message },
       });
       classified.push({ invoiceId, kind: "skip", reason: "invalid_invoice" });
       continue;
@@ -68,7 +68,7 @@ export async function runLadder(
     await logToolCall(db, {
       tool: "next_escalation_step",
       invoiceId,
-      input: { invoice: record.invoice, history, today },
+      input: { invoice: record.invoice, history, today, config: DEFAULT_LADDER_CONFIG },
       output: decision,
     });
     if (decision.action === "advance") advances.set(invoiceId, { record, decision });

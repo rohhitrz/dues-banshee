@@ -38,6 +38,7 @@ export {
   APPROVAL_STEP_LIST,
   isApprovalStep,
   DEFAULT_STEP_GAP_DAYS,
+  DEFAULT_LADDER_CONFIG,
 } from "./escalation-ladder";
 export { formatINR, parseINR } from "./format-inr";
 export { validateInvoice, SUPPLIER_CATEGORIES, SUPPLIER_ACTIVITIES } from "./validate";

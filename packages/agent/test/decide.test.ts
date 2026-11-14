@@ -3,6 +3,7 @@
 // Requirements: 3.8, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 7.7, 8.7, 12.8
 import {
   DEMO_SUPPLIER,
+  agentRuns,
   drafts,
   escalationEvents,
   findSupplierIdByUdyam,
@@ -210,6 +211,32 @@ describe("approveDraft", () => {
       { step: "whatsapp_nudge", occurredOn: TODAY, action: "approved" },
     ]);
     expect(record?.pendingDraftId).toBeNull();
+  });
+
+  it("logs the recomputed Decision with the Engine input and the default config", async () => {
+    const f = await withNudgeDraft();
+    await f.t.db.delete(agentRuns);
+
+    expect(await approveDraft({ db: f.t.db }, f.supplierId, f.draftId, TODAY)).toEqual({ kind: "ok" });
+
+    const rows = (await f.t.db.select().from(agentRuns)).filter((r) => r.tool === "next_escalation_step");
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.invoiceId).toEqual(f.sharmaInvoiceId);
+    expect(rows[0]?.input).toEqual({
+      invoice: {
+        id: f.sharmaInvoiceId,
+        amountPaise: 41_200_000,
+        acceptedOn: "2026-09-02",
+        agreedTermDays: 45,
+        supplierCategory: "micro",
+        supplierActivity: "manufacturing",
+        udyamRegisteredOn: DEMO_SUPPLIER.udyamRegisteredOn,
+      },
+      history: [],
+      today: TODAY,
+      config: { stepGapDays: 7 },
+    });
+    expect(rows[0]?.output).toEqual(NUDGE_DECISION);
   });
 
   it("expires the Draft when a promise was recorded since: expired event, no approved event", async () => {
