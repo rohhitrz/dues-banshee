@@ -1,5 +1,6 @@
+import path from "node:path";
 import type { NextConfig } from "next";
-
+const fonts = "../../packages/agent/assets/fonts/**";
 const nextConfig: NextConfig = {
   // The workspace packages export TypeScript source, so Next must compile them.
   transpilePackages: [
@@ -8,6 +9,12 @@ const nextConfig: NextConfig = {
     "@dues-banshee/db",
     "@dues-banshee/agent",
   ],
+  // Trace from the repo root so files in `packages/` are reachable, and ship the PDF fonts the agent reads
+  // at run time (they are not imported, so the tracer cannot find them).
+  outputFileTracingRoot: path.join(__dirname, "../../"),
+  outputFileTracingIncludes: {
+    "/approvals": [fonts],
+    "/api/ladder/run": [fonts],
+  },
 };
-
 export default nextConfig;
