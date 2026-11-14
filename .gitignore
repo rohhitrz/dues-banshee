@@ -10,9 +10,6 @@ coverage/
 *.log
 .DS_Store
 
-printf '\n# Claude Code (local review tool, not part of the project)\n.claude/\nCLAUDE.md\nCLAUDE.local.md\n' >> .gitignore
-git add .gitignore && git commit -m "chore: ignore local Claude Code files" && git push
-.kiro/specs/escalation-ladder/tasks.md
 # Claude Code (local review tool, not part of the project)
 .claude/
 CLAUDE.md
