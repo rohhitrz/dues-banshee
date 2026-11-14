@@ -4,3 +4,5 @@ export { MODEL_IDS, primaryFor, productionModels } from "./models";
 export type { ModelKey, ModelSet } from "./models";
 export { callModel } from "./io/model-router";
 export type { CallErrorKind, CallResult } from "./io/model-router";
+export { renderDocument } from "./io/documents/render";
+export type { DocumentData, DocumentKind } from "./io/documents/render";
