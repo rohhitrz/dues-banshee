@@ -566,3 +566,62 @@ describe("checkLadderNow", () => {
     expect(mocks.runLadder).not.toHaveBeenCalled();
   });
 });
+describe("the today override is for the demo supplier only", () => {
+  const NON_DEMO: Supplier = { ...SUPPLIER, udyamNumber: "UDYAM-XX-00-0000000" };
+  const HIDDEN_TODAY = 'name="today"';
+  beforeEach(() => {
+    mocks.getSupplier.mockResolvedValue(NON_DEMO);
+  });
+  it("approve, saveEdit, reject and redraftIn give a non-demo supplier the real IST date and no override", async () => {
+    const fields = { draftId: DRAFT_ID, today: "2027-12-31" };
+    expect(await redirectOf(() => approve(form(fields)))).toBe("/approvals?notice=approved");
+    expect(await redirectOf(() => saveEdit(form({ ...fields, body: "x" })))).toBe("/approvals?notice=saved");
+    expect(await redirectOf(() => reject(form(fields)))).toBe("/approvals?notice=rejected");
+    expect(await redirectOf(() => redraftIn(form({ ...fields, language: "english" })))).toBe(
+      "/approvals?notice=redrafted",
+    );
+    expect(mocks.approveDraft.mock.calls).toEqual([[{ db: DB }, SUPPLIER_ID, DRAFT_ID, "2026-11-12"]]);
+    expect(mocks.editDraft.mock.calls).toEqual([[{ db: DB }, SUPPLIER_ID, DRAFT_ID, "x", "2026-11-12"]]);
+    expect(mocks.rejectDraft.mock.calls).toEqual([[{ db: DB }, SUPPLIER_ID, DRAFT_ID, null, "2026-11-12"]]);
+    expect(mocks.redraft.mock.calls).toEqual([
+      [{ db: DB, models: MODELS }, SUPPLIER_ID, DRAFT_ID, "english", "2026-11-12"],
+    ]);
+  });
+  it("checkLadderNow gives a non-demo supplier the real IST date and drops the override from the redirect", async () => {
+    const url = await redirectOf(() => checkLadderNow(form({ today: "2027-12-31" })));
+    expect(url).toBe("/approvals?notice=ladder_checked&n=0");
+    expect(mocks.runLadder.mock.calls).toEqual([[{ db: DB, models: MODELS }, SUPPLIER_ID, "2026-11-12"]]);
+  });
+  it("uses the IST date, not the UTC date, for a non-demo supplier", async () => {
+    // 2026-11-12 20:00 UTC is 2026-11-13 01:30 IST.
+    nowSpy.mockReturnValue(Date.parse("2026-11-12T20:00:00Z"));
+    await redirectOf(() => approve(form({ draftId: DRAFT_ID, today: "2027-12-31" })));
+    expect(mocks.approveDraft.mock.calls).toEqual([[{ db: DB }, SUPPLIER_ID, DRAFT_ID, "2026-11-13"]]);
+  });
+  it("a malformed draft id or language from a non-demo supplier keeps no override either", async () => {
+    expect(await redirectOf(() => approve(form({ draftId: "nope", today: "2027-12-31" })))).toBe(
+      "/approvals?notice=not_found",
+    );
+    expect(await redirectOf(() => redraftIn(form({ draftId: DRAFT_ID, today: "2027-12-31", language: "x" })))).toBe(
+      "/approvals?notice=draft_failed",
+    );
+  });
+  it("the page renders no hidden today input for a non-demo supplier, even with ?today=", async () => {
+    const html = await render({ today: "2027-12-31" });
+    expect(count(html, "<article")).toBe(2);
+    expect(count(html, HIDDEN_TODAY)).toBe(0);
+    expect(html).not.toContain("2027-12-31");
+  });
+  it("the demo supplier still gets the override from the form and on the page", async () => {
+    mocks.getSupplier.mockResolvedValue(SUPPLIER);
+    const url = await redirectOf(() => approve(form({ draftId: DRAFT_ID, today: "2027-12-31" })));
+    expect(url).toBe("/approvals?today=2027-12-31&notice=approved");
+    expect(mocks.approveDraft.mock.calls).toEqual([[{ db: DB }, SUPPLIER_ID, DRAFT_ID, "2027-12-31"]]);
+    const ladderUrl = await redirectOf(() => checkLadderNow(form({ today: "2027-12-31" })));
+    expect(ladderUrl).toBe("/approvals?today=2027-12-31&notice=ladder_checked&n=0");
+    expect(mocks.runLadder.mock.calls).toEqual([[{ db: DB, models: MODELS }, SUPPLIER_ID, "2027-12-31"]]);
+    const html = await render({ today: "2027-12-31" });
+    // One hidden input in the check form and one in each of the two cards' four forms.
+    expect(count(html, `${HIDDEN_TODAY} value="2027-12-31"`)).toBe(1 + 2 * 4);
+  });
+});

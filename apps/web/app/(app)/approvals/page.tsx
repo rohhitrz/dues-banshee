@@ -3,6 +3,7 @@ import {
   getSupplier,
   listPendingDrafts,
   type DraftWithContext,
+  type Supplier,
 } from "@dues-banshee/db";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -11,7 +12,7 @@ import { DraftCard } from "@/components/approvals/draft-card";
 import { SubmitButton } from "@/components/approvals/submit-button";
 import { getDb } from "@/lib/db";
 import { noticeMessage, type NoticeParams } from "@/lib/approvals/notices";
-import { resolveToday } from "@/lib/graveyard/today";
+import { resolveSupplierToday } from "@/lib/approvals/supplier-today";
 import { checkLadderNow } from "./actions";
 import styles from "./approvals.module.css";
 
@@ -19,7 +20,7 @@ import styles from "./approvals.module.css";
 // action run with the limit of the page that calls them, so the 300 seconds is set here.
 export const maxDuration = 300;
 
-type Loaded = { kind: "ok"; drafts: DraftWithContext[] } | { kind: "stale" } | { kind: "error" };
+type Loaded = { kind: "ok"; supplier: Supplier; drafts: DraftWithContext[] } | { kind: "stale" } | { kind: "error" };
 
 /** Never throws and never redirects: the page redirects on `stale`, outside any `try`. */
 async function load(supplierId: string): Promise<Loaded> {
@@ -31,8 +32,8 @@ async function load(supplierId: string): Promise<Loaded> {
     return { kind: "error" };
   }
   try {
-    await getSupplier(handle.db, supplierId);
-    return { kind: "ok", drafts: await listPendingDrafts(handle.db, supplierId) };
+    const supplier = await getSupplier(handle.db, supplierId);
+    return { kind: "ok", supplier, drafts: await listPendingDrafts(handle.db, supplierId) };
   } catch (err) {
     if (err instanceof SupplierNotFoundError) return { kind: "stale" };
     console.error("approvals: load failed", err);
@@ -53,10 +54,11 @@ export default async function ApprovalsPage({
   if (!supplierId) redirect("/signin");
 
   const params = await searchParams;
-  const { override } = resolveToday(Date.now(), params.today);
-
   const result = await load(supplierId);
   if (result.kind === "stale") redirect("/signin?error=SessionExpired");
+  // Only the demo supplier may time-travel; when the supplier could not be loaded there is no override.
+  const override =
+    result.kind === "ok" ? resolveSupplierToday(result.supplier, Date.now(), params.today).override : null;
 
   const notice = noticeMessage(params);
 

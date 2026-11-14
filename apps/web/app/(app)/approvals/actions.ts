@@ -10,13 +10,14 @@ import {
   type DecideResult,
   type DraftLanguage,
 } from "@dues-banshee/agent";
-import { SupplierNotFoundError, getSupplier, type Db } from "@dues-banshee/db";
+import { SupplierNotFoundError, getSupplier, type Db, type Supplier } from "@dues-banshee/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getDb } from "@/lib/db";
 import { decisionLabelKey, type NoticeCode } from "@/lib/approvals/notices";
-import { resolveToday } from "@/lib/graveyard/today";
+import { resolveSupplierToday } from "@/lib/approvals/supplier-today";
+import type { ResolvedToday } from "@/lib/graveyard/today";
 
 // This file sets no `maxDuration`: a server action runs with the limit of the page that calls it, and
 // `approvals/page.tsx` exports 300 seconds for `checkLadderNow` (and the LLM-backed redraft).
@@ -43,9 +44,12 @@ function field(form: FormData, name: string): string {
   return typeof value === "string" ? value : "";
 }
 
-/** The form's `today` goes through the same validation as `?today=` on the page. */
-function resolveFormToday(form: FormData) {
-  return resolveToday(Date.now(), field(form, "today"));
+/**
+ * The form's `today` goes through the same validation as `?today=` on the page, and only the demo
+ * supplier's override is honoured. Every other supplier gets the real IST date and a null override.
+ */
+function resolveFormToday(supplier: Supplier, form: FormData): ResolvedToday {
+  return resolveSupplierToday(supplier, Date.now(), field(form, "today"));
 }
 
 type Scoped<T> = { stale: true } | { stale: false; value: T };
@@ -54,11 +58,14 @@ type Scoped<T> = { stale: true } | { stale: false; value: T };
  * Runs `fn` against the database for the session supplier. A supplier that no longer exists (stale
  * session) comes back as `{ stale: true }`; the caller redirects outside any `try`.
  */
-async function withSupplier<T>(supplierId: string, fn: (db: Db) => Promise<T>): Promise<Scoped<T>> {
+async function withSupplier<T>(
+  supplierId: string,
+  fn: (db: Db, supplier: Supplier) => Promise<T>,
+): Promise<Scoped<T>> {
   const { db, close } = getDb();
   try {
-    await getSupplier(db, supplierId);
-    return { stale: false, value: await fn(db) };
+    const supplier = await getSupplier(db, supplierId);
+    return { stale: false, value: await fn(db, supplier) };
   } catch (err) {
     if (err instanceof SupplierNotFoundError) return { stale: true };
     throw err;
@@ -96,13 +103,14 @@ async function decide(
   run: (db: Db, supplierId: string, draftId: string, today: string) => Promise<DecideResult>,
 ): Promise<never> {
   const supplierId = await sessionSupplierId();
-  const { today, override } = resolveFormToday(form);
   const draftId = field(form, "draftId");
-  if (!UUID.test(draftId)) return finish({ code: "not_found" }, override);
-
-  const outcome = await withSupplier(supplierId, (db) => run(db, supplierId, draftId, today));
+  const outcome = await withSupplier(supplierId, async (db, supplier) => {
+    const { today, override } = resolveFormToday(supplier, form);
+    if (!UUID.test(draftId)) return { notice: { code: "not_found" } satisfies Notice, override };
+    return { notice: noticeFor(await run(db, supplierId, draftId, today), success), override };
+  });
   if (outcome.stale) redirect(STALE_URL);
-  return finish(noticeFor(outcome.value, success), override);
+  return finish(outcome.value.notice, outcome.value.override);
 }
 
 export async function approve(form: FormData): Promise<void> {
@@ -133,8 +141,12 @@ function toLanguage(value: string): DraftLanguage | null {
 export async function redraftIn(form: FormData): Promise<void> {
   const language = toLanguage(field(form, "language"));
   if (language === null) {
-    await sessionSupplierId();
-    return finish({ code: "draft_failed" }, resolveFormToday(form).override);
+    const outcome = await withSupplier(
+      await sessionSupplierId(),
+      async (_db, supplier) => resolveFormToday(supplier, form).override,
+    );
+    if (outcome.stale) redirect(STALE_URL);
+    return finish({ code: "draft_failed" }, outcome.value);
   }
   await decide(form, "redrafted", (db, supplierId, draftId, today) =>
     redraft({ db, models: productionModels() }, supplierId, draftId, language, today),
@@ -144,19 +156,18 @@ export async function redraftIn(form: FormData): Promise<void> {
 /** One Ladder_Run for the session supplier only. */
 export async function checkLadderNow(form: FormData): Promise<void> {
   const supplierId = await sessionSupplierId();
-  const { today, override } = resolveFormToday(form);
-
-  const outcome = await withSupplier(supplierId, async (db): Promise<Notice> => {
+  const outcome = await withSupplier(supplierId, async (db, supplier) => {
+    const { today, override } = resolveFormToday(supplier, form);
     try {
       const result = await runLadder({ db, models: productionModels() }, supplierId, today);
       const n = Object.values(result.invoices).filter((o) => o.kind === "drafted").length;
-      return { code: "ladder_checked", n };
+      return { notice: { code: "ladder_checked", n } satisfies Notice, override };
     } catch (err) {
       if (err instanceof SupplierNotFoundError) throw err;
       console.error("approvals: ladder run failed", { supplierId, today }, err);
-      return { code: "ladder_failed" };
+      return { notice: { code: "ladder_failed" } satisfies Notice, override };
     }
   });
   if (outcome.stale) redirect(STALE_URL);
-  return finish(outcome.value, override);
+  return finish(outcome.value.notice, outcome.value.override);
 }
