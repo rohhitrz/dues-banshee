@@ -33,21 +33,26 @@ function isAllowed(s: string): boolean {
 }
 
 describe("Property 9: returnTo allowlist", () => {
-  it("returns the input only for /approvals or /debtors/<uuid>, else /approvals", () => {
+  it("returns the (lowercased) input only for /approvals or /debtors/<uuid>, else /approvals", () => {
     fc.assert(
       fc.property(arbCandidate, (raw) => {
-        expect(parseReturnTo(raw)).toBe(isAllowed(raw) ? raw : "/approvals");
+        expect(parseReturnTo(raw)).toBe(isAllowed(raw) ? raw.toLowerCase() : "/approvals");
       }),
       { numRuns: 200 },
     );
   });
 
-  it("accepts every valid target unchanged", () => {
+  it("accepts every valid target, lowercased", () => {
     fc.assert(
       fc.property(arbValidTarget, (target) => {
-        expect(parseReturnTo(target)).toBe(target);
+        expect(parseReturnTo(target)).toBe(target.toLowerCase());
       }),
       { numRuns: 100 },
+    );
+  });
+  it("lowercases an uppercase uuid", () => {
+    expect(parseReturnTo("/debtors/0A1B2C3D-4E5F-4A6B-8C7D-9E0F1A2B3C4D")).toBe(
+      "/debtors/0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d",
     );
   });
 });

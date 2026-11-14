@@ -107,11 +107,11 @@ describe("approvals actions follow an allowlisted returnTo", () => {
     expect(url).toBe(`${DEBTOR_URL}?today=2027-03-10&notice=approved`);
   });
 
-  it("an uppercase uuid in returnTo is followed unchanged", async () => {
+  it("an uppercase uuid in returnTo is followed, lowercased", async () => {
     const target = `/debtors/${BUYER_ID.toUpperCase()}`;
     const url = await redirectOf(() => approve(form({ draftId: DRAFT_ID, returnTo: target })));
 
-    expect(url).toBe(`${target}?notice=approved`);
+    expect(url).toBe(`/debtors/${BUYER_ID.toLowerCase()}?notice=approved`);
   });
 
   it("saveEdit and reject return to the debtor page with their own notice", async () => {

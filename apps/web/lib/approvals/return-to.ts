@@ -6,9 +6,9 @@ const DEBTOR_TARGET = /^\/debtors\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 
 /**
  * The form's `returnTo` is untrusted. Only `/approvals` and `/debtors/<uuid>` (nothing before or after)
- * are followed; anything else, including absolute and protocol-relative URLs, goes to `/approvals`.
+ * are followed, with the uuid lowercased; anything else, including absolute and protocol-relative URLs, goes to `/approvals`.
  */
 export function parseReturnTo(raw: string): ReturnTarget {
   if (raw === DEFAULT_TARGET) return DEFAULT_TARGET;
-  return DEBTOR_TARGET.test(raw) ? (raw as `/debtors/${string}`) : DEFAULT_TARGET;
+  return DEBTOR_TARGET.test(raw) ? (raw.toLowerCase() as `/debtors/${string}`) : DEFAULT_TARGET;
 }
