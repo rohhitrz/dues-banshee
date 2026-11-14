@@ -66,7 +66,7 @@ describe("callModel", () => {
   it("returns the primary output without calling the fallback", async () => {
     const fallback = okModel("mock-luna");
     const result = await callModel(set(okModel("mock-haiku"), okModel("mock-sonnet"), fallback), "default", PARAMS);
-    expect(result).toEqual({ ok: true, output: FIXTURE, modelId: "mock-haiku", usedFallback: false });
+    expect(result).toEqual({ ok: true, output: FIXTURE, modelId: "mock-haiku", modelKey: "default", usedFallback: false });
     expect(fallback.doGenerateCalls).toHaveLength(0);
   });
 
@@ -74,7 +74,7 @@ describe("callModel", () => {
     const primary = failingModel("mock-haiku", 429);
     const fallback = okModel("mock-luna");
     const result = await callModel(set(primary, okModel("mock-sonnet"), fallback), "default", PARAMS);
-    expect(result).toEqual({ ok: true, output: FIXTURE, modelId: "mock-luna", usedFallback: true });
+    expect(result).toEqual({ ok: true, output: FIXTURE, modelId: "mock-luna", modelKey: "fallback", usedFallback: true });
     expect(primary.doGenerateCalls).toHaveLength(1);
     expect(fallback.doGenerateCalls).toHaveLength(1);
   });
@@ -88,14 +88,14 @@ describe("callModel", () => {
     });
     const fallback = okModel("mock-luna");
     const result = await callModel(set(okModel("mock-haiku"), legal, fallback), "legal", PARAMS);
-    expect(result).toEqual({ ok: true, output: FIXTURE, modelId: "mock-luna", usedFallback: true });
+    expect(result).toEqual({ ok: true, output: FIXTURE, modelId: "mock-luna", modelKey: "fallback", usedFallback: true });
     expect(fallback.doGenerateCalls).toHaveLength(1);
   });
 
   it("returns ok:false when the primary and the fallback both fail", async () => {
     const fallback = failingModel("mock-luna", 500);
     const result = await callModel(set(failingModel("mock-haiku", 429), okModel("mock-sonnet"), fallback), "default", PARAMS);
-    expect(result).toEqual({ ok: false, errorKind: "api_error", modelId: "mock-luna" });
+    expect(result).toEqual({ ok: false, errorKind: "api_error", modelId: "mock-luna", modelKey: "fallback" });
     expect(fallback.doGenerateCalls).toHaveLength(1);
   });
 
@@ -103,14 +103,14 @@ describe("callModel", () => {
     const fallback = okModel("mock-luna");
     const bad = okModel("mock-haiku", { text: 5, ruleIds: "MSMED-15" });
     const result = await callModel(set(bad, okModel("mock-sonnet"), fallback), "default", PARAMS);
-    expect(result).toEqual({ ok: false, errorKind: "schema_invalid", modelId: "mock-haiku" });
+    expect(result).toEqual({ ok: false, errorKind: "schema_invalid", modelId: "mock-haiku", modelKey: "default" });
     expect(fallback.doGenerateCalls).toHaveLength(0);
   });
 
   it("does not fall back again when the key is already fallback", async () => {
     const fallback = failingModel("mock-luna", 429);
     const result = await callModel(set(okModel("mock-haiku"), okModel("mock-sonnet"), fallback), "fallback", PARAMS);
-    expect(result).toEqual({ ok: false, errorKind: "rate_limited", modelId: "mock-luna" });
+    expect(result).toEqual({ ok: false, errorKind: "rate_limited", modelId: "mock-luna", modelKey: "fallback" });
     expect(fallback.doGenerateCalls).toHaveLength(1);
   });
 
@@ -119,5 +119,18 @@ describe("callModel", () => {
     await callModel(set(failingModel("mock-haiku", 503), okModel("mock-sonnet"), fallback), "default", PARAMS);
     expect(JSON.stringify(fallback.doGenerateCalls[0]?.prompt)).toContain("SYSTEM");
     expect(JSON.stringify(fallback.doGenerateCalls[0]?.prompt)).toContain("PROMPT");
+  });
+  it("makes no fallback call and reports each call when fallback is disabled", async () => {
+    const fallback = okModel("mock-luna");
+    const calls: string[] = [];
+    const result = await callModel(
+      set(failingModel("mock-haiku", 429), okModel("mock-sonnet"), fallback),
+      "default",
+      PARAMS,
+      { fallback: false, onCall: (c) => calls.push(`${c.kind}:${c.modelKey}:${c.modelId}`) },
+    );
+    expect(result).toEqual({ ok: false, errorKind: "rate_limited", modelId: "mock-haiku", modelKey: "default" });
+    expect(fallback.doGenerateCalls).toHaveLength(0);
+    expect(calls).toEqual(["primary:default:mock-haiku"]);
   });
 });
