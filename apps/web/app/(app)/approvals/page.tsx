@@ -9,6 +9,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { DraftCard } from "@/components/approvals/draft-card";
+import { GuardedForm } from "@/components/approvals/guarded-form";
 import { SubmitButton } from "@/components/approvals/submit-button";
 import { getDb } from "@/lib/db";
 import { noticeMessage, type NoticeParams } from "@/lib/approvals/notices";
@@ -76,12 +77,12 @@ export default async function ApprovalsPage({
         </p>
       )}
 
-      <form action={checkLadderNow} className={styles.check}>
+      <GuardedForm action={checkLadderNow} className={styles.check}>
         {override === null ? null : <input type="hidden" name="today" value={override} />}
         <SubmitButton className={styles.button} pendingLabel="Checking the ladder…">
           Check the ladder now
         </SubmitButton>
-      </form>
+      </GuardedForm>
 
       {result.kind === "error" ? (
         <p role="alert" className={styles.error}>

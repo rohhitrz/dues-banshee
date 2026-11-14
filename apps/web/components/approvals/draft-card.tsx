@@ -1,6 +1,7 @@
 import type { DraftWithContext } from "@dues-banshee/db";
 import { approve, redraftIn, reject, saveEdit } from "@/app/(app)/approvals/actions";
 import { STEP_TEXT } from "@/lib/graveyard/labels";
+import { GuardedForm } from "./guarded-form";
 import { SubmitButton } from "./submit-button";
 import styles from "./draft-card.module.css";
 
@@ -74,7 +75,7 @@ export function DraftCard({ item, override }: DraftCardProps) {
         </p>
       ) : null}
 
-      <form action={saveEdit} className={styles.editForm}>
+      <GuardedForm action={saveEdit} className={styles.editForm}>
         <HiddenFields draftId={draft.id} override={override} />
         <label className={styles.label} htmlFor={`body-${draft.id}`}>
           Edit the message
@@ -90,17 +91,17 @@ export function DraftCard({ item, override }: DraftCardProps) {
         <SubmitButton className={styles.button} pendingLabel="Saving…">
           Save edit
         </SubmitButton>
-      </form>
+      </GuardedForm>
 
       <div className={styles.actions}>
-        <form action={approve}>
+        <GuardedForm action={approve}>
           <HiddenFields draftId={draft.id} override={override} />
           <SubmitButton className={styles.primary} pendingLabel="Approving…">
             Approve
           </SubmitButton>
-        </form>
+        </GuardedForm>
 
-        <form action={redraftIn} className={styles.redraft}>
+        <GuardedForm action={redraftIn} className={styles.redraft}>
           <HiddenFields draftId={draft.id} override={override} />
           <SubmitButton className={styles.button} name="language" value="english" pendingLabel="Redrafting…">
             Redraft in English
@@ -108,9 +109,9 @@ export function DraftCard({ item, override }: DraftCardProps) {
           <SubmitButton className={styles.button} name="language" value="hinglish" pendingLabel="Redrafting…">
             Redraft in Hinglish
           </SubmitButton>
-        </form>
+        </GuardedForm>
 
-        <form action={reject} className={styles.reject}>
+        <GuardedForm action={reject} className={styles.reject}>
           <HiddenFields draftId={draft.id} override={override} />
           <label className={styles.label} htmlFor={`reason-${draft.id}`}>
             Reason (optional)
@@ -119,7 +120,7 @@ export function DraftCard({ item, override }: DraftCardProps) {
           <SubmitButton className={styles.danger} pendingLabel="Rejecting…">
             Reject
           </SubmitButton>
-        </form>
+        </GuardedForm>
       </div>
     </article>
   );
