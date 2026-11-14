@@ -1,3 +1,4 @@
+import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Document, Font, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { DocumentProps } from "@react-pdf/renderer";
@@ -24,9 +25,12 @@ export interface DocumentData {
  * Noto Sans (Regular + Bold, static TTF, OFL) is registered by absolute path so it resolves from any cwd.
  */
 export const FONT_FAMILY = "Noto Sans";
+// Not `new URL(..., import.meta.url)`: Turbopack rewrites that pattern into an asset reference and
+// `fileURLToPath` then rejects it during `next build`.
+const FONT_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "../../../assets/fonts");
 export const FONT_FILES = {
-  regular: fileURLToPath(new URL("../../../assets/fonts/NotoSans-Regular.ttf", import.meta.url)),
-  bold: fileURLToPath(new URL("../../../assets/fonts/NotoSans-Bold.ttf", import.meta.url)),
+  regular: resolve(FONT_DIR, "NotoSans-Regular.ttf"),
+  bold: resolve(FONT_DIR, "NotoSans-Bold.ttf"),
 } as const;
 
 Font.register({
