@@ -8,7 +8,8 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/auth", () => ({ auth: mocks.auth, signOut: mocks.signOut }));
 
-import { AppShell } from "@/components/app-shell";
+import { DISCLAIMER } from "@dues-banshee/agent";
+import { AppShell, FOOTER_TEXT } from "@/components/app-shell";
 import { signOutAction } from "@/components/sign-out-action";
 
 const FOOTER = "Reminders a supplier sends to its own buyers. Not legal advice.";
@@ -34,10 +35,21 @@ function links(html: string): Record<string, string> {
 }
 
 describe("AppShell with a supplierId", () => {
-  it('links "Graveyard" to / and "Import" to /import', async () => {
+  it('links "Graveyard" to /, "Approvals" to /approvals and "Import" to /import', async () => {
     const html = await render({ supplierId: "supplier-1" });
 
-    expect(links(html)).toEqual({ "/": "Graveyard", "/import": "Import" });
+    expect(links(html)).toEqual({ "/": "Graveyard", "/approvals": "Approvals", "/import": "Import" });
+  });
+
+  it("lists the nav links in the order Graveyard, Approvals, Import", async () => {
+    const html = await render({ supplierId: "supplier-1" });
+
+    expect(Object.keys(links(html))).toEqual(["/", "/approvals", "/import"]);
+  });
+
+  it("uses the agent's DISCLAIMER as the footer text", () => {
+    expect(FOOTER_TEXT).toBe(DISCLAIMER);
+    expect(FOOTER_TEXT).toBe(FOOTER);
   });
 
   it('has a "Sign out" submit button inside a form', async () => {
@@ -64,6 +76,8 @@ describe.each([
 
     expect(links(html)).toEqual({});
     expect(html).not.toContain("Graveyard</a>");
+    expect(html).not.toContain("Approvals</a>");
+    expect(html).not.toContain('href="/approvals"');
     expect(html).not.toContain("Import</a>");
     expect(html).not.toContain("Sign out");
     expect(html).not.toContain("<form");

@@ -6,6 +6,7 @@ export { callModel } from "./io/model-router";
 export type { CallErrorKind, CallOptions, CallRecord, CallResult } from "./io/model-router";
 export { renderDocument } from "./io/documents/render";
 export type { DocumentData, DocumentKind } from "./io/documents/render";
+export { DISCLAIMER } from "./core/final-text";
 export { draftStep } from "./draft-step";
 export type { AttemptKind, DraftAttemptInput, DraftAttemptResult, DraftErrorKind } from "./draft-step";
 export { runLadder } from "./run-ladder";

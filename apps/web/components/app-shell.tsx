@@ -19,6 +19,9 @@ export async function AppShell({ children }: { children: ReactNode }) {
             <Link href="/" className={styles.link}>
               Graveyard
             </Link>
+            <Link href="/approvals" className={styles.link}>
+              Approvals
+            </Link>
             <Link href="/import" className={styles.link}>
               Import
             </Link>

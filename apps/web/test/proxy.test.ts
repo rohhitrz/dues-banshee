@@ -205,6 +205,33 @@ describe("proxy: /api/import", () => {
   });
 });
 
+describe("proxy: /approvals", () => {
+  it("redirects /approvals to /signin when signed out", () => {
+    const res = proxyHandler(fakeRequest("http://localhost:3000/approvals", null, null));
+
+    expect(res?.status).toBe(307);
+    expect(res?.headers.get("location")).toBe("http://localhost:3000/signin");
+  });
+
+  it("passes /approvals when signed in", () => {
+    expect(proxyHandler(fakeRequest("http://localhost:3000/approvals", null, SIGNED_IN))).toBeUndefined();
+  });
+});
+
+describe("proxy: /api/drafts", () => {
+  it("answers 401 JSON for the document route when signed out", async () => {
+    const res = proxyHandler(fakeRequest("http://localhost:3000/api/drafts/x/document", null, null));
+
+    expect(res?.status).toBe(401);
+    expect(res?.headers.get("location")).toBeNull();
+    expect(await res?.json()).toEqual({ error: "Unauthorized" });
+  });
+
+  it("passes the document route when signed in", () => {
+    expect(proxyHandler(fakeRequest("http://localhost:3000/api/drafts/x/document", null, SIGNED_IN))).toBeUndefined();
+  });
+});
+
 describe("proxy: module shape", () => {
   const source = readFileSync(fileURLToPath(new URL("../proxy.ts", import.meta.url)), "utf8");
 
@@ -215,7 +242,16 @@ describe("proxy: module shape", () => {
     expect([...specifiers, ...bare]).toEqual(["next-auth", "next/server", "./auth.config"]);
   });
 
-  it("matches the six guarded routes", () => {
-    expect(config.matcher).toEqual(["/", "/signin", "/import/:path*", "/graveyard/:path*", "/debtor/:path*", "/api/import/:path*"]);
+  it("matches the eight guarded routes", () => {
+    expect(config.matcher).toEqual([
+      "/",
+      "/signin",
+      "/import/:path*",
+      "/approvals/:path*",
+      "/graveyard/:path*",
+      "/debtor/:path*",
+      "/api/import/:path*",
+      "/api/drafts/:path*",
+    ]);
   });
 });
