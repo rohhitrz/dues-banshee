@@ -1,4 +1,5 @@
-import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import { fileURLToPath } from "node:url";
+import { Document, Font, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { DocumentProps } from "@react-pdf/renderer";
 import type { Supplier } from "@dues-banshee/db";
 import { RULE_SOURCES } from "@dues-banshee/engine";
@@ -19,20 +20,30 @@ export interface DocumentData {
 }
 
 /**
- * Built-in Helvetica (WinAnsi) has no rupee glyph and would print U+20B9 as a wrong character.
- * Only the currency sign is swapped for "Rs. "; every digit stays as the Fact_Sheet formatted it.
+ * Built-in Helvetica (WinAnsi) has no rupee glyph, so formatINR output would print a wrong character.
+ * Noto Sans (Regular + Bold, static TTF, OFL) is registered by absolute path so it resolves from any cwd.
  */
-export function pdfSafe(text: string): string {
-  return text.replaceAll("\u20B9", "Rs. ");
-}
+export const FONT_FAMILY = "Noto Sans";
+export const FONT_FILES = {
+  regular: fileURLToPath(new URL("../../../assets/fonts/NotoSans-Regular.ttf", import.meta.url)),
+  bold: fileURLToPath(new URL("../../../assets/fonts/NotoSans-Bold.ttf", import.meta.url)),
+} as const;
+
+Font.register({
+  family: FONT_FAMILY,
+  fonts: [
+    { src: FONT_FILES.regular, fontWeight: "normal" },
+    { src: FONT_FILES.bold, fontWeight: "bold" },
+  ],
+});
 
 const styles = StyleSheet.create({
-  page: { paddingTop: 60, paddingBottom: 60, paddingHorizontal: 48, fontFamily: "Helvetica", fontSize: 10.5, lineHeight: 1.4 },
-  header: { position: "absolute", top: 24, left: 48, right: 48, fontSize: 9, fontFamily: "Helvetica-Bold", color: "#8a1c1c" },
-  title: { fontSize: 16, fontFamily: "Helvetica-Bold", marginBottom: 12 },
-  heading: { fontSize: 11, fontFamily: "Helvetica-Bold", marginTop: 14, marginBottom: 4 },
+  page: { paddingTop: 60, paddingBottom: 60, paddingHorizontal: 48, fontFamily: FONT_FAMILY, fontSize: 10.5, lineHeight: 1.4 },
+  header: { position: "absolute", top: 24, left: 48, right: 48, fontSize: 9, fontFamily: FONT_FAMILY, fontWeight: "bold", color: "#8a1c1c" },
+  title: { fontSize: 16, fontFamily: FONT_FAMILY, fontWeight: "bold", marginBottom: 12 },
+  heading: { fontSize: 11, fontFamily: FONT_FAMILY, fontWeight: "bold", marginTop: 14, marginBottom: 4 },
   row: { flexDirection: "row", marginBottom: 2 },
-  label: { width: 110, fontFamily: "Helvetica-Bold" },
+  label: { width: 110, fontFamily: FONT_FAMILY, fontWeight: "bold" },
   value: { flex: 1 },
   rule: { marginBottom: 3 },
   body: { marginTop: 2 },
@@ -43,7 +54,7 @@ function Field({ label, children }: { label: string; children: ReactNode }): Rea
   return (
     <View style={styles.row}>
       <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{typeof children === "string" ? pdfSafe(children) : children}</Text>
+      <Text style={styles.value}>{children}</Text>
     </View>
   );
 }
@@ -101,7 +112,12 @@ export function NoticePages({
         {extra}
 
         <Text style={styles.heading}>Message</Text>
-        <Text style={styles.body}>{pdfSafe(finalText)}</Text>
+        {/* One <Text> per line: a "\n" inside a run has no Noto Sans glyph, so react-pdf would fall back to Helvetica for it. */}
+        <View style={styles.body}>
+          {finalText.split("\n").map((line, i) => (
+            <Text key={i}>{line === "" ? " " : line}</Text>
+          ))}
+        </View>
 
         <Text style={styles.footer}>{DISCLAIMER}</Text>
       </Page>

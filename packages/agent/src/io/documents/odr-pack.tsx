@@ -2,7 +2,7 @@ import { Text, View } from "@react-pdf/renderer";
 import type { RuleId } from "@dues-banshee/engine";
 import type { DocumentProps } from "@react-pdf/renderer";
 import type { ReactElement } from "react";
-import { NoticePages, RuleList } from "./legal-notice";
+import { FONT_FAMILY, NoticePages, RuleList } from "./legal-notice";
 import type { DocumentData } from "./legal-notice";
 
 export const ODR_LINE = "File on the MSME ODR portal (odr.msme.gov.in)";
@@ -15,7 +15,7 @@ export function OdrPack({ data }: { data: DocumentData }): ReactElement<Document
       data={data}
       extra={
         <View>
-          <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", marginTop: 14, marginBottom: 4 }}>{ODR_LINE}</Text>
+          <Text style={{ fontSize: 11, fontFamily: FONT_FAMILY, fontWeight: "bold", marginTop: 14, marginBottom: 4 }}>{ODR_LINE}</Text>
           <RuleList ruleIds={ODR_RULE_IDS} />
         </View>
       }

@@ -1,5 +1,7 @@
 // Legal_Notice and ODR_Pack PDFs for Sharma Traders at Today 2026-11-12 (Bank_Rate 575 bps as of 2026-10-07).
 // Requirements: 8.1, 8.2, 8.3, 8.4, 12.8
+import { existsSync } from "node:fs";
+import { isAbsolute } from "node:path";
 import { DEMO_INVOICES, DEMO_SUPPLIER, toEngineInvoice } from "@dues-banshee/db";
 import type { InvoiceRow, SupplierRow } from "@dues-banshee/db";
 import { RULE_SOURCES, formatINR } from "@dues-banshee/engine";
@@ -8,6 +10,7 @@ import { extractText, getDocumentProxy } from "unpdf";
 import { describe, expect, it } from "vitest";
 import { buildFactSheet } from "../src/core/fact-sheet";
 import { DISCLAIMER, buildFinalText } from "../src/core/final-text";
+import { FONT_FILES } from "../src/io/documents/legal-notice";
 import { renderDocument } from "../src/io/documents/render";
 
 const TODAY = "2026-11-12";
@@ -68,8 +71,29 @@ describe("Legal_Notice and ODR_Pack documents for Sharma Traders", () => {
   it("demo facts are the exact Sharma values", () => {
     expect(FACTS.principal).toEqual(formatINR(41200000, "full"));
     expect(FACTS.interest).toEqual(formatINR(512794, "full"));
+    expect(FACTS.principal.startsWith("\u20B9")).toBe(true);
+    expect(FACTS.interest?.startsWith("\u20B9")).toBe(true);
     expect(FACTS.due_date).toEqual("17 Oct 2026");
     expect(FACTS.rate_as_of).toEqual("7 Oct 2026");
+  });
+
+  it("registers Noto Sans files that exist and never references Helvetica in the PDF", async () => {
+    expect(existsSync(FONT_FILES.regular)).toBe(true);
+    expect(existsSync(FONT_FILES.bold)).toBe(true);
+    expect(isAbsolute(FONT_FILES.regular)).toBe(true);
+    expect(isAbsolute(FONT_FILES.bold)).toBe(true);
+    for (const kind of ["legal_notice", "odr_pack"] as const) {
+      const bytes = await renderDocument(kind, {
+        supplier: SUPPLIER,
+        facts: FACTS,
+        ruleIds: RULE_IDS,
+        finalText: finalTextOf(3),
+        caveat: undefined,
+      });
+      const raw = Buffer.from(bytes).toString("latin1");
+      expect(raw).not.toContain("Helvetica");
+      expect(raw).toContain("NotoSans");
+    }
   });
 
   it("legal_notice shows every Fact_Sheet value, each rule with its source, the header and the Disclaimer", async () => {
@@ -86,9 +110,9 @@ describe("Legal_Notice and ODR_Pack documents for Sharma Traders", () => {
     expect(text).toContain(DEMO_SUPPLIER.udyamNumber);
     expect(text).toContain("Sharma Traders");
     expect(text).toContain("LPC/26-27/0412");
-    expect(text).toContain("Principal Rs. 4,12,000");
+    expect(text).toContain(`Principal ${formatINR(41200000, "full")}`);
     expect(text).toContain("Due date 17 Oct 2026");
-    expect(text).toContain("Interest Rs. 5,127.94 (rate as of 7 Oct 2026)");
+    expect(text).toContain(`Interest ${formatINR(512794, "full")} (rate as of 7 Oct 2026)`);
     for (const id of RULE_IDS) expect(text).toContain(`${id} (${RULE_SOURCES[id]})`);
     // Rule lines appear in Basis_Line order.
     const positions = RULE_IDS.map((id) => text.indexOf(`${id} (${RULE_SOURCES[id]})`));
@@ -114,8 +138,8 @@ describe("Legal_Notice and ODR_Pack documents for Sharma Traders", () => {
     expect(text).toContain(ODR_LINE);
     expect(text).toContain(`MSMED-ODR (${RULE_SOURCES["MSMED-ODR"]})`);
     expect(text).toContain(`MSMED-18 (${RULE_SOURCES["MSMED-18"]})`);
-    expect(text).toContain("Principal Rs. 4,12,000");
-    expect(text).toContain("Interest Rs. 5,127.94 (rate as of 7 Oct 2026)");
+    expect(text).toContain(`Principal ${formatINR(41200000, "full")}`);
+    expect(text).toContain(`Interest ${formatINR(512794, "full")} (rate as of 7 Oct 2026)`);
     expect(text).toContain(norm(DISCLAIMER));
     expect(text).not.toContain(CAVEAT);
   });
