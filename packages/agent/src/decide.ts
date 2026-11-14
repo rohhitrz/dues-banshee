@@ -9,7 +9,7 @@ import {
   updatePendingBody,
 } from "@dues-banshee/db";
 import type { Db, DraftWithContext, LadderRecord } from "@dues-banshee/db";
-import { DEFAULT_LADDER_CONFIG, RULE_IDS, nextEscalationStep } from "@dues-banshee/engine";
+import { DEFAULT_LADDER_CONFIG, RULE_IDS, ValidationError, nextEscalationStep } from "@dues-banshee/engine";
 import type { CalendarDate, EscalationDecision, RuleId } from "@dues-banshee/engine";
 import { buildFactSheet } from "./core/fact-sheet";
 import { buildFinalText } from "./core/final-text";
@@ -60,7 +60,11 @@ async function loadPending(
   return { ctx };
 }
 
-/** Recomputes the Engine Decision for the Draft's invoice. The Draft's own pending status plays no part. */
+/**
+ * Recomputes the Engine Decision for the Draft's invoice. The Draft's own pending status plays no part.
+ * An invoice the Engine now rejects (a ValidationError) gets one Tool_Log error row and comes back as
+ * `null`, which the callers answer with `not_found`; the Draft is left as it was.
+ */
 async function recompute(
   db: Db,
   supplierId: string,
@@ -70,13 +74,21 @@ async function recompute(
   const [record] = await listLadderRecords(db, supplierId, ctx.draft.invoiceId);
   if (record === undefined) return null;
   const history = engineHistory(record);
-  const decision = nextEscalationStep(record.invoice, history, today, DEFAULT_LADDER_CONFIG);
-  await logToolCall(db, {
-    tool: "next_escalation_step",
-    invoiceId: record.invoice.id,
-    input: { invoice: record.invoice, history, today, config: DEFAULT_LADDER_CONFIG },
-    output: decision,
-  });
+  const input = { invoice: record.invoice, history, today, config: DEFAULT_LADDER_CONFIG };
+  let decision: EscalationDecision;
+  try {
+    decision = nextEscalationStep(record.invoice, history, today, DEFAULT_LADDER_CONFIG);
+  } catch (err) {
+    if (!(err instanceof ValidationError)) throw err;
+    await logToolCall(db, {
+      tool: "next_escalation_step",
+      invoiceId: record.invoice.id,
+      input,
+      output: { error: "ValidationError", field: err.field, message: err.message },
+    });
+    return null;
+  }
+  await logToolCall(db, { tool: "next_escalation_step", invoiceId: record.invoice.id, input, output: decision });
   return { record, decision };
 }
 

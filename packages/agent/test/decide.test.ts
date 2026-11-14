@@ -265,6 +265,52 @@ describe("approveDraft", () => {
   });
 });
 
+describe("a pending Draft whose invoice the Engine now rejects", () => {
+  const VALIDATION_ROW = {
+    error: "ValidationError",
+    field: "paidOn",
+    message: "paidOn: must not be before acceptedOn",
+  };
+  /** paid_on before accepted_on passes the database checks and fails the Engine's validateInvoice. */
+  async function breakInvoice(f: Fixture): Promise<void> {
+    await f.t.pglite.query("update invoices set paid_on = '2026-01-01' where id = $1", [f.sharmaInvoiceId]);
+  }
+  async function errorRows(f: Fixture) {
+    return (await f.t.db.select().from(agentRuns)).filter((r) => r.tool === "next_escalation_step");
+  }
+  it("approveDraft logs the ValidationError row and answers not_found, leaving the Draft pending", async () => {
+    const f = await withNudgeDraft();
+    await breakInvoice(f);
+    await f.t.db.delete(agentRuns);
+    const before = await snapshot(f.t);
+    await expect(approveDraft({ db: f.t.db }, f.supplierId, f.draftId, TODAY)).resolves.toEqual({
+      kind: "not_found",
+    });
+    const rows = await errorRows(f);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.invoiceId).toEqual(f.sharmaInvoiceId);
+    expect(rows[0]?.output).toEqual(VALIDATION_ROW);
+    expect(rows[0]?.input).toMatchObject({ today: TODAY, history: [], config: { stepGapDays: 7 } });
+    expect(await snapshot(f.t)).toEqual(before);
+    expect((await draftById(f.t, f.draftId)).status).toEqual("pending");
+  });
+  it("redraft logs the ValidationError row and answers not_found without calling a model", async () => {
+    const f = await withNudgeDraft();
+    await breakInvoice(f);
+    await f.t.db.delete(agentRuns);
+    const before = await snapshot(f.t);
+    const models = modelSet(REDRAFT_OUTPUT);
+    await expect(redraft({ db: f.t.db, models }, f.supplierId, f.draftId, "english", TODAY)).resolves.toEqual({
+      kind: "not_found",
+    });
+    const rows = await errorRows(f);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.invoiceId).toEqual(f.sharmaInvoiceId);
+    expect(rows[0]?.output).toEqual(VALIDATION_ROW);
+    expect(models.default.doGenerateCalls).toHaveLength(0);
+    expect(await snapshot(f.t)).toEqual(before);
+  });
+});
 describe("editDraft", () => {
   it("rebuilds the Final_Text with the same Basis_Line and the Disclaimer last, and keeps the Draft pending", async () => {
     const f = await withNudgeDraft();
