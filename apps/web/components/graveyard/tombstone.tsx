@@ -1,6 +1,8 @@
 import type { CSSProperties } from "react";
 import type { CalendarDate } from "@dues-banshee/engine";
+import { debtorHref } from "@/lib/debtor/href";
 import type { TombstoneView } from "@/lib/graveyard/build-graveyard";
+import { overdueText } from "@/lib/graveyard/labels";
 import { bankRateMissingText } from "./bank-rate-message";
 import styles from "./tombstone.module.css";
 
@@ -8,25 +10,28 @@ export interface TombstoneProps {
   view: TombstoneView;
   /** Today, used only for the "Bank rate not configured for <Today>" text. */
   today: CalendarDate;
+  /** The active Demo_Override, carried into the link so the Debtor_Page shows the same Today. */
+  override?: CalendarDate | null;
 }
 
 const CAVEAT_TEXT = "Registered on Udyam after supply: claim may be contested";
 
 /**
- * One invoice as a tombstone. The stone is decorative and aria-hidden; every figure sits on the plaque
- * below it, never on the stone. Read-only: no buttons or controls (Req 5.6).
+ * One invoice as a tombstone, a single link to the Debtor_Page. The stone is decorative and aria-hidden;
+ * every figure sits on the plaque below it, never on the stone. A link triggers no escalation step.
  */
-export function Tombstone({ view, today }: TombstoneProps) {
+export function Tombstone({ view, today, override = null }: TombstoneProps) {
   const { look } = view;
-  const showOverdue = view.state === "overdue" || view.state === "armed" || view.state === "exploded";
-  const overdueText =
-    view.state === "overdue"
-      ? `Overdue ${view.daysOverdue} days`
-      : `Overdue ${view.daysOverdue} days, interest accruing`;
+  const overdue = overdueText(view);
 
   return (
     <li className={styles.item}>
-      <article className={styles.article} tabIndex={0} aria-label={view.ariaLabel} data-state={view.state}>
+      <a
+        className={styles.article}
+        href={debtorHref(view.buyerId, view.id, override)}
+        aria-label={view.ariaLabel}
+        data-state={view.state}
+      >
         <div className={styles.ground} aria-hidden="true">
           {look.wisp ? <span className={styles.wisp} data-look="wisp" /> : null}
           <div className={styles.stone} style={{ "--stone-rank": look.heightPx } as CSSProperties}>
@@ -50,7 +55,7 @@ export function Tombstone({ view, today }: TombstoneProps) {
           {view.dueDateText === null ? null : (
             <p className={styles.line}>{`Due ${view.dueDateText} · MSMED-15`}</p>
           )}
-          {showOverdue ? <p className={styles.line}>{overdueText}</p> : null}
+          {overdue === null ? null : <p className={styles.line}>{overdue}</p>}
           {view.interest !== null ? (
             <p className={styles.line}>{`Interest ${view.interest.text} · MSMED-16`}</p>
           ) : view.state === "not_covered" ? null : (
@@ -65,7 +70,7 @@ export function Tombstone({ view, today }: TombstoneProps) {
           {view.caveat === "registered_after_supply" ? <p className={styles.caveat}>{CAVEAT_TEXT}</p> : null}
           <p className={styles.next}>{view.nextLabel}</p>
         </div>
-      </article>
+      </a>
     </li>
   );
 }

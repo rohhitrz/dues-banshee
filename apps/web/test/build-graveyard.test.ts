@@ -94,6 +94,7 @@ function extraRecord(acceptedOn: string): GraveyardInvoiceRecord {
 //   Kumar are armed with the whole principal at risk (41,200,000 + 18,500,000 + 24,000,000 = 83,700,000).
 const KUMAR: TombstoneView = {
   id: "inv-kumar",
+  buyerId: "buyer-inv-kumar",
   buyerName: "Kumar Textiles",
   invoiceNumber: "LPC/26-27/0301",
   principalPaise: 24000000,
@@ -115,6 +116,7 @@ const KUMAR: TombstoneView = {
 
 const SHARMA: TombstoneView = {
   id: "inv-sharma",
+  buyerId: "buyer-inv-sharma",
   buyerName: "Sharma Traders",
   invoiceNumber: "LPC/26-27/0412",
   principalPaise: 41200000,
@@ -136,6 +138,7 @@ const SHARMA: TombstoneView = {
 
 const BANSAL: TombstoneView = {
   id: "inv-bansal",
+  buyerId: "buyer-inv-bansal",
   buyerName: "Bansal Hardware",
   invoiceNumber: "LPC/23-24/0098",
   principalPaise: 5500000,
@@ -157,6 +160,7 @@ const BANSAL: TombstoneView = {
 
 const MEHTA: TombstoneView = {
   id: "inv-mehta",
+  buyerId: "buyer-inv-mehta",
   buyerName: "Mehta Polymers",
   invoiceNumber: "LPC/25-26/0388",
   principalPaise: 16000000,
@@ -178,6 +182,7 @@ const MEHTA: TombstoneView = {
 
 const GUPTA: TombstoneView = {
   id: "inv-gupta",
+  buyerId: "buyer-inv-gupta",
   buyerName: "Gupta Engineering Works",
   invoiceNumber: "LPC/26-27/0466",
   principalPaise: 18500000,
@@ -199,6 +204,7 @@ const GUPTA: TombstoneView = {
 
 const VERMA: TombstoneView = {
   id: "inv-verma",
+  buyerId: "buyer-inv-verma",
   buyerName: "Verma Auto Parts",
   invoiceNumber: "LPC/26-27/0377",
   principalPaise: 8500000,

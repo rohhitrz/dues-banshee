@@ -6,7 +6,10 @@
   list-style: none;
 }
 
+/* The whole tombstone is one link to the Debtor_Page. */
 .article {
+  color: inherit;
+  text-decoration: none;
   --stone-min: 110px;
   --stone-max: max(150px, min(300px, 28vh));
   display: flex;

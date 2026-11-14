@@ -68,3 +68,14 @@ export function stateText({
         : `Outside MSMED (${WAIT_TEXT[nonCoverageReason]})`;
   }
 }
+
+/**
+ * The overdue line of a plaque or panel, or null when the state shows none. Shown only for `overdue`,
+ * `armed` and `exploded`; `overdue` has no "interest accruing" suffix because its stateText says so.
+ */
+export function overdueText(view: { state: TombstoneState; daysOverdue: number }): string | null {
+  if (view.state !== "overdue" && view.state !== "armed" && view.state !== "exploded") return null;
+  return view.state === "overdue"
+    ? `Overdue ${view.daysOverdue} days`
+    : `Overdue ${view.daysOverdue} days, interest accruing`;
+}

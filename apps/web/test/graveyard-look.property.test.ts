@@ -4,6 +4,7 @@ import type { GraveyardInvoiceRecord, Supplier } from "@dues-banshee/db";
 import {
   LADDER_STEPS,
   fromEpochDay,
+  hasActivePromise,
   type BankRate,
   type EscalationEvent,
   type Invoice,
@@ -11,6 +12,7 @@ import {
   type SupplierCategory,
 } from "@dues-banshee/engine";
 import { buildGraveyard, type GraveyardView, type TombstoneView } from "@/lib/graveyard/build-graveyard";
+import { tombstoneLook } from "@/lib/graveyard/look";
 
 // Feature: dashboard-ui, Property 8: Tombstone look encodes the data monotonically
 // **Validates: Requirements 5.11, 5.12**
@@ -261,5 +263,42 @@ describe("Property 8: Tombstone look encodes the data monotonically", () => {
     expect(tombstones.some((t) => !t.look.wisp)).toBe(true);
     expect(tombstones.some((t) => t.state === "resurrected")).toBe(true);
     expect(tombstones.some((t) => t.look.cracked && t.look.ember)).toBe(true);
+  });
+});
+
+// Feature: debtor-ui, Property 3: Wisp is "unpaid and active promise"
+// **Validates: Requirements 6.2**
+describe("Property 3: Wisp is \"unpaid and active promise\"", () => {
+  const arbDay = fc.integer({ min: FIRST_DAY, max: LAST_DAY }).map(fromEpochDay);
+  const arbEvent: fc.Arbitrary<EscalationEvent> = fc.oneof(
+    fc.record({
+      kind: fc.constant("step" as const),
+      step: fc.constantFrom(...LADDER_STEPS),
+      on: arbDay,
+    }),
+    fc.record({
+      kind: fc.constant("promise" as const),
+      promisedDate: arbDay,
+      amountPaise: fc.integer({ min: 1, max: 100_000_000 }),
+      recordedOn: arbDay,
+    }),
+  );
+
+  it("equals !paid && hasActivePromise(history, today) for any look input", () => {
+    fc.assert(
+      fc.property(
+        fc.record({
+          heightPx: fc.integer({ min: 130, max: 300 }),
+          daysOverdue: fc.integer({ min: 0, max: 1000 }),
+          paid: fc.boolean(),
+          history: fc.array(arbEvent, { maxLength: 6 }),
+          today: arbDay,
+        }),
+        (input) => {
+          expect(tombstoneLook(input).wisp).toBe(!input.paid && hasActivePromise(input.history, input.today));
+        },
+      ),
+      { numRuns: 100 },
+    );
   });
 });

@@ -72,7 +72,7 @@ export default async function GraveyardPage({
           {view.tombstones.length === 0 ? (
             <GraveyardEmpty />
           ) : (
-            <TombstoneGrid tombstones={view.tombstones} today={view.today} />
+            <TombstoneGrid tombstones={view.tombstones} today={view.today} override={override} />
           )}
         </PendingDim>
       </GraveyardPendingProvider>

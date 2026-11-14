@@ -21,6 +21,7 @@ export type { TombstoneState } from "./labels";
 
 export interface TombstoneView {
   id: string;
+  buyerId: string;
   buyerName: string;
   invoiceNumber: string;
   principalPaise: Paise;
@@ -107,6 +108,7 @@ function viewFor(
     record,
     paid,
     id: invoice.id,
+    buyerId: record.buyerId,
     buyerName: record.buyerName,
     invoiceNumber: record.invoiceNumber,
     principalPaise: invoice.amountPaise,

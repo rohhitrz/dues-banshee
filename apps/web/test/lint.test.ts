@@ -1,6 +1,7 @@
 // Node types are needed for fileURLToPath; the ESLint Node API runs in the Vitest process.
 /// <reference types="node" />
-import { readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ESLint } from "eslint";
 import { describe, expect, it } from "vitest";
@@ -117,5 +118,56 @@ describe("apps/web proxy import allowlist", () => {
 
   it.each(["apps/web/proxy.ts", "apps/web/auth.config.ts"])("reports no errors for the real %s", async (file) => {
     expect(await lintRealFile(file)).toEqual([]);
+  });
+});
+
+// Feature: debtor-ui, Req 6.3: the only active-promise rule is the Engine's hasActivePromise / activePromiseUntil.
+/** True when `source` compares a `promise` event kind with `promisedDate`, i.e. re-implements the wisp rule. */
+function hasInlinePromiseCheck(source: string): boolean {
+  return (
+    /kind\s*[!=]==?\s*["']promise["'][^;]{0,120}promisedDate/.test(source) ||
+    /promisedDate[^;]{0,120}kind\s*[!=]==?\s*["']promise["']/.test(source) ||
+    /["']promise["']\s*[!=]==?\s*[\w.]*kind[^;]{0,120}promisedDate/.test(source)
+  );
+}
+
+const WEB_ROOT = fileURLToPath(new URL("..", import.meta.url));
+const SKIPPED_DIRS = new Set(["node_modules", ".next", "test", "e2e", "coverage"]);
+
+/** Every non-test .ts/.tsx source file under `dir`. */
+function listWebSources(dir: string): string[] {
+  if (!existsSync(dir)) return [];
+  const files: string[] = [];
+  for (const entry of readdirSync(dir)) {
+    const full = join(dir, entry);
+    if (statSync(full).isDirectory()) {
+      if (!SKIPPED_DIRS.has(entry)) files.push(...listWebSources(full));
+    } else if (/\.tsx?$/.test(entry) && !/\.(test|spec)\.tsx?$/.test(entry)) {
+      files.push(full);
+    }
+  }
+  return files.sort();
+}
+
+describe("apps/web active-promise scan", () => {
+  it("detects an inline promise check in each common spelling", () => {
+    expect(hasInlinePromiseCheck('history.some((e) => e.kind === "promise" && e.promisedDate >= today)')).toBe(true);
+    expect(hasInlinePromiseCheck("history.filter(e => e.promisedDate >= t && e.kind === 'promise')")).toBe(true);
+    expect(hasInlinePromiseCheck('const x = "promise" === e.kind && e.promisedDate >= today;')).toBe(true);
+    expect(hasInlinePromiseCheck('if (e.kind !== "promise") continue;\nconst d = e.promisedDate;')).toBe(false);
+  });
+
+  it("allows calls to hasActivePromise and activePromiseUntil", () => {
+    expect(hasInlinePromiseCheck("wisp: !paid && hasActivePromise(history, today)")).toBe(false);
+    expect(hasInlinePromiseCheck("const until = activePromiseUntil(history, today);")).toBe(false);
+  });
+
+  it("finds no inline active-promise check in any apps/web source outside tests", () => {
+    const sources = listWebSources(WEB_ROOT);
+    expect(sources.length).toBeGreaterThan(0);
+    const offenders = sources
+      .filter((file) => hasInlinePromiseCheck(readFileSync(file, "utf8")))
+      .map((file) => file.slice(WEB_ROOT.length));
+    expect(offenders).toEqual([]);
   });
 });

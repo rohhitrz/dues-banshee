@@ -11,6 +11,7 @@ import type { TombstoneView } from "@/lib/graveyard/build-graveyard";
 
 const SHARMA: TombstoneView = {
   id: "inv-1",
+  buyerId: "buyer-1",
   buyerName: "Sharma Traders",
   invoiceNumber: "LPC/26-27/0412",
   principalPaise: 41200000,
@@ -71,11 +72,41 @@ describe("TimeTravel", () => {
 describe("Tombstone", () => {
   const html = renderToStaticMarkup(<Tombstone view={SHARMA} today="2026-11-12" />);
 
-  it("is a focusable article with the view's aria-label and no button", () => {
-    expect(html).toContain('tabindex="0"');
+  it("is one link with the view's aria-label, no tabindex and no button", () => {
+    expect(html.match(/<a[ >]/g)?.length).toBe(1);
+    expect(html).not.toContain("tabindex");
+    expect(html).not.toContain("<article");
     expect(html).toContain(`aria-label="${SHARMA.ariaLabel}"`);
     expect(html).not.toContain("<button");
   });
+
+  it("links to the buyer's page at the invoice, with no today value without an override", () => {
+    expect(html).toContain('href="/debtors/buyer-1#invoice-inv-1"');
+    expect(html).not.toContain("today=");
+  });
+
+  it("puts the Demo_Override before the fragment when one is active", () => {
+    const out = renderToStaticMarkup(<Tombstone view={SHARMA} today="2027-03-10" override="2027-03-10" />);
+    expect(out).toContain('href="/debtors/buyer-1?today=2027-03-10#invoice-inv-1"');
+  });
+
+  it.each(["resurrected", "not_covered", "not_due", "exploded", "armed", "overdue"] as const)(
+    "renders exactly one link for the %s state",
+    (state) => {
+      const view: TombstoneView = { ...SHARMA, state };
+      for (const override of [null, "2027-03-10"] as const) {
+        const out = renderToStaticMarkup(<Tombstone view={view} today="2026-11-12" override={override} />);
+        const hrefs = [...out.matchAll(/<a [^>]*href="([^"]*)"/g)].map((m) => m[1]);
+        expect(hrefs).toEqual([
+          override === null
+            ? "/debtors/buyer-1#invoice-inv-1"
+            : "/debtors/buyer-1?today=2027-03-10#invoice-inv-1",
+        ]);
+        expect(out).toContain(`aria-label="${SHARMA.ariaLabel}"`);
+        expect(out).not.toContain("tabindex");
+      }
+    },
+  );
 
   it("shows figures with their rule IDs, the caveat and the next step", () => {
     expect(html).toContain("Due 17 Oct 2026 · MSMED-15");

@@ -1,4 +1,4 @@
-import type { CalendarDate, EscalationHistory, Paise } from "@dues-banshee/engine";
+import { hasActivePromise, type CalendarDate, type EscalationHistory, type Paise } from "@dues-banshee/engine";
 
 export type MossLevel = 0 | 1 | 2 | 3 | 4;
 
@@ -56,6 +56,6 @@ export function tombstoneLook({ heightPx, daysOverdue, paid, history, today }: T
     moss: mossLevel(daysOverdue),
     cracked: daysOverdue > 60,
     ember: daysOverdue > 45,
-    wisp: !paid && history.some((e) => e.kind === "promise" && e.promisedDate >= today),
+    wisp: !paid && hasActivePromise(history, today),
   };
 }

@@ -150,13 +150,15 @@ describe("GraveyardPage session", () => {
   });
 });
 
+// A Tombstone is now one link to its Debtor_Page instead of an <article>.
+const TOMBSTONE_LINK = 'href="/debtors/';
 describe("GraveyardPage signed in", () => {
   it("renders the demo tombstones and Totals, and closes the database", async () => {
     const html = await render();
 
     expect(html).toContain("Sharma Traders");
     expect(html).toContain("LPC/26-27/0412");
-    expect(count(html, "<article")).toBe(6);
+    expect(count(html, TOMBSTONE_LINK)).toBe(6);
     expect(html).toContain("Rules as of 7 Oct 2026");
     expect(html).not.toContain(MISSING);
     expect(html).not.toContain(LOAD_FAILED);
@@ -176,7 +178,7 @@ describe("GraveyardPage signed in", () => {
     for (const entry of entries) expect(count(html, entry)).toBe(1);
     const text = html.replace(/<[^>]*>/g, "");
     expect(count(text, entries.join(" · "))).toBe(1);
-    expect(html.indexOf(entries[0]!)).toBeGreaterThan(html.lastIndexOf("</article>"));
+    expect(html.indexOf(entries[0]!)).toBeGreaterThan(html.indexOf("</a>", html.lastIndexOf(TOMBSTONE_LINK)));
   });
   it("shows no legend when there are no tombstones", async () => {
     mocks.listGraveyardInvoices.mockResolvedValue([]);
@@ -231,7 +233,7 @@ describe("GraveyardPage without a Bank_Rate", () => {
 
     expect(html).toContain("LPC/26-27/0412");
     expect(html).toContain('aria-label="Totals"');
-    const tombstones = count(html, "<article");
+    const tombstones = count(html, TOMBSTONE_LINK);
     expect(tombstones).toBe(6);
     // One per tombstone interest slot, plus Interest_Accrued and the rules line.
     expect(count(html, MISSING)).toBe(tombstones + 2);
@@ -310,7 +312,7 @@ describe("GraveyardPage with no invoices", () => {
 
     expect(html).toContain("The graveyard is quiet");
     expect(html).toMatch(/<a [^>]*href="\/import"[^>]*>/);
-    expect(count(html, "<article")).toBe(0);
+    expect(count(html, TOMBSTONE_LINK)).toBe(0);
     expect(html).toContain(formatINR(0, "full"));
     expect(html).toContain(`Exploded 0 · Resurrected 0`);
     expect(html).not.toContain(LOAD_FAILED);

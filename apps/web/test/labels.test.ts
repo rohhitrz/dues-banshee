@@ -5,7 +5,7 @@ import type {
   NonCoverageReason,
 } from "@dues-banshee/engine";
 import { describe, expect, it } from "vitest";
-import { nextStepLabel, stateText, type TombstoneState } from "@/lib/graveyard/labels";
+import { nextStepLabel, overdueText, stateText, type TombstoneState } from "@/lib/graveyard/labels";
 
 const advance = (step: LadderStep): EscalationDecision => ({
   action: "advance",
@@ -85,5 +85,19 @@ describe("stateText", () => {
     expect(stateText({ state: "not_covered", daysLeft: 0, nonCoverageReason: reason })).toBe(
       expected,
     );
+  });
+});
+
+describe("overdueText", () => {
+  it("is the plain line for overdue and adds interest accruing for armed and exploded", () => {
+    expect(overdueText({ state: "overdue", daysOverdue: 12 })).toBe("Overdue 12 days");
+    expect(overdueText({ state: "armed", daysOverdue: 26 })).toBe("Overdue 26 days, interest accruing");
+    expect(overdueText({ state: "exploded", daysOverdue: 956 })).toBe("Overdue 956 days, interest accruing");
+  });
+
+  it("is null for states that show no overdue line", () => {
+    for (const state of ["resurrected", "not_covered", "not_due"] as const) {
+      expect(overdueText({ state, daysOverdue: 0 })).toBeNull();
+    }
   });
 });
