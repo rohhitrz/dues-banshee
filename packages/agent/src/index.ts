@@ -8,4 +8,6 @@ export { renderDocument } from "./io/documents/render";
 export type { DocumentData, DocumentKind } from "./io/documents/render";
 export { draftStep } from "./draft-step";
 export type { AttemptKind, DraftAttemptInput, DraftAttemptResult, DraftErrorKind } from "./draft-step";
+export { runLadder } from "./run-ladder";
+export type { InvoiceOutcome, LadderRunResult } from "./run-ladder";
 export type { NewDraft } from "@dues-banshee/db";
