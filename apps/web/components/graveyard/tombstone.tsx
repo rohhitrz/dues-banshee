@@ -14,7 +14,7 @@ export interface TombstoneProps {
   override?: CalendarDate | null;
 }
 
-const CAVEAT_TEXT = "Registered on Udyam after supply: claim may be contested";
+export const CAVEAT_TEXT = "Registered on Udyam after supply: claim may be contested";
 
 /**
  * One invoice as a tombstone, a single link to the Debtor_Page. The stone is decorative and aria-hidden;

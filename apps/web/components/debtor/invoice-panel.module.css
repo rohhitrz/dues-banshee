@@ -1,0 +1,86 @@
+/* Colours: bone #ECE7DB, secondary #A9A497, spectral #7CE8C0, ember label #FFB27A; each is at least 4.5:1 on the
+   panel ground #14111F. No decoration sits on or over the text. */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #221f2e;
+  border-radius: 8px;
+  background: #14111f;
+  color: #ece7db;
+  overflow-wrap: anywhere;
+  /* The App_Shell header is about 61px tall, and about 105px when its brand and nav wrap at 360px. */
+  scroll-margin-top: 140px;
+}
+
+.panel p {
+  margin: 0;
+}
+
+.invoiceNumber {
+  margin: 0;
+  color: #ece7db;
+  font-family: var(--font-figures, "JetBrains Mono"), ui-monospace, monospace;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.principal {
+  color: #ece7db;
+  font-family: var(--font-figures, "JetBrains Mono"), ui-monospace, monospace;
+  font-size: 1.25rem;
+}
+
+.line {
+  color: #a9a497;
+  font-size: 0.9rem;
+}
+
+.missing {
+  color: #ffb27a;
+  font-size: 0.9rem;
+}
+
+.state {
+  color: #ece7db;
+  font-weight: 600;
+}
+
+.state[data-state="resurrected"] {
+  color: #7ce8c0;
+}
+
+.state[data-state="armed"],
+.state[data-state="exploded"] {
+  color: #ffb27a;
+}
+
+.rule {
+  margin-left: 8px;
+  white-space: nowrap;
+  color: #ffb27a;
+  font-family: var(--font-figures, "JetBrains Mono"), ui-monospace, monospace;
+  font-size: 0.75rem;
+}
+
+.caveat {
+  align-self: flex-start;
+  padding: 2px 8px;
+  border: 1px solid #ff8a3d;
+  border-radius: 4px;
+  color: #ffb27a;
+  font-size: 0.85rem;
+}
+
+.promise {
+  color: #7ce8c0;
+  font-size: 0.9rem;
+}
+
+.next {
+  padding-top: 6px;
+  color: #7ce8c0;
+  font-size: 0.9rem;
+}

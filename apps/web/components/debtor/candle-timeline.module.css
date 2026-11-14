@@ -1,0 +1,106 @@
+/* Static colours: bone #ECE7DB, spectral #7CE8C0, ember #FF8A3D, flame glow moonlight #F3EBD3. The candle sits in
+   its own grid column, so it never overlaps text. Text is bone or secondary #A9A497 on the page ground.
+   Flicker keyframes are declared only under prefers-reduced-motion: no-preference. */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entry {
+  --tone: #ece7db;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 12px;
+  min-height: 44px;
+  padding: 6px 0;
+}
+
+.entry[data-tone="spectral"] {
+  --tone: #7ce8c0;
+}
+
+.entry[data-tone="ember"] {
+  --tone: #ff8a3d;
+}
+
+/* The candle body: filled when lit, an empty outline when unlit. */
+.candle {
+  position: relative;
+  align-self: start;
+  justify-self: center;
+  width: 10px;
+  height: 28px;
+  margin-top: 14px;
+  border: 2px solid var(--tone);
+  border-radius: 2px;
+  background: transparent;
+}
+
+.entry[data-lit="true"] .candle {
+  background: var(--tone);
+}
+
+/* The flame exists only on a lit candle. */
+.candle::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  display: none;
+  width: 8px;
+  height: 12px;
+  margin-bottom: 2px;
+  border-radius: 50% 50% 40% 40%;
+  background: #f3ebd3;
+  box-shadow: 0 0 8px 2px rgba(243, 235, 211, 0.6);
+  transform: translateX(-50%);
+}
+
+.entry[data-lit="true"] .candle::before {
+  display: block;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.date {
+  color: #a9a497;
+  font-family: var(--font-figures, "JetBrains Mono"), ui-monospace, monospace;
+  font-size: 0.8rem;
+}
+
+.text {
+  color: #ece7db;
+}
+
+.invoice {
+  color: #a9a497;
+  font-family: var(--font-figures, "JetBrains Mono"), ui-monospace, monospace;
+  font-size: 0.75rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes flicker {
+    0%,
+    100% {
+      transform: translateX(-50%) scale(1);
+    }
+
+    50% {
+      transform: translateX(-50%) scale(0.85, 1.1);
+    }
+  }
+
+  .entry[data-lit="true"] .candle::before {
+    animation: flicker 2.4s ease-in-out infinite;
+  }
+}

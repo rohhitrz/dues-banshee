@@ -44,6 +44,32 @@ function listSourceFiles(dir: string): string[] {
 // apps/web/test -> apps/web
 const WEB_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const SCANNED_DIRS = ["lib/graveyard", "components/graveyard"].map((d) => join(WEB_ROOT, d));
+// Feature: debtor-ui, Req 4.5: the same ban, plus float division, on the debtor screen.
+const DEBTOR_DIRS = ["lib/debtor", "components/debtor", "app/(debtor)"].map((d) => join(WEB_ROOT, d));
+
+/** Blanks comments and string/template text so only code operators remain. `${...}` expressions are kept. */
+function codeOnly(source: string): string {
+  let out = source.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
+  out = out.replace(/"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'/g, '""');
+  // Keep only the ${...} parts of template literals (one nesting level is enough here).
+  out = out.replace(/`((?:[^`\\]|\\.)*)`/g, (_m, body: string) => {
+    const parts = [...body.matchAll(/\$\{([^}]*)\}/g)].map((m) => m[1] ?? "");
+    return parts.length === 0 ? '""' : `(${parts.join(", ")})`;
+  });
+  return out;
+}
+
+/** Returns the 1-based lines of `source` that divide one operand by another with the `/` operator. */
+function findDivisions(source: string): number[] {
+  const lines: number[] = [];
+  codeOnly(source)
+    .split(/\r?\n/)
+    .forEach((text, index) => {
+      // `</tag>` and `/>` have no operand on the left or right, regex literals follow an operator or `(`.
+      if (/[\w)\]]\s*\/\s*[\w(]/.test(text)) lines.push(index + 1);
+    });
+  return lines;
+}
 
 describe("money lint scanner", () => {
   it("detects each banned token with its line number", () => {
@@ -57,6 +83,21 @@ describe("money lint scanner", () => {
 
   it("reports nothing for clean integer-paise code", () => {
     expect(findOffences("const p = parseInt(s, 10);\nconst ok = Number.isSafeInteger(p);\n")).toEqual([]);
+  });
+
+  it("detects division but not comments, strings, paths, closing tags or regex literals", () => {
+    expect(findDivisions("const a = total / 100;\nconst b = (x + y) / n;\nconst c = `${a / b}`;")).toEqual([1, 2, 3]);
+    const clean = [
+      "// paid / due",
+      "/* a / b */",
+      'const href = "/debtors/" + id;',
+      "const u = `/debtors/${id}`;",
+      "const r = /^\\d+$/.test(s);",
+      "const j = <a href={u}>x</a>;",
+      "const k = <br />;",
+      'const url = "https://example.com/x"; // see a / b',
+    ].join("\n");
+    expect(findDivisions(clean)).toEqual([]);
   });
 
   it("treats a missing directory as empty", () => {
@@ -73,5 +114,32 @@ describe("graveyard sources contain no float money handling", () => {
       }
     }
     expect(report, `Banned money tokens found:\n${report.join("\n")}`).toEqual([]);
+  });
+});
+
+describe("debtor sources contain no float money handling", () => {
+  const files = DEBTOR_DIRS.flatMap(listSourceFiles);
+
+  it("scans the debtor directories, so the check is not vacuous", () => {
+    const names = files.map((f) => relative(WEB_ROOT, f));
+    expect(names).toContain("lib/debtor/candle-timeline.ts");
+    expect(names).toContain("lib/debtor/build-debtor-view.ts");
+    expect(names.some((n) => n.startsWith("components/debtor/"))).toBe(true);
+    expect(names.some((n) => n.startsWith("app/(debtor)/"))).toBe(true);
+  });
+
+  it("has no toFixed, parseFloat or Number( in lib/debtor, components/debtor or app/(debtor)", () => {
+    const report: string[] = [];
+    for (const file of files) {
+      for (const { line, token } of findOffences(readFileSync(file, "utf8"))) {
+        report.push(`${relative(WEB_ROOT, file)}:${line} uses ${token}`);
+      }
+    }
+    expect(report, `Banned money tokens found:\n${report.join("\n")}`).toEqual([]);
+  });
+
+  it("has no division operator in lib/debtor, components/debtor or app/(debtor)", () => {
+    const report = files.flatMap((file) => findDivisions(readFileSync(file, "utf8")).map((line) => `${relative(WEB_ROOT, file)}:${line}`));
+    expect(report, `Division found:\n${report.join("\n")}`).toEqual([]);
   });
 });

@@ -98,6 +98,7 @@ export const config = {
     "/approvals/:path*",
     "/graveyard/:path*",
     "/debtor/:path*",
+    "/debtors/:path*",
     "/api/import/:path*",
     "/api/drafts/:path*",
   ],

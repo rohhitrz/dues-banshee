@@ -1,0 +1,32 @@
+/* Disabled text is secondary #A9A497 on the plaque #14111F (about 7:1). No opacity is used, so contrast holds. */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin-top: 8px;
+}
+
+.action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px dashed #a9a497;
+  border-radius: 6px;
+  background: #14111f;
+  color: #a9a497;
+  font: inherit;
+  cursor: not-allowed;
+}
+
+.note {
+  color: #a9a497;
+  font-size: 0.8rem;
+}
