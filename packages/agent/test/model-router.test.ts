@@ -57,7 +57,7 @@ describe("MODEL_IDS", () => {
     expect(MODEL_IDS).toEqual({
       default: "claude-haiku-5-5",
       legal: "claude-sonnet-5-5",
-      fallback: "gpt-5.6-luna",
+      fallback: "gpt-6-luna",
     });
   });
 });

@@ -12,8 +12,8 @@ export const MODEL_IDS = {
   default: "claude-haiku-5-5",
   /** Claude Sonnet 5.5: careful legal wording (legal notice, ODR pack). */
   legal: "claude-sonnet-5-5",
-  /** OpenAI GPT-5.6 Luna: used when the Claude call errors or is rate limited. */
-  fallback: "gpt-5.6-luna",
+  /** OpenAI GPT-6 Luna: used when the Claude call errors or is rate limited. */
+  fallback: "gpt-6-luna",
 } as const;
 
 export type ModelKey = keyof typeof MODEL_IDS;
