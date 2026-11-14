@@ -78,6 +78,8 @@ function demoRecords(): GraveyardInvoiceRecord[] {
       buyerName: demo.buyerName,
       invoiceNumber: demo.invoiceNumber,
       history: [],
+      buyerId: row.buyerId,
+      invoiceDate: row.invoiceDate,
     };
   });
 }

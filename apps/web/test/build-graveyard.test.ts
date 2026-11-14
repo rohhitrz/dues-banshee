@@ -57,6 +57,8 @@ function demoRecords(): GraveyardInvoiceRecord[] {
       buyerName: demo.buyerName,
       invoiceNumber: demo.invoiceNumber,
       history: [],
+      buyerId: row.buyerId,
+      invoiceDate: row.invoiceDate,
     };
   });
 }
@@ -75,6 +77,8 @@ function extraRecord(acceptedOn: string): GraveyardInvoiceRecord {
     buyerName: "Extra Buyer",
     invoiceNumber: "EXTRA/1",
     history: [],
+    buyerId: "buyer-extra",
+    invoiceDate: acceptedOn,
   };
 }
 

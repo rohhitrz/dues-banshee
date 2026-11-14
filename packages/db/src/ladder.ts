@@ -55,6 +55,8 @@ export interface DraftWithContext {
   invoice: Invoice;
   invoiceDate: CalendarDate;
   acceptanceDateDefaulted: boolean;
+  /** `invoices.buyer_id`: the buyer this Draft is about (the Debtor_Page filters its Drafts by it). */
+  buyerId: string;
   buyerName: string;
   invoiceNumber: string;
 }
@@ -231,6 +233,7 @@ function toDraftWithContext(r: {
     invoice: toEngineInvoice(r.invoice, r.supplier),
     invoiceDate: r.invoice.invoiceDate,
     acceptanceDateDefaulted: r.invoice.acceptanceDateDefaulted,
+    buyerId: r.invoice.buyerId,
     buyerName: r.buyerName,
     invoiceNumber: r.invoice.invoiceNumber,
   };

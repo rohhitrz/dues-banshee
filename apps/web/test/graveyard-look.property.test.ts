@@ -153,7 +153,14 @@ function toRecord(draft: InvoiceDraft, events: EventDraft[], index: number, toda
         },
   );
 
-  return { invoice, buyerName: draft.buyerName, invoiceNumber: draft.invoiceNumber, history };
+  return {
+    invoice,
+    buyerName: draft.buyerName,
+    invoiceNumber: draft.invoiceNumber,
+    history,
+    buyerId: `buyer-${draft.buyerName}`,
+    invoiceDate: invoice.acceptedOn,
+  };
 }
 
 const arbScenario: fc.Arbitrary<Scenario> = fc

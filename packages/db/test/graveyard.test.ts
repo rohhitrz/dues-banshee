@@ -207,6 +207,8 @@ describe("listGraveyardInvoices", () => {
           { kind: "step", step: "voice_call", on: "2026-10-01" },
           { kind: "promise", promisedDate: "2026-11-30", amountPaise: 7_700_000, recordedOn: "2026-10-02" },
         ],
+        buyerId: other.buyer.id,
+        invoiceDate: "2026-08-01",
       },
     ]);
 

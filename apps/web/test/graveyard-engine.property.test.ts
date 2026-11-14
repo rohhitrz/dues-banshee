@@ -121,6 +121,8 @@ const arbRecords: fc.Arbitrary<GraveyardInvoiceRecord[]> = fc
       buyerName: row.buyerName,
       invoiceNumber: row.invoiceNumber,
       history: row.history,
+      buyerId: `buyer-${row.buyerName}`,
+      invoiceDate: row.body.acceptedOn,
     })),
   );
 

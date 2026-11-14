@@ -44,6 +44,8 @@ function record(overrides: Partial<GraveyardInvoiceRecord["invoice"]> = {}): Gra
     buyerName: "Sharma Traders",
     invoiceNumber: "LPC/26-27/0412",
     history: [],
+    buyerId: "buyer-1",
+    invoiceDate: "2026-09-02",
   };
 }
 

@@ -123,7 +123,14 @@ function arbRecord(id: string, today: number): fc.Arbitrary<GraveyardInvoiceReco
         ...(r.registeredOffset === undefined ? {} : { udyamRegisteredOn: dateOf(acceptedEpoch + r.registeredOffset) }),
         ...(r.paidAfter === undefined ? {} : { paidOn: dateOf(acceptedEpoch + r.paidAfter) }),
       };
-      return { invoice, buyerName: r.buyerName, invoiceNumber: r.invoiceNumber, history: r.history };
+      return {
+        invoice,
+        buyerName: r.buyerName,
+        invoiceNumber: r.invoiceNumber,
+        history: r.history,
+        buyerId: `buyer-${r.buyerName}`,
+        invoiceDate: invoice.acceptedOn,
+      };
     });
 }
 

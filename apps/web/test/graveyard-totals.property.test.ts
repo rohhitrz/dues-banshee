@@ -127,7 +127,14 @@ const arbScenario: fc.Arbitrary<Scenario> = fc
               amountPaise: e.amountPaise,
             },
       );
-      return { invoice, buyerName: s.buyerName, invoiceNumber: s.invoiceNumber, history };
+      return {
+        invoice,
+        buyerName: s.buyerName,
+        invoiceNumber: s.invoiceNumber,
+        history,
+        buyerId: `buyer-${s.buyerName}`,
+        invoiceDate: invoice.acceptedOn,
+      };
     }),
   }));
 

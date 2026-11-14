@@ -63,7 +63,7 @@ function pendingItem(): DraftWithContext {
     decidedAt: null,
     createdAt: new Date(0),
   };
-  return { draft, buyerName: "Sharma Traders", invoiceNumber: "LPC/26-27/0412" } as unknown as DraftWithContext;
+  return { draft, buyerId: "buyer-sharma", buyerName: "Sharma Traders", invoiceNumber: "LPC/26-27/0412" } as unknown as DraftWithContext;
 }
 interface Deferred {
   promise: Promise<void>;

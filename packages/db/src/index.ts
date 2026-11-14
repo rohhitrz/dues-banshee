@@ -4,7 +4,14 @@ export { getSupplier, findSupplierIdByUdyam, type Supplier } from "./suppliers";
 export { getBankRate, BANK_RATE_KEY } from "./bank-rate";
 export { SupplierNotFoundError, BankRateNotFoundError } from "./errors";
 export { findStoredInvoices, importInvoices, toEngineInvoice } from "./invoices";
-export { listGraveyardInvoices, type GraveyardInvoiceRecord } from "./graveyard";
+export {
+  listGraveyardInvoices,
+  getDebtorData,
+  type GraveyardInvoiceRecord,
+  type DebtorData,
+  type DebtorEventRow,
+  type DebtorPromiseRow,
+} from "./graveyard";
 export {
   listLadderRecords,
   listRunSuppliers,

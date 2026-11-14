@@ -121,6 +121,8 @@ const arbRecords = (supplier: Supplier): fc.Arbitrary<GraveyardInvoiceRecord[]> 
         buyerName: body.buyerName,
         invoiceNumber: body.invoiceNumber,
         history: body.history,
+        buyerId: `buyer-${body.buyerName}`,
+        invoiceDate: body.acceptedOn,
       };
     }),
   );

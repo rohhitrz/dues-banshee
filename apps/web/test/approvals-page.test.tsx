@@ -144,6 +144,7 @@ function draftItem(options: {
     invoice: toEngineInvoice(row, SUPPLIER_ROW),
     invoiceDate: row.invoiceDate,
     acceptanceDateDefaulted: false,
+    buyerId: row.buyerId,
     buyerName: demo.buyerName,
     invoiceNumber: demo.invoiceNumber,
   };
