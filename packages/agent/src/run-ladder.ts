@@ -1,15 +1,9 @@
-import {
-  BankRateNotFoundError,
-  getBankRate,
-  getSupplier,
-  insertDraft,
-  listLadderRecords,
-  logToolCall,
-} from "@dues-banshee/db";
+import { getSupplier, insertDraft, listLadderRecords, logToolCall } from "@dues-banshee/db";
 import type { Db, LadderRecord } from "@dues-banshee/db";
 import { ValidationError, dueDate, nextEscalationStep } from "@dues-banshee/engine";
-import type { BankRate, CalendarDate, EscalationDecision, WaitReason } from "@dues-banshee/engine";
+import type { CalendarDate, EscalationDecision, WaitReason } from "@dues-banshee/engine";
 import { draftStep } from "./draft-step";
+import { loadBankRate } from "./load-bank-rate";
 import { engineHistory } from "./core/history";
 import { classify, planRun } from "./core/plan-run";
 import type { Classified } from "./core/plan-run";
@@ -108,14 +102,4 @@ export async function runLadder(
   }
 
   return { supplierId, today, invoices: outcomes };
-}
-
-/** The Bank_Rate in force on `today`, or null when none is effective yet. */
-async function loadBankRate(db: Db, today: CalendarDate): Promise<BankRate | null> {
-  try {
-    return await getBankRate(db, today);
-  } catch (err) {
-    if (err instanceof BankRateNotFoundError) return null;
-    throw err;
-  }
 }

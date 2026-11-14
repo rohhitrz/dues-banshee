@@ -10,4 +10,6 @@ export { draftStep } from "./draft-step";
 export type { AttemptKind, DraftAttemptInput, DraftAttemptResult, DraftErrorKind } from "./draft-step";
 export { runLadder } from "./run-ladder";
 export type { InvoiceOutcome, LadderRunResult } from "./run-ladder";
+export { approveDraft, editDraft, rejectDraft, redraft } from "./decide";
+export type { DecideDeps, DecideResult, RedraftDeps } from "./decide";
 export type { NewDraft } from "@dues-banshee/db";

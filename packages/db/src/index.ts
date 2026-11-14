@@ -9,6 +9,7 @@ export {
   listLadderRecords,
   listRunSuppliers,
   insertDraft,
+  insertDraftRows,
   getDraftForSupplier,
   listPendingDrafts,
   setDraftStatus,

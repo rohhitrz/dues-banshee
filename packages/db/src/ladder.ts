@@ -180,37 +180,44 @@ export async function listRunSuppliers(db: Db): Promise<{ id: string; udyamNumbe
  */
 export async function insertDraft(db: Db, d: NewDraft, today: CalendarDate): Promise<InsertDraftResult> {
   try {
-    const draftId = await db.transaction(async (tx) => {
-      const [row] = await tx
-        .insert(drafts)
-        .values({
-          invoiceId: d.invoiceId,
-          step: d.step,
-          language: d.language,
-          bodyText: d.bodyText,
-          finalText: d.finalText,
-          ruleIds: d.ruleIds,
-          modelId: d.modelId,
-          decision: d.decision,
-          document: d.document,
-          createdOn: today,
-        })
-        .returning({ id: drafts.id });
-      if (row === undefined) throw new Error("insertDraft: no row returned");
-      await insertEscalationEvent(tx, {
-        invoiceId: d.invoiceId,
-        step: d.step,
-        occurredOn: today,
-        action: "drafted",
-        draftId: row.id,
-      });
-      return row.id;
-    });
+    const draftId = await db.transaction((tx) => insertDraftRows(tx, d, today));
     return { kind: "ok", draftId };
   } catch (error) {
     if (isPendingDraftViolation(error)) return { kind: "pending_exists" };
     throw error;
   }
+}
+
+/**
+ * The transaction-friendly part of `insertDraft`: inserts the `pending` Draft and its `drafted`
+ * event on the handle it is given, so a caller can combine it with other writes (a redraft expires
+ * the old Draft first, in the same transaction). A pending-Draft unique violation is thrown, not caught.
+ */
+export async function insertDraftRows(tx: Db, d: NewDraft, today: CalendarDate): Promise<string> {
+  const [row] = await tx
+    .insert(drafts)
+    .values({
+      invoiceId: d.invoiceId,
+      step: d.step,
+      language: d.language,
+      bodyText: d.bodyText,
+      finalText: d.finalText,
+      ruleIds: d.ruleIds,
+      modelId: d.modelId,
+      decision: d.decision,
+      document: d.document,
+      createdOn: today,
+    })
+    .returning({ id: drafts.id });
+  if (row === undefined) throw new Error("insertDraft: no row returned");
+  await insertEscalationEvent(tx, {
+    invoiceId: d.invoiceId,
+    step: d.step,
+    occurredOn: today,
+    action: "drafted",
+    draftId: row.id,
+  });
+  return row.id;
 }
 
 function toDraftWithContext(r: {
