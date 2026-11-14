@@ -209,6 +209,20 @@ describe("GraveyardPage signed in", () => {
     expect(mocks.getBankRate).toHaveBeenCalledWith(DB, "2027-03-10");
   });
 
+  it("puts ?today= on tombstone links for the demo supplier", async () => {
+    const html = await render({ today: "2027-03-10" });
+    const links = html.match(/href="\/debtors\/[^"]*"/g) ?? [];
+    expect(links).toHaveLength(6);
+    for (const link of links) expect(link).toContain("today=2027-03-10");
+  });
+  it("puts no today value on tombstone links for a non-demo supplier, while the graveyard keeps its Today", async () => {
+    mocks.getSupplier.mockResolvedValue({ ...SUPPLIER, udyamNumber: "UDYAM-XX-00-0000000" });
+    const html = await render({ today: "2027-03-10" });
+    const links = html.match(/href="\/debtors\/[^"]*"/g) ?? [];
+    expect(links).toHaveLength(6);
+    for (const link of links) expect(link).not.toContain("today");
+    expect(html).toContain("Demo date: 10 Mar 2027");
+  });
   it("shows no chip without a today query", async () => {
     const html = await render();
 

@@ -6,6 +6,7 @@ import { GraveyardPendingProvider, PendingDim } from "@/components/graveyard/pen
 import { TimeTravel } from "@/components/graveyard/time-travel";
 import { TombstoneGrid } from "@/components/graveyard/tombstone-grid";
 import { TotalsBar } from "@/components/graveyard/totals-bar";
+import { resolveSupplierToday } from "@/lib/approvals/supplier-today";
 import { getDb } from "@/lib/db";
 import { loadGraveyardData, type GraveyardLoadResult } from "@/lib/graveyard/load";
 import { resolveToday } from "@/lib/graveyard/today";
@@ -60,6 +61,9 @@ export default async function GraveyardPage({
   }
 
   const { view } = result;
+  // The graveyard's own Today is unchanged; only the links to debtor pages carry `?today=`, and only
+  // for the demo supplier (the debtor page ignores the override for anyone else).
+  const linkOverride = resolveSupplierToday(result.supplier, Date.now(), rawToday).override;
   return (
     <main className={styles.page}>
       <h1 className={styles.title}>Graveyard of dues</h1>
@@ -72,7 +76,7 @@ export default async function GraveyardPage({
           {view.tombstones.length === 0 ? (
             <GraveyardEmpty />
           ) : (
-            <TombstoneGrid tombstones={view.tombstones} today={view.today} override={override} />
+            <TombstoneGrid tombstones={view.tombstones} today={view.today} override={linkOverride} />
           )}
         </PendingDim>
       </GraveyardPendingProvider>
