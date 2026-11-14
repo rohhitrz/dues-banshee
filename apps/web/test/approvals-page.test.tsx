@@ -24,6 +24,7 @@ const mocks = vi.hoisted(() => ({
   getDb: vi.fn(),
   close: vi.fn(),
   getSupplier: vi.fn(),
+  getDraftForSupplier: vi.fn(),
   listPendingDrafts: vi.fn(),
   approveDraft: vi.fn(),
   editDraft: vi.fn(),
@@ -40,6 +41,7 @@ vi.mock("@/lib/db", () => ({ getDb: mocks.getDb }));
 vi.mock("@dues-banshee/db", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@dues-banshee/db")>()),
   getSupplier: mocks.getSupplier,
+  getDraftForSupplier: mocks.getDraftForSupplier,
   listPendingDrafts: mocks.listPendingDrafts,
 }));
 // No live model call and no provider key: the agent's entry points are replaced.
@@ -233,6 +235,7 @@ beforeEach(() => {
   mocks.close.mockReset().mockResolvedValue(undefined);
   mocks.getDb.mockReset().mockReturnValue({ db: DB, close: mocks.close });
   mocks.getSupplier.mockReset().mockResolvedValue(SUPPLIER);
+  mocks.getDraftForSupplier.mockReset().mockResolvedValue(null);
   mocks.listPendingDrafts.mockReset().mockResolvedValue(pendingItems());
   mocks.approveDraft.mockReset().mockResolvedValue({ kind: "ok" });
   mocks.editDraft.mockReset().mockResolvedValue({ kind: "ok" });

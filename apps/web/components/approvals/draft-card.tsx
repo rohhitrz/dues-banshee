@@ -12,6 +12,8 @@ export interface DraftCardProps {
   item: DraftWithContext;
   /** The accepted `?today=` value, passed back with every action; null when Today is the real date. */
   override: string | null;
+  /** Where the actions send the owner back to (`/debtors/<buyerId>`); omitted on /approvals. */
+  returnTo?: string;
 }
 
 /** Steps 4 and 5 attach a PDF Document the owner can download. */
@@ -19,11 +21,20 @@ function hasDocument(step: DraftWithContext["draft"]["step"]): boolean {
   return step === "legal_notice" || step === "odr_pack";
 }
 
-function HiddenFields({ draftId, override }: { draftId: string; override: string | null }) {
+function HiddenFields({
+  draftId,
+  override,
+  returnTo,
+}: {
+  draftId: string;
+  override: string | null;
+  returnTo: string | undefined;
+}) {
   return (
     <>
       <input type="hidden" name="draftId" value={draftId} />
       {override === null ? null : <input type="hidden" name="today" value={override} />}
+      {returnTo === undefined ? null : <input type="hidden" name="returnTo" value={returnTo} />}
     </>
   );
 }
@@ -32,7 +43,7 @@ function HiddenFields({ draftId, override }: { draftId: string; override: string
  * One pending Draft. Only the Body_Text is editable; the Basis_Line and Disclaimer in the Final_Text are
  * rebuilt by the server. Approving records the owner's decision and sends nothing.
  */
-export function DraftCard({ item, override }: DraftCardProps) {
+export function DraftCard({ item, override, returnTo }: DraftCardProps) {
   const { draft, buyerName, invoiceNumber } = item;
   const caveat = draft.decision.action === "advance" && draft.decision.caveat === "registered_after_supply";
   const headingId = `draft-${draft.id}`;
@@ -76,7 +87,7 @@ export function DraftCard({ item, override }: DraftCardProps) {
       ) : null}
 
       <GuardedForm action={saveEdit} className={styles.editForm}>
-        <HiddenFields draftId={draft.id} override={override} />
+        <HiddenFields draftId={draft.id} override={override} returnTo={returnTo} />
         <label className={styles.label} htmlFor={`body-${draft.id}`}>
           Edit the message
         </label>
@@ -95,14 +106,14 @@ export function DraftCard({ item, override }: DraftCardProps) {
 
       <div className={styles.actions}>
         <GuardedForm action={approve}>
-          <HiddenFields draftId={draft.id} override={override} />
+          <HiddenFields draftId={draft.id} override={override} returnTo={returnTo} />
           <SubmitButton className={styles.primary} pendingLabel="Approving…">
             Approve
           </SubmitButton>
         </GuardedForm>
 
         <GuardedForm action={redraftIn} className={styles.redraft}>
-          <HiddenFields draftId={draft.id} override={override} />
+          <HiddenFields draftId={draft.id} override={override} returnTo={returnTo} />
           <SubmitButton className={styles.button} name="language" value="english" pendingLabel="Redrafting…">
             Redraft in English
           </SubmitButton>
@@ -112,7 +123,7 @@ export function DraftCard({ item, override }: DraftCardProps) {
         </GuardedForm>
 
         <GuardedForm action={reject} className={styles.reject}>
-          <HiddenFields draftId={draft.id} override={override} />
+          <HiddenFields draftId={draft.id} override={override} returnTo={returnTo} />
           <label className={styles.label} htmlFor={`reason-${draft.id}`}>
             Reason (optional)
           </label>

@@ -10,12 +10,19 @@ import {
   type DecideResult,
   type DraftLanguage,
 } from "@dues-banshee/agent";
-import { SupplierNotFoundError, getSupplier, type Db, type Supplier } from "@dues-banshee/db";
+import {
+  SupplierNotFoundError,
+  getDraftForSupplier,
+  getSupplier,
+  type Db,
+  type Supplier,
+} from "@dues-banshee/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getDb } from "@/lib/db";
 import { decisionLabelKey, type NoticeCode } from "@/lib/approvals/notices";
+import { parseReturnTo, type ReturnTarget } from "@/lib/approvals/return-to";
 import { resolveSupplierToday } from "@/lib/approvals/supplier-today";
 import type { ResolvedToday } from "@/lib/graveyard/today";
 
@@ -74,15 +81,24 @@ async function withSupplier<T>(
   }
 }
 
-/** Back to the queue with one fixed message, keeping a valid `?today=` override. */
-function finish(notice: Notice, override: string | null): never {
+/**
+ * Back to the queue (or the allowlisted Debtor_Page) with one fixed message, keeping a valid `?today=`
+ * override. `buyerId` is the buyer of the session supplier's Draft, so that buyer's page is refreshed too.
+ */
+function finish(
+  notice: Notice,
+  override: string | null,
+  target: ReturnTarget = "/approvals",
+  buyerId: string | null = null,
+): never {
   revalidatePath("/approvals");
+  if (buyerId !== null) revalidatePath(`/debtors/${buyerId}`);
   const params = new URLSearchParams();
   if (override !== null) params.set("today", override);
   params.set("notice", notice.code);
   if (notice.label !== undefined) params.set("label", notice.label);
   if (notice.n !== undefined) params.set("n", String(notice.n));
-  redirect(`/approvals?${params.toString()}`);
+  redirect(`${target}?${params.toString()}`);
 }
 
 function noticeFor(result: DecideResult, success: NoticeCode): Notice {
@@ -96,6 +112,11 @@ function noticeFor(result: DecideResult, success: NoticeCode): Notice {
   }
 }
 
+/** The buyer of the session supplier's Draft; null when the Draft is not this supplier's (or does not exist). */
+async function buyerIdOf(db: Db, supplierId: string, draftId: string): Promise<string | null> {
+  return (await getDraftForSupplier(db, supplierId, draftId))?.buyerId ?? null;
+}
+
 /** Shared by approve, saveEdit, reject and redraftIn: one decision on one Draft of the session supplier. */
 async function decide(
   form: FormData,
@@ -104,13 +125,15 @@ async function decide(
 ): Promise<never> {
   const supplierId = await sessionSupplierId();
   const draftId = field(form, "draftId");
+  const target = parseReturnTo(field(form, "returnTo"));
   const outcome = await withSupplier(supplierId, async (db, supplier) => {
     const { today, override } = resolveFormToday(supplier, form);
-    if (!UUID.test(draftId)) return { notice: { code: "not_found" } satisfies Notice, override };
-    return { notice: noticeFor(await run(db, supplierId, draftId, today), success), override };
+    if (!UUID.test(draftId)) return { notice: { code: "not_found" } satisfies Notice, override, buyerId: null };
+    const buyerId = await buyerIdOf(db, supplierId, draftId);
+    return { notice: noticeFor(await run(db, supplierId, draftId, today), success), override, buyerId };
   });
   if (outcome.stale) redirect(STALE_URL);
-  return finish(outcome.value.notice, outcome.value.override);
+  return finish(outcome.value.notice, outcome.value.override, target, outcome.value.buyerId);
 }
 
 export async function approve(form: FormData): Promise<void> {
@@ -141,12 +164,15 @@ function toLanguage(value: string): DraftLanguage | null {
 export async function redraftIn(form: FormData): Promise<void> {
   const language = toLanguage(field(form, "language"));
   if (language === null) {
-    const outcome = await withSupplier(
-      await sessionSupplierId(),
-      async (_db, supplier) => resolveFormToday(supplier, form).override,
-    );
+    const target = parseReturnTo(field(form, "returnTo"));
+    const draftId = field(form, "draftId");
+    const supplierId = await sessionSupplierId();
+    const outcome = await withSupplier(supplierId, async (db, supplier) => ({
+      override: resolveFormToday(supplier, form).override,
+      buyerId: UUID.test(draftId) ? await buyerIdOf(db, supplierId, draftId) : null,
+    }));
     if (outcome.stale) redirect(STALE_URL);
-    return finish({ code: "draft_failed" }, outcome.value);
+    return finish({ code: "draft_failed" }, outcome.value.override, target, outcome.value.buyerId);
   }
   await decide(form, "redrafted", (db, supplierId, draftId, today) =>
     redraft({ db, models: productionModels() }, supplierId, draftId, language, today),
