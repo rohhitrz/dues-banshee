@@ -124,7 +124,7 @@ Commit rule for every top-level task (git-workflow.md): one Conventional Commit 
     - **Property 7: Candle look encodes data**
     - **Validates: Requirements 5.6**
 
-- [-] 8. Serve the Debtor_Page at /debtors/[id]
+- [x] 8. Serve the Debtor_Page at /debtors/[id]
   - Commit: `feat(web): add the debtor seance page at /debtors/[id]`
   - [x] 8.1 Implement `apps/web/lib/debtor/load.ts`
     - `DebtorLoadResult`, `loadDebtorData(db, supplierId, buyerIdRaw, nowMs, rawToday)` in the design's step order: `getSupplier` (`SupplierNotFoundError` → `stale`), `resolveSupplierToday`, uuid regex (non-uuid → `not_found` with no buyer query), `getBankRate` (`BankRateNotFoundError` → `null`), `getDebtorData` (`null` → `not_found`), `listPendingDrafts`, `buildDebtorView`; any other error → `{ kind: "error", override }` with `console.error` only; never throws or redirects
@@ -150,20 +150,20 @@ Commit rule for every top-level task (git-workflow.md): one Conventional Commit 
     - Scan `lib/debtor/**`, `components/debtor/**` and `app/(debtor)/**`: no `toFixed`, `parseFloat`, `Number(` or float division on money; no inline active-promise check; no `<canvas>`, `three` or WebGL; flicker keyframes only inside `@media (prefers-reduced-motion: no-preference)`; `ACTION_TEXT` uses `satisfies Record<EscalationAction, string>`
     - _Requirements: 4.5, 5.5, 5.8, 6.3, 9.1_
 
-- [ ] 9. Checkpoint: Debtor_Page
+- [x] 9. Checkpoint: Debtor_Page
   - From the repo root run `pnpm -r --if-present test && pnpm -r --if-present typecheck && pnpm -r --if-present lint`; ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. Add the Playwright smoke test
+- [x] 10. Add the Playwright smoke test
   - Commit: `test(web): add Playwright smoke test for the debtor page`
-  - [ ] 10.1 Add Playwright to `apps/web`
+  - [x] 10.1 Add Playwright to `apps/web`
     - `@playwright/test` dev dependency and script `"e2e": "playwright test"` in `apps/web/package.json` (not part of `test`); `apps/web/playwright.config.ts` with `testDir: "e2e"`, one Chromium project, `baseURL: "http://localhost:3000"`, `webServer: { command: "pnpm build && pnpm start", url: "http://localhost:3000", reuseExistingServer: true }`; confirm Vitest's include does not pick up `e2e/**/*.spec.ts`; lint and typecheck cover the new files
     - _Requirements: 10.8, 10.9_
     - Notes: Do not run `playwright install`, `pnpm e2e`, `pnpm build` or `pnpm start`. Only add the files and check typecheck, lint and Vitest. Rohit runs the smoke test himself.
-  - [ ] 10.2 Write `apps/web/e2e/debtor-smoke.spec.ts`
+  - [x] 10.2 Write `apps/web/e2e/debtor-smoke.spec.ts`
     - Sign in with "Enter the graveyard (demo)", open `/?today=2026-11-12`, click the Sharma Traders Tombstone; assert the URL matches `/debtors/<uuid>?today=2026-11-12#invoice-<uuid>` using the ids from the clicked link's `href`; assert the page shows "Sharma Traders", `LPC/26-27/0412`, `formatINR(41200000, "full")`, "Overdue 26 days, interest accruing", `formatINR(512794, "full")` and "Tax bomb armed: 139 days left to 31 March" (amounts from the Engine `formatINR`)
     - _Requirements: 10.8_
 
-- [ ] 11. Final checkpoint
+- [x] 11. Final checkpoint
   - From the repo root run `pnpm -r --if-present test && pnpm -r --if-present typecheck && pnpm -r --if-present lint` with zero failures and zero errors; ensure all tests pass, ask the user if questions arise.
   - Ask the user to run the smoke test against the demo database (destructive reset, demo DB only): `pnpm --filter @dues-banshee/db db:reset-demo -- --yes`, then `pnpm --filter web exec playwright install chromium` (first run only), then `pnpm --filter web e2e`; it must pass with zero failures (Req 10.8, 10.9).
   - Ask the user to confirm the manual checks from design.md: disabled-button and "Arrives with …" contrast, 44 × 44 targets, no horizontal scroll at 360 px and 1920 px, no decoration over text, `#invoice-<id>` scroll clears the App_Shell header, unknown fragment stays at the top, `curl -I` on an unknown buyer returns 404 and on a stale session returns 307 (Req 1.3, 1.4, 9.2–9.5).

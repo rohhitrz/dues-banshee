@@ -1,0 +1,471 @@
+{
+  "pbtResults": {
+    "1.3 Write property test in `packages/engine/test/promise.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794665022973
+    },
+    "1.4 Add property test to `packages/engine/test/promise.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794665088274
+    },
+    "4.2 Add property test to `apps/web/test/graveyard-look.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794666193633
+    },
+    "5.2 Write property test `apps/web/test/return-to.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794666516655
+    },
+    "7.4 Write property test `apps/web/test/debtor-view.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794666926749
+    },
+    "7.7 Write property test `apps/web/test/candle-timeline.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794666966350
+    },
+    "7.8 Add property test to `apps/web/test/candle-timeline.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794667078317
+    },
+    "7.9 Add property test to `apps/web/test/candle-timeline.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1794667130418
+    }
+  },
+  "executionHistory": {
+    "1.1 Implement `packages/engine/src/promise.ts` and export it from `index.ts`": [
+      {
+        "executionId": "f1b1d591-e8cf-49fd-9b7d-a0cf12bf6f7f",
+        "chatSessionId": "sess_09533c77-faf1-4949-9b45-587ee2c566bc",
+        "timestamp": 1794664898763
+      },
+      {
+        "executionId": "f1b1d591-e8cf-49fd-9b7d-a0cf12bf6f7f",
+        "chatSessionId": "sess_09533c77-faf1-4949-9b45-587ee2c566bc",
+        "timestamp": 1794664964441
+      }
+    ],
+    "1.2 Write `packages/engine/test/promise.test.ts`": [
+      {
+        "executionId": "f1b1d591-e8cf-49fd-9b7d-a0cf12bf6f7f",
+        "chatSessionId": "sess_09533c77-faf1-4949-9b45-587ee2c566bc",
+        "timestamp": 1794664965682
+      },
+      {
+        "executionId": "f1b1d591-e8cf-49fd-9b7d-a0cf12bf6f7f",
+        "chatSessionId": "sess_09533c77-faf1-4949-9b45-587ee2c566bc",
+        "timestamp": 1794665038852
+      }
+    ],
+    "1.3 Write property test in `packages/engine/test/promise.property.test.ts`": [
+      {
+        "executionId": "f1b1d591-e8cf-49fd-9b7d-a0cf12bf6f7f",
+        "chatSessionId": "sess_09533c77-faf1-4949-9b45-587ee2c566bc",
+        "timestamp": 1794664966048
+      },
+      {
+        "executionId": "f1b1d591-e8cf-49fd-9b7d-a0cf12bf6f7f",
+        "chatSessionId": "sess_09533c77-faf1-4949-9b45-587ee2c566bc",
+        "timestamp": 1794665039340
+      }
+    ],
+    "1.4 Add property test to `packages/engine/test/promise.property.test.ts`": [
+      {
+        "executionId": "f1b1d591-e8cf-49fd-9b7d-a0cf12bf6f7f",
+        "chatSessionId": "sess_09533c77-faf1-4949-9b45-587ee2c566bc",
+        "timestamp": 1794665044202
+      },
+      {
+        "executionId": "f1b1d591-e8cf-49fd-9b7d-a0cf12bf6f7f",
+        "chatSessionId": "sess_09533c77-faf1-4949-9b45-587ee2c566bc",
+        "timestamp": 1794665123248
+      }
+    ],
+    "1. Add the Engine active-promise helpers": [
+      {
+        "executionId": "f1b1d591-e8cf-49fd-9b7d-a0cf12bf6f7f",
+        "chatSessionId": "sess_09533c77-faf1-4949-9b45-587ee2c566bc",
+        "timestamp": 1794665123274
+      }
+    ],
+    "2.1 Update `packages/db/src/graveyard.ts` and `index.ts`": [
+      {
+        "executionId": "6f909970-3aef-4393-8cec-7dda2dc55f90",
+        "chatSessionId": "sess_7db15d6b-ab5c-47b5-a317-d5a6bb9148ab",
+        "timestamp": 1794665286234
+      },
+      {
+        "executionId": "6f909970-3aef-4393-8cec-7dda2dc55f90",
+        "chatSessionId": "sess_7db15d6b-ab5c-47b5-a317-d5a6bb9148ab",
+        "timestamp": 1794665475294
+      }
+    ],
+    "2.2 Add `buyerId` to `DraftWithContext` in `packages/db/src/ladder.ts`": [
+      {
+        "executionId": "6f909970-3aef-4393-8cec-7dda2dc55f90",
+        "chatSessionId": "sess_7db15d6b-ab5c-47b5-a317-d5a6bb9148ab",
+        "timestamp": 1794665475556
+      },
+      {
+        "executionId": "6f909970-3aef-4393-8cec-7dda2dc55f90",
+        "chatSessionId": "sess_7db15d6b-ab5c-47b5-a317-d5a6bb9148ab",
+        "timestamp": 1794665555587
+      }
+    ],
+    "2.3 Write `packages/db/test/debtor.test.ts` (PGlite)": [
+      {
+        "executionId": "6f909970-3aef-4393-8cec-7dda2dc55f90",
+        "chatSessionId": "sess_7db15d6b-ab5c-47b5-a317-d5a6bb9148ab",
+        "timestamp": 1794665556103
+      },
+      {
+        "executionId": "6f909970-3aef-4393-8cec-7dda2dc55f90",
+        "chatSessionId": "sess_7db15d6b-ab5c-47b5-a317-d5a6bb9148ab",
+        "timestamp": 1794665677135
+      }
+    ],
+    "2. Add the debtor db reads": [
+      {
+        "executionId": "6f909970-3aef-4393-8cec-7dda2dc55f90",
+        "chatSessionId": "sess_7db15d6b-ab5c-47b5-a317-d5a6bb9148ab",
+        "timestamp": 1794665677166
+      }
+    ],
+    "3. Checkpoint: engine and db": [
+      {
+        "executionId": "02c24eb1-5c0a-441e-be7d-d4e99f274412",
+        "chatSessionId": "sess_74e5148e-4132-4969-a3ab-cf7a0dd95246",
+        "timestamp": 1794665727423
+      },
+      {
+        "executionId": "02c24eb1-5c0a-441e-be7d-d4e99f274412",
+        "chatSessionId": "sess_74e5148e-4132-4969-a3ab-cf7a0dd95246",
+        "timestamp": 1794665780428
+      }
+    ],
+    "4. Use the Engine wisp rule and link tombstones to the Debtor_Page": [
+      {
+        "executionId": "93bbc69f-1f26-40e5-b6c3-636cb78d176b",
+        "chatSessionId": "sess_1bb4ac51-94ab-41a2-a3d0-3f91b81c431a",
+        "timestamp": 1794665866577
+      },
+      {
+        "executionId": "93bbc69f-1f26-40e5-b6c3-636cb78d176b",
+        "chatSessionId": "sess_1bb4ac51-94ab-41a2-a3d0-3f91b81c431a",
+        "timestamp": 1794666222005
+      }
+    ],
+    "5. Add returnTo to the approvals actions": [
+      {
+        "executionId": "a2013ac4-676f-41f1-b688-91ff7fae68d6",
+        "chatSessionId": "sess_b8821ed2-5ec2-491d-b447-4e1ef949a02b",
+        "timestamp": 1794666386244
+      },
+      {
+        "executionId": "a2013ac4-676f-41f1-b688-91ff7fae68d6",
+        "chatSessionId": "sess_b8821ed2-5ec2-491d-b447-4e1ef949a02b",
+        "timestamp": 1794666535764
+      }
+    ],
+    "5.1 Implement `apps/web/lib/approvals/return-to.ts`": [
+      {
+        "executionId": "a2013ac4-676f-41f1-b688-91ff7fae68d6",
+        "chatSessionId": "sess_b8821ed2-5ec2-491d-b447-4e1ef949a02b",
+        "timestamp": 1794666546415
+      }
+    ],
+    "5.2 Write property test `apps/web/test/return-to.property.test.ts`": [
+      {
+        "executionId": "a2013ac4-676f-41f1-b688-91ff7fae68d6",
+        "chatSessionId": "sess_b8821ed2-5ec2-491d-b447-4e1ef949a02b",
+        "timestamp": 1794666546466
+      }
+    ],
+    "5.3 Update `apps/web/app/(app)/approvals/actions.ts` and `components/approvals/draft-card.tsx`": [
+      {
+        "executionId": "a2013ac4-676f-41f1-b688-91ff7fae68d6",
+        "chatSessionId": "sess_b8821ed2-5ec2-491d-b447-4e1ef949a02b",
+        "timestamp": 1794666547458
+      }
+    ],
+    "5.4 Write `apps/web/test/approvals-actions.test.ts`": [
+      {
+        "executionId": "a2013ac4-676f-41f1-b688-91ff7fae68d6",
+        "chatSessionId": "sess_b8821ed2-5ec2-491d-b447-4e1ef949a02b",
+        "timestamp": 1794666547712
+      }
+    ],
+    "6. Checkpoint: graveyard and approvals": [
+      {
+        "executionId": "b66e1b4c-de7a-4657-9f82-e0fafd7077c4",
+        "chatSessionId": "sess_29dfb572-076f-486a-acbd-93db945ea81c",
+        "timestamp": 1794666607613
+      },
+      {
+        "executionId": "b66e1b4c-de7a-4657-9f82-e0fafd7077c4",
+        "chatSessionId": "sess_29dfb572-076f-486a-acbd-93db945ea81c",
+        "timestamp": 1794666659912
+      }
+    ],
+    "7.1 Implement `apps/web/lib/debtor/build-debtor-view.ts`": [
+      {
+        "executionId": "50864b79-5388-45ff-b488-dcae24fb7e7d",
+        "chatSessionId": "sess_b3242c4e-b322-4109-934a-2ba9559ca35a",
+        "timestamp": 1794666720485
+      },
+      {
+        "executionId": "50864b79-5388-45ff-b488-dcae24fb7e7d",
+        "chatSessionId": "sess_b3242c4e-b322-4109-934a-2ba9559ca35a",
+        "timestamp": 1794666800060
+      }
+    ],
+    "7.2 Implement `apps/web/lib/debtor/candle-timeline.ts`": [
+      {
+        "executionId": "50864b79-5388-45ff-b488-dcae24fb7e7d",
+        "chatSessionId": "sess_b3242c4e-b322-4109-934a-2ba9559ca35a",
+        "timestamp": 1794666804426
+      },
+      {
+        "executionId": "50864b79-5388-45ff-b488-dcae24fb7e7d",
+        "chatSessionId": "sess_b3242c4e-b322-4109-934a-2ba9559ca35a",
+        "timestamp": 1794666863491
+      }
+    ],
+    "7.3 Write `apps/web/test/debtor-view.test.ts`": [
+      {
+        "executionId": "50864b79-5388-45ff-b488-dcae24fb7e7d",
+        "chatSessionId": "sess_b3242c4e-b322-4109-934a-2ba9559ca35a",
+        "timestamp": 1794666869759
+      },
+      {
+        "executionId": "50864b79-5388-45ff-b488-dcae24fb7e7d",
+        "chatSessionId": "sess_b3242c4e-b322-4109-934a-2ba9559ca35a",
+        "timestamp": 1794667017641
+      }
+    ],
+    "7.4 Write property test `apps/web/test/debtor-view.property.test.ts`": [
+      {
+        "executionId": "50864b79-5388-45ff-b488-dcae24fb7e7d",
+        "chatSessionId": "sess_b3242c4e-b322-4109-934a-2ba9559ca35a",
+        "timestamp": 1794666869979
+      },
+      {
+        "executionId": "50864b79-5388-45ff-b488-dcae24fb7e7d",
+        "chatSessionId": "sess_b3242c4e-b322-4109-934a-2ba9559ca35a",
+        "timestamp": 1794667017672
+      }
+    ],
+    "7.6 Write `apps/web/test/candle-timeline.test.ts`": [
+      {
+        "executionId": "50864b79-5388-45ff-b488-dcae24fb7e7d",
+        "chatSessionId": "sess_b3242c4e-b322-4109-934a-2ba9559ca35a",
+        "timestamp": 1794666870016
+      },
+      {
+        "executionId": "50864b79-5388-45ff-b488-dcae24fb7e7d",
+        "chatSessionId": "sess_b3242c4e-b322-4109-934a-2ba9559ca35a",
+        "timestamp": 1794667017869
+      }
+    ],
+    "7.7 Write property test `apps/web/test/candle-timeline.property.test.ts`": [
+      {
+        "executionId": "50864b79-5388-45ff-b488-dcae24fb7e7d",
+        "chatSessionId": "sess_b3242c4e-b322-4109-934a-2ba9559ca35a",
+        "timestamp": 1794666870417
+      },
+      {
+        "executionId": "50864b79-5388-45ff-b488-dcae24fb7e7d",
+        "chatSessionId": "sess_b3242c4e-b322-4109-934a-2ba9559ca35a",
+        "timestamp": 1794667017897
+      }
+    ],
+    "7.5 Add property test to `apps/web/test/debtor-view.property.test.ts`": [
+      {
+        "executionId": "50864b79-5388-45ff-b488-dcae24fb7e7d",
+        "chatSessionId": "sess_b3242c4e-b322-4109-934a-2ba9559ca35a",
+        "timestamp": 1794667037038
+      },
+      {
+        "executionId": "50864b79-5388-45ff-b488-dcae24fb7e7d",
+        "chatSessionId": "sess_b3242c4e-b322-4109-934a-2ba9559ca35a",
+        "timestamp": 1794667086174
+      }
+    ],
+    "7.8 Add property test to `apps/web/test/candle-timeline.property.test.ts`": [
+      {
+        "executionId": "50864b79-5388-45ff-b488-dcae24fb7e7d",
+        "chatSessionId": "sess_b3242c4e-b322-4109-934a-2ba9559ca35a",
+        "timestamp": 1794667037088
+      },
+      {
+        "executionId": "50864b79-5388-45ff-b488-dcae24fb7e7d",
+        "chatSessionId": "sess_b3242c4e-b322-4109-934a-2ba9559ca35a",
+        "timestamp": 1794667086725
+      }
+    ],
+    "7.9 Add property test to `apps/web/test/candle-timeline.property.test.ts`": [
+      {
+        "executionId": "50864b79-5388-45ff-b488-dcae24fb7e7d",
+        "chatSessionId": "sess_b3242c4e-b322-4109-934a-2ba9559ca35a",
+        "timestamp": 1794667089999
+      },
+      {
+        "executionId": "50864b79-5388-45ff-b488-dcae24fb7e7d",
+        "chatSessionId": "sess_b3242c4e-b322-4109-934a-2ba9559ca35a",
+        "timestamp": 1794667217481
+      }
+    ],
+    "7. Build the pure Debtor_View and Candle_Timeline": [
+      {
+        "executionId": "50864b79-5388-45ff-b488-dcae24fb7e7d",
+        "chatSessionId": "sess_b3242c4e-b322-4109-934a-2ba9559ca35a",
+        "timestamp": 1794667217516
+      }
+    ],
+    "8.1 Implement `apps/web/lib/debtor/load.ts`": [
+      {
+        "executionId": "e69aac7e-41e7-41ac-a35d-a9d14df6010d",
+        "chatSessionId": "sess_648d1b33-7804-4aa2-b30d-097672fa2a1b",
+        "timestamp": 1794667317208
+      },
+      {
+        "executionId": "e69aac7e-41e7-41ac-a35d-a9d14df6010d",
+        "chatSessionId": "sess_648d1b33-7804-4aa2-b30d-097672fa2a1b",
+        "timestamp": 1794667371547
+      }
+    ],
+    "8.2 Write `apps/web/test/debtor-load.test.ts`": [
+      {
+        "executionId": "e69aac7e-41e7-41ac-a35d-a9d14df6010d",
+        "chatSessionId": "sess_648d1b33-7804-4aa2-b30d-097672fa2a1b",
+        "timestamp": 1794667374625
+      },
+      {
+        "executionId": "e69aac7e-41e7-41ac-a35d-a9d14df6010d",
+        "chatSessionId": "sess_648d1b33-7804-4aa2-b30d-097672fa2a1b",
+        "timestamp": 1794667475116
+      }
+    ],
+    "8.3 Implement `apps/web/components/debtor/` components with `.module.css`": [
+      {
+        "executionId": "e69aac7e-41e7-41ac-a35d-a9d14df6010d",
+        "chatSessionId": "sess_648d1b33-7804-4aa2-b30d-097672fa2a1b",
+        "timestamp": 1794667375194
+      },
+      {
+        "executionId": "e69aac7e-41e7-41ac-a35d-a9d14df6010d",
+        "chatSessionId": "sess_648d1b33-7804-4aa2-b30d-097672fa2a1b",
+        "timestamp": 1794667475604
+      }
+    ],
+    "8.4 Add the `(debtor)` route group, page and proxy matcher": [
+      {
+        "executionId": "e69aac7e-41e7-41ac-a35d-a9d14df6010d",
+        "chatSessionId": "sess_648d1b33-7804-4aa2-b30d-097672fa2a1b",
+        "timestamp": 1794667480110
+      },
+      {
+        "executionId": "e69aac7e-41e7-41ac-a35d-a9d14df6010d",
+        "chatSessionId": "sess_648d1b33-7804-4aa2-b30d-097672fa2a1b",
+        "timestamp": 1794667610199
+      }
+    ],
+    "8.5 Write `apps/web/test/debtor-page.test.tsx`": [
+      {
+        "executionId": "e69aac7e-41e7-41ac-a35d-a9d14df6010d",
+        "chatSessionId": "sess_648d1b33-7804-4aa2-b30d-097672fa2a1b",
+        "timestamp": 1794667614129
+      },
+      {
+        "executionId": "e69aac7e-41e7-41ac-a35d-a9d14df6010d",
+        "chatSessionId": "sess_648d1b33-7804-4aa2-b30d-097672fa2a1b",
+        "timestamp": 1794667874283
+      }
+    ],
+    "8.6 Extend `apps/web/test/proxy.test.ts`": [
+      {
+        "executionId": "e69aac7e-41e7-41ac-a35d-a9d14df6010d",
+        "chatSessionId": "sess_648d1b33-7804-4aa2-b30d-097672fa2a1b",
+        "timestamp": 1794667614891
+      },
+      {
+        "executionId": "e69aac7e-41e7-41ac-a35d-a9d14df6010d",
+        "chatSessionId": "sess_648d1b33-7804-4aa2-b30d-097672fa2a1b",
+        "timestamp": 1794667874330
+      }
+    ],
+    "8.7 Extend `apps/web/test/lint.test.ts` and `apps/web/test/money-lint.test.ts`": [
+      {
+        "executionId": "e69aac7e-41e7-41ac-a35d-a9d14df6010d",
+        "chatSessionId": "sess_648d1b33-7804-4aa2-b30d-097672fa2a1b",
+        "timestamp": 1794667615425
+      },
+      {
+        "executionId": "e69aac7e-41e7-41ac-a35d-a9d14df6010d",
+        "chatSessionId": "sess_648d1b33-7804-4aa2-b30d-097672fa2a1b",
+        "timestamp": 1794667874372
+      }
+    ],
+    "8. Serve the Debtor_Page at /debtors/[id]": [
+      {
+        "executionId": "e69aac7e-41e7-41ac-a35d-a9d14df6010d",
+        "chatSessionId": "sess_648d1b33-7804-4aa2-b30d-097672fa2a1b",
+        "timestamp": 1794667874399
+      },
+      {
+        "executionId": "e69aac7e-41e7-41ac-a35d-a9d14df6010d",
+        "chatSessionId": "sess_648d1b33-7804-4aa2-b30d-097672fa2a1b",
+        "timestamp": 1794667888076
+      },
+      {
+        "executionId": "e69aac7e-41e7-41ac-a35d-a9d14df6010d",
+        "chatSessionId": "sess_648d1b33-7804-4aa2-b30d-097672fa2a1b",
+        "timestamp": 1794667956498
+      }
+    ],
+    "9. Checkpoint: Debtor_Page": [
+      {
+        "executionId": "a0333c98-2279-46e2-b929-59d381446f17",
+        "chatSessionId": "sess_4039ac7b-94cf-47f4-8c6c-af6d8915ca91",
+        "timestamp": 1794668357202
+      },
+      {
+        "executionId": "a0333c98-2279-46e2-b929-59d381446f17",
+        "chatSessionId": "sess_4039ac7b-94cf-47f4-8c6c-af6d8915ca91",
+        "timestamp": 1794668413678
+      }
+    ],
+    "10.1 Add Playwright to `apps/web`": [
+      {
+        "executionId": "63fc3431-2545-4a03-bdb8-3da9a63cbe8c",
+        "chatSessionId": "sess_0dedec40-294b-4cf3-a434-0ba2fe5a0030",
+        "timestamp": 1794668468742
+      },
+      {
+        "executionId": "63fc3431-2545-4a03-bdb8-3da9a63cbe8c",
+        "chatSessionId": "sess_0dedec40-294b-4cf3-a434-0ba2fe5a0030",
+        "timestamp": 1794668569642
+      }
+    ],
+    "10.2 Write `apps/web/e2e/debtor-smoke.spec.ts`": [
+      {
+        "executionId": "63fc3431-2545-4a03-bdb8-3da9a63cbe8c",
+        "chatSessionId": "sess_0dedec40-294b-4cf3-a434-0ba2fe5a0030",
+        "timestamp": 1794668570059
+      },
+      {
+        "executionId": "63fc3431-2545-4a03-bdb8-3da9a63cbe8c",
+        "chatSessionId": "sess_0dedec40-294b-4cf3-a434-0ba2fe5a0030",
+        "timestamp": 1794668663370
+      }
+    ],
+    "10. Add the Playwright smoke test": [
+      {
+        "executionId": "63fc3431-2545-4a03-bdb8-3da9a63cbe8c",
+        "chatSessionId": "sess_0dedec40-294b-4cf3-a434-0ba2fe5a0030",
+        "timestamp": 1794668663419
+      }
+    ]
+  }
+}
