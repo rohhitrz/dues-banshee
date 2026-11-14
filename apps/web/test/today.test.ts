@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEMO_MAX, DEMO_MIN, formatDisplayDate, istDate, resolveToday, TIME_TRAVEL_PRESETS } from "@/lib/graveyard/today";
+import { DEMO_MAX, DEMO_MIN, formatDisplayDate, istDate, isValidTodayOverride, resolveToday, TIME_TRAVEL_PRESETS } from "@/lib/graveyard/today";
 
 // All instants are injected; the real clock is never read.
 const BEFORE_IST_MIDNIGHT = Date.UTC(2026, 10, 12, 18, 29, 59); // 23:59:59 IST on 12 Nov 2026
@@ -92,4 +92,18 @@ describe("TIME_TRAVEL_PRESETS", () => {
       expect(resolveToday(BEFORE_IST_MIDNIGHT, preset.today)).toEqual({ today: preset.today, override: preset.today });
     }
   });
+});
+
+describe("isValidTodayOverride", () => {
+  it.each(["2024-01-01", "2027-03-10", "2027-12-31"])("accepts %j", (value) => {
+    expect(isValidTodayOverride(value)).toBe(true);
+    expect(resolveToday(0, value).override).toBe(value);
+  });
+  it.each(["2023-12-31", "2028-01-01", "2027-02-30", "2027-3-10", "", "x", null, undefined, 20270310])(
+    "rejects %j, as resolveToday does",
+    (value) => {
+      expect(isValidTodayOverride(value)).toBe(false);
+      expect(resolveToday(0, value as string | undefined).override).toBeNull();
+    },
+  );
 });

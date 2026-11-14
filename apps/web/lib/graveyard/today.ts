@@ -20,23 +20,27 @@ export function istDate(nowMs: number): CalendarDate {
 }
 
 /**
- * Resolves the page's Today. An array takes its first element only. The value is accepted when it is a
- * strict YYYY-MM-DD real calendar date within DEMO_MIN..DEMO_MAX; otherwise Today is the IST date.
+ * True when `value` is a usable `?today=` override: a strict YYYY-MM-DD real calendar date within
+ * DEMO_MIN..DEMO_MAX. Pure, so client components can use it too.
  */
-export function resolveToday(nowMs: number, raw: string | string[] | undefined): ResolvedToday {
-  const value = Array.isArray(raw) ? raw[0] : raw;
-  if (
+export function isValidTodayOverride(value: unknown): value is CalendarDate {
+  return (
     typeof value === "string" &&
     STRICT_DATE.test(value) &&
     isValidCalendarDate(value) &&
     value >= DEMO_MIN &&
     value <= DEMO_MAX
-  ) {
-    return { today: value, override: value };
-  }
+  );
+}
+/**
+ * Resolves the page's Today. An array takes its first element only. The value is accepted when
+ * `isValidTodayOverride` holds; otherwise Today is the IST date.
+ */
+export function resolveToday(nowMs: number, raw: string | string[] | undefined): ResolvedToday {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  if (isValidTodayOverride(value)) return { today: value, override: value };
   return { today: istDate(nowMs), override: null };
 }
-
 /** Moved into the Engine (escalation-ladder task 2.1); re-exported so dashboard-ui callers stay unchanged. */
 export { formatDisplayDate } from "@dues-banshee/engine";
 

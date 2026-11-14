@@ -458,6 +458,16 @@ describe("(debtor)/error.tsx backstop (Req 1.6)", () => {
     expect(html.replace(/<[^>]*>/g, "")).toBe(`${LOAD_FAILED}Try again`);
     for (const leaked of [MESSAGE, STACK, DIGEST]) expect(html).not.toContain(leaked);
   });
+  it.each(["2027-02-30", "2028-01-01", "2023-12-31", "2027-3-10", "<script>", "", "2027-03-10&x=1"])(
+    "drops an invalid today value (%j) from the retry link",
+    (value) => {
+      mocks.pathname = `/debtors/${BUYER_ID}`;
+      mocks.query = `today=${encodeURIComponent(value)}`;
+      const html = renderBoundary();
+      expect(retryHref(html)).toBe(`/debtors/${BUYER_ID}`);
+      expect(html).not.toContain("today");
+    },
+  );
 });
 
 describe("DebtorPage Today and the demo override (Req 2.2, 2.3)", () => {
