@@ -59,6 +59,25 @@ function okModel(modelId: string, beforeReply?: (options: { prompt: unknown }) =
   });
 }
 
+/** Replies with a blank body (and a valid citation) for `blankSubject`, and with OUTPUT for every other invoice. */
+function blankFor(modelId: string, blankSubject: string, blank: string): MockLanguageModelV4 {
+  return new MockLanguageModelV4({
+    modelId,
+    doGenerate: async (options) => {
+      const output = JSON.stringify(options.prompt).includes(blankSubject) ? { ...OUTPUT, text: blank } : OUTPUT;
+      return {
+        content: [{ type: "text", text: JSON.stringify(output) }],
+        finishReason: { unified: "stop", raw: "stop" },
+        usage: {
+          inputTokens: { total: 1, noCache: 1, cacheRead: 0, cacheWrite: 0 },
+          outputTokens: { total: 1, text: 1, reasoning: 0 },
+        },
+        warnings: [],
+      };
+    },
+  });
+}
+
 function modelSet(haiku: MockLanguageModelV4): ModelSet {
   return { default: haiku, legal: okModel("mock-sonnet"), fallback: okModel("mock-luna") };
 }
@@ -333,6 +352,37 @@ describe("runLadder on the Demo_Seed at 2026-11-12", () => {
     expect(await toolRows(t, "next_escalation_step")).toHaveLength(7);
     expect((await draftRows(t)).some((d) => d.invoiceId === bad.id)).toBe(false);
   });
+
+  it.each([["spaces", "   "], ["a newline", "\n"], ["a tab", "\t"]])(
+    "inserts no Draft for a model body of %s and goes on to the next invoice",
+    async (_name, blank) => {
+      const { t, supplierId, idOf } = await seeded();
+      const haiku = blankFor("mock-haiku", BANSAL, blank);
+
+      const result = await runLadder({ db: t.db, models: modelSet(haiku) }, supplierId, TODAY);
+
+      // Bansal is tried twice (initial + one Repair_Call), both blank; the other three are drafted once each.
+      expect(subjectsCalled(haiku, DRAFT_ORDER)).toEqual([BANSAL, BANSAL, MEHTA, KUMAR, SHARMA]);
+      expect(result.invoices[idOf(BANSAL)]).toEqual({ kind: "skip", reason: "draft_failed" });
+      for (const name of [MEHTA, KUMAR, SHARMA]) expect(result.invoices[idOf(name)]?.kind).toEqual("drafted");
+
+      const rows = await draftRows(t);
+      expect(rows.map((r) => r.invoiceId).sort()).toEqual([MEHTA, KUMAR, SHARMA].map(idOf).sort());
+      expect(rows.some((r) => r.invoiceId === idOf(BANSAL))).toBe(false);
+      const events = await eventRows(t);
+      expect(events.map((e) => e.invoiceId)).toEqual([MEHTA, KUMAR, SHARMA].map(idOf));
+      expect(events.every((e) => e.action === "drafted")).toBe(true);
+
+      const bansalModelRows = (await toolRows(t, "draft_step")).filter((r) => r.invoiceId === idOf(BANSAL));
+      expect(bansalModelRows.map((r) => (r.input as { attempt: string }).attempt)).toEqual(["initial", "repair"]);
+      for (const row of bansalModelRows) {
+        expect(row.output).toEqual({
+          modelOutput: { ...OUTPUT, text: blank },
+          citation: { ok: false, reason: "empty_body", offending: null },
+        });
+      }
+    },
+  );
 
   it("leaves one pending Sharma Draft and one drafted event when two runs overlap", async () => {
     const { t, supplierId, idOf } = await seeded();

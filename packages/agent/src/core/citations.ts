@@ -27,6 +27,7 @@ export const PLACEHOLDER_RULE: Partial<Record<Placeholder, RuleId>> = {
 };
 
 export type BlockReason =
+  | "empty_body"
   | "missing_citation"
   | "invalid_rule_id"
   | "rule_not_applicable"
@@ -69,6 +70,9 @@ export function validateCitations(
   const allowedSet: ReadonlySet<string> = new Set(allowed);
   const knownSet: ReadonlySet<string> = new Set(ruleIds);
   const citedSet: ReadonlySet<string> = new Set(cited);
+
+  // 0. A body with no visible text (empty, or only whitespace such as spaces, \n, \t) is never a draft.
+  if (out.text.trim() === "") return blocked("empty_body", null);
 
   // 1. At least one citation.
   if (cited.length === 0) return blocked("missing_citation", null);

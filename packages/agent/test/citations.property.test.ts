@@ -88,6 +88,7 @@ function reference(
   const fail = (reason: BlockReason, offending: string | null): CitationResult => ({ ok: false, reason, offending });
   const cited = out.ruleIds;
 
+  if (out.text.replace(/[ \n\r\t]/g, "") === "") return fail("empty_body", null);
   if (cited.length === 0) return fail("missing_citation", null);
   for (const id of cited) if (!ruleIds.includes(id)) return fail("invalid_rule_id", id);
   for (const id of cited) if (!allowed.includes(id)) return fail("rule_not_applicable", id);
@@ -132,6 +133,7 @@ const DIGIT_PIECES = ["5", "१२", "3.5%", "0"];
 const MONEY_PIECES = ["₹", "Rs", "INR", "inr", "rs"];
 const DELIVER_PIECES = ["deliver", "Delivered", "DELIVERY", "डिलीवरी"];
 const FRAGMENTS = ["{{", "}}", "{", "R", "s"];
+const BLANKS = [" ", "\n", "\t", "  \n"];
 
 const pieceArb: fc.Arbitrary<string> = fc.oneof(
   { weight: 10, arbitrary: fc.constantFrom(...WORDS) },
@@ -141,6 +143,7 @@ const pieceArb: fc.Arbitrary<string> = fc.oneof(
   { weight: 1, arbitrary: fc.constantFrom(...MONEY_PIECES) },
   { weight: 1, arbitrary: fc.constantFrom(...DELIVER_PIECES) },
   { weight: 1, arbitrary: fc.constantFrom(...FRAGMENTS) },
+  { weight: 1, arbitrary: fc.constantFrom(...BLANKS) },
 );
 
 const textArb: fc.Arbitrary<string> = fc
@@ -214,6 +217,7 @@ describe("Property 1: Citation_Validator matches its reference model", () => {
     );
     const expected: string[] = [
       "accepted",
+      "empty_body",
       "missing_citation",
       "invalid_rule_id",
       "rule_not_applicable",

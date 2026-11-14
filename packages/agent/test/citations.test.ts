@@ -50,6 +50,19 @@ describe("validateCitations: accepted output", () => {
 });
 
 describe("validateCitations: one result per block reason", () => {
+  it.each([
+    ["empty", ""],
+    ["spaces", "   "],
+    ["a newline", "\n"],
+    ["a tab", "\t"],
+    ["mixed whitespace", " \n\t \r\n "],
+  ])("blocks empty_body for text that is %s, before any other check", (_name, text) => {
+    expect(run(text, ["MSMED-15"])).toEqual(blocked("empty_body", null));
+    // It is the first check: it wins over missing_citation and invalid_rule_id.
+    expect(run(text, [])).toEqual(blocked("empty_body", null));
+    expect(run(text, ["MSMED-99"])).toEqual(blocked("empty_body", null));
+  });
+
   it("blocks missing_citation with a null offending value", () => {
     expect(run("Namaste {{buyer_name}} ji", [])).toEqual(blocked("missing_citation", null));
   });

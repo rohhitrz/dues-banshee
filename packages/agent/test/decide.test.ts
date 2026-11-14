@@ -451,6 +451,25 @@ describe("redraft", () => {
       { step: "whatsapp_nudge", occurredOn: TODAY, action: "drafted", draftId: f.draftId, detail: null },
     ]);
   });
+  it.each([["spaces", "   "], ["a newline", "\n"], ["a tab", "\t"]])(
+    "returns draft_failed for a model body of %s: the old Draft stays pending and no event is written",
+    async (_name, blank) => {
+      const f = await withNudgeDraft();
+      const before = await snapshot(f.t);
+      const models = modelSet({ text: blank, ruleIds: ["MSMED-15"] });
+
+      const result = await redraft({ db: f.t.db, models }, f.supplierId, f.draftId, "english", TODAY);
+
+      expect(result).toEqual({ kind: "draft_failed" });
+      // The blank output is blocked, then the one Repair_Call returns a blank body again.
+      expect(models.default.doGenerateCalls).toHaveLength(2);
+      expect(await snapshot(f.t)).toEqual(before);
+      expect((await draftById(f.t, f.draftId)).status).toEqual("pending");
+      expect(await sharmaEvents(f)).toEqual([
+        { step: "whatsapp_nudge", occurredOn: TODAY, action: "drafted", draftId: f.draftId, detail: null },
+      ]);
+    },
+  );
 });
 
 describe("overlapping decisions", () => {
