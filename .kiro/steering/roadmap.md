@@ -23,7 +23,7 @@ Sharma Traders tombstone → escalation draft approved by the owner → WhatsApp
 
 ### 2. escalation-ladder — risky tier, Supervised, 2 reviews
 - The daily step decision comes from the engine's next step (`nextEscalationStep`). A promise-to-pay pauses the ladder until its date. No ladder logic re-written outside the engine.
-- **LLM drafts** (Vercel AI SDK: Haiku by default, Sonnet for legal wording, GPT-5.6 Luna fallback; model IDs only in `models.ts`) in Hinglish or English. They must cite rule IDs from `legal-rules.md`, validated against the real rule list; a draft is blocked if one is missing or invalid.
+- **LLM drafts** (Vercel AI SDK: Haiku by default, Sonnet for legal wording, `gpt-6-luna` fallback; model IDs only in `models.ts`) in Hinglish or English. They must cite rule IDs from `legal-rules.md`, validated against the real rule list; a draft is blocked if one is missing or invalid.
 - Money and dates in drafts come from engine output via `formatINR`, never from the LLM. Buyer names and invoice numbers are untrusted text inside prompts.
 - Add a `legal-rules.md` rule ID for MSMED s.2(b) before any draft says acceptance = delivery.
 - **Owner approval queue:** approve, edit or reject. Every action goes into `escalation_events`, scoped by the session supplierId only. Stale session (missing supplier) is handled like dashboard-ui, never a 500.
@@ -32,12 +32,15 @@ Sharma Traders tombstone → escalation draft approved by the owner → WhatsApp
 - **Non-goals:** actually sending (whatsapp-channel), calling (buyer-voice-call), dashboard changes (it stays read-only).
 
 ### 3. debtor-ui — UI tier, Autopilot, 1 review
-- **One screen, `/debtors/[id]`:**
+- **One screen, `/debtors/[id]`, where `id` is the buyer id** (one page per buyer, all their invoices):
   - a candle timeline of invoices, ladder events, promises and payments
-  - pending approvals
-  - action buttons (approve draft, send pay link, start call), wired up as those specs land
-- Make dashboard tombstones link here.
-- **Non-goals:** editing invoices, more screens.
+  - pending approvals for this buyer, using the existing approvals actions (no second copy of approve/edit/reject logic)
+  - action buttons: approve draft works now; send pay link and start call are visible but disabled ("arrives with WhatsApp" / "arrives with voice call") until whatsapp-channel and buyer-voice-call switch them on
+- Make dashboard tombstones link to `/debtors/<buyerId>#invoice-<invoiceId>`.
+- Scoped by the session supplierId only; another supplier's buyer id → 404. Stale session handled like dashboard-ui, never a 500. Today override only for the demo supplier, as in `/approvals`.
+- Move the active-promise check (`apps/web/lib/graveyard/look.ts`, wisp rule) into an engine helper and use it on both screens.
+- One Playwright smoke test: sign in → graveyard → Sharma Traders tombstone → debtor page shows the exact demo values.
+- **Non-goals:** editing invoices, more screens, 5,000-invoice scale (polish), source-lint gaps (guardrails-evals), `/import` stale-session error (polish).
 
 ### 4. whatsapp-channel — risky tier, Supervised, 1 review
 - **Outbound only:** an approved template plus a Razorpay test payment link, sent only after owner approval, only to verified test numbers.
