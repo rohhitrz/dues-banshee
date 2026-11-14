@@ -145,15 +145,14 @@ export async function approveDraft(
  * Owner edits the Body_Text of a pending Draft. The Final_Text is rebuilt from the new body, the
  * stored rule IDs and the Disclaimer; a `legal_notice` or `odr_pack` Document is re-rendered from it.
  * The Draft stays `pending`; one `edited` event holds `{ before, after }`. The edited text is the
- * owner's own and is not re-validated. `today` dates the event; it falls back to the Draft's
- * creation date when the caller doesn't pass it.
+ * owner's own and is not re-validated. The event is dated `today`, the day of the edit.
  */
 export async function editDraft(
   deps: DecideDeps,
   supplierId: string,
   draftId: string,
   body: string,
-  today?: CalendarDate,
+  today: CalendarDate,
 ): Promise<DecideResult> {
   const { db } = deps;
   if (body.trim() === "") return { kind: "empty_body" };
@@ -187,7 +186,7 @@ export async function editDraft(
     await insertEscalationEvent(tx, {
       invoiceId: draft.invoiceId,
       step: draft.step,
-      occurredOn: today ?? draft.createdOn,
+      occurredOn: today,
       action: "edited",
       draftId,
       detail: { before: updated.before, after: body },

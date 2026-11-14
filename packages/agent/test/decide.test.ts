@@ -268,6 +268,26 @@ describe("editDraft", () => {
     ]);
   });
 
+  it("dates the edited event Today, not the day the Draft was created", async () => {
+    const f = await withNudgeDraft();
+    const later = "2026-11-14";
+    const newBody = "Sharma ji, kripya is hafte bhugtan ki tareekh bata dein.";
+
+    const result = await editDraft({ db: f.t.db }, f.supplierId, f.draftId, newBody, later);
+
+    expect(result).toEqual({ kind: "ok" });
+    expect(await sharmaEvents(f)).toEqual([
+      { step: "whatsapp_nudge", occurredOn: TODAY, action: "drafted", draftId: f.draftId, detail: null },
+      {
+        step: "whatsapp_nudge",
+        occurredOn: later,
+        action: "edited",
+        draftId: f.draftId,
+        detail: { before: ORIGINAL_BODY, after: newBody },
+      },
+    ]);
+  });
+
   it("refuses an empty body with empty_body, changes nothing and writes no event", async () => {
     const f = await withNudgeDraft();
     const before = await snapshot(f.t);
