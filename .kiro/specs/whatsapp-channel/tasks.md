@@ -183,7 +183,7 @@ Commit rule for every top-level task (git-workflow.md): one Conventional Commit 
 - [x] 9. Checkpoint: agent
   - From the repo root run `pnpm -r --if-present test && pnpm -r --if-present typecheck && pnpm -r --if-present lint` (covers `packages/engine`, `packages/db`, `packages/agent`, `apps/web`); ensure all tests pass, ask the user if questions arise.
 
-- [-] 10. Add the send actions and SendControls to the Debtor_Page
+- [x] 10. Add the send actions and SendControls to the Debtor_Page
   - Commit: `feat(web): add send pay link and open in whatsapp to the debtor page`
   - [x] 10.1 Implement `apps/web/lib/send/messages.ts` and `apps/web/lib/send/control-state.ts`
     - `outcomeMessage(outcome, sandboxJoinCode)` → `{ text, role }` with the exact texts of design.md "Error Handling" and Req 4.6: "Queued with Twilio. Delivery is not tracked." / "Opened in WhatsApp. Tap Send on your phone." (`status`); "This draft can't be sent", "This draft was approved on <D MMM YYYY>. Approve a fresh draft to send today.", "Not sent: <WAIT_TEXT[reason] | STEP_TEXT[step]>", "Payments are not configured", the payment-link failure text, "Message too long for WhatsApp (max 1,600 characters)", the Req 1.3 sandbox text with `join <code>` or "send the join code from the Twilio sandbox page", the Req 1.7 not-sent text, the record-failed text (`alert`)
@@ -209,33 +209,33 @@ Commit rule for every top-level task (git-workflow.md): one Conventional Commit 
     - `debtor-page.test.tsx`: with every Channel_Env value unset, the Demo_Seed page renders without error and "Send pay link" is in a disabled state of Req 4.3–4.5
     - _Requirements: 4.1, 4.3, 4.4, 4.5, 4.7, 4.8, 4.9, 5.2, 5.4, 8.5, 9.8_
 
-- [ ] 11. Add the webhook routes and Channel_Env configuration
+- [x] 11. Add the webhook routes and Channel_Env configuration
   - Commit: `feat(web): add razorpay and twilio webhook routes and channel env`
-  - [ ] 11.1 Implement `apps/web/app/api/webhooks/razorpay/route.ts` and `apps/web/app/api/webhooks/twilio/route.ts`
+  - [x] 11.1 Implement `apps/web/app/api/webhooks/razorpay/route.ts` and `apps/web/app/api/webhooks/twilio/route.ts`
     - Both `export const runtime = "nodejs"`; Razorpay: `await req.text()` first, then `X-Razorpay-Signature` and `x-razorpay-event-id`, call `handleRazorpayWebhook` with `readChannelEnv(process.env)` and the demo-supplier check, `revalidatePath("/")` and `revalidatePath("/debtors/<id>")` before responding when `revalidateBuyerId` is set; Twilio: `await req.formData()` into string-only params plus `X-Twilio-Signature`, call `handleTwilioInbound`; responses use the handler's status, body and content type only
     - `proxy.ts` unchanged
     - _Requirements: 6.7, 6.11, 7.2, 8.4, 8.6, 8.7_
-  - [ ] 11.2 Write `apps/web/test/webhook-routes.test.ts` and extend `apps/web/test/proxy.test.ts`
+  - [x] 11.2 Write `apps/web/test/webhook-routes.test.ts` and extend `apps/web/test/proxy.test.ts`
     - Both routes export `runtime = "nodejs"`; the Razorpay route passes the `req.text()` string unchanged to the handler; a paid result revalidates `/` and `/debtors/<id>` before the response; unset secrets give 503, never 500
     - `config.matcher` of `apps/web/proxy.ts` matches neither `/api/webhooks/razorpay` nor `/api/webhooks/twilio`
     - _Requirements: 6.7, 6.11, 8.4, 8.6, 8.7, 9.15_
-  - [ ] 11.3 Update `apps/web/.env.example` and extend `apps/web/test/lint.test.ts`
+  - [x] 11.3 Update `apps/web/.env.example` and extend `apps/web/test/lint.test.ts`
     - `.env.example` lists `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM`, `TWILIO_SANDBOX_JOIN_CODE`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `PUBLIC_BASE_URL`, `DEMO_BUYER_WHATSAPP`, each as `NAME=` alone on its line
     - Lint test: no `api.twilio.com`, `wa.me` or `api.razorpay.com` string in `apps/web` outside tests; `.env.example` has every Channel_Env name with an empty value; no `AC[0-9a-f]{32}`, `rzp_(test|live)_[A-Za-z0-9]{14}` or `+91` 10-digit number outside the fictional fixture list in git-tracked files; every local env file except `apps/web/.env.example` is git-ignored
     - _Requirements: 1.1, 8.1, 8.2, 8.3_
 
-- [ ] 12. Checkpoint: web
+- [x] 12. Checkpoint: web
   - From the repo root run `pnpm -r --if-present test && pnpm -r --if-present typecheck && pnpm -r --if-present lint` (covers `packages/engine`, `packages/db`, `packages/agent`, `apps/web`); ensure all tests pass, ask the user if questions arise.
     - Notes: Also run the Playwright smoke: start `pnpm --filter web dev`, then `pnpm --filter web e2e` (the debtor page changed).
 
-- [ ] 13. Add the manual live-check script
+- [x] 13. Add the manual live-check script
   - Commit: `chore(agent): add manual whatsapp live-check script`
-  - [ ] 13.1 Write `packages/agent/scripts/whatsapp-live-check.ts`
+  - [x] 13.1 Write `packages/agent/scripts/whatsapp-live-check.ts`
     - Reads Channel_Env, `DATABASE_URL` and `DEMO_BUYER_WHATSAPP`; exits with a message naming any missing variable (never its value) and refuses a key id without `rzp_test_`; builds the Sharma Traders Outbound_Text with `buildOutboundText`; runs `findByReference` first and creates a link only when none exists (test mode allows 30 links); sends through `createTwilioSandbox` with the real `sleep` and `AbortSignal.timeout`; prints the Twilio message SID, the link URL and the final polled status (last `polls` entry); writes nothing to the database
     - Excluded from Vitest globs, the `test` script and CI; typecheck and lint still cover it
     - _Requirements: 9.9, 8.3_
 
-- [ ] 14. Final checkpoint
+- [x] 14. Final checkpoint
   - From the repo root run `pnpm -r --if-present test && pnpm -r --if-present typecheck && pnpm -r --if-present lint` with zero failures and zero errors in `packages/engine`, `packages/db`, `packages/agent` and `apps/web`; ensure all tests pass, ask the user if questions arise (Req 9.10).
 
     - Notes: Also run `pnpm --filter web build` (catches twilio bundling and client/server import errors before Vercel auto-deploys on push).

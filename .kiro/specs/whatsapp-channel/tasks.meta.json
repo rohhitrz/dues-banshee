@@ -592,6 +592,97 @@
         "executionId": "9c8000ad-32bc-45a8-b491-5509d07bcd26",
         "chatSessionId": "sess_78791887-2533-4ebe-beee-8228daf2046a",
         "timestamp": 1795027526073
+      },
+      {
+        "executionId": "9c8000ad-32bc-45a8-b491-5509d07bcd26",
+        "chatSessionId": "sess_78791887-2533-4ebe-beee-8228daf2046a",
+        "timestamp": 1795027613675
+      }
+    ],
+    "11.1 Implement `apps/web/app/api/webhooks/razorpay/route.ts` and `apps/web/app/api/webhooks/twilio/route.ts`": [
+      {
+        "executionId": "54e52421-bef2-4dcc-b538-ca5cc324738f",
+        "chatSessionId": "sess_bd95d52b-c47f-44ec-9a64-24faf7d3a5d7",
+        "timestamp": 1795030841320
+      },
+      {
+        "executionId": "54e52421-bef2-4dcc-b538-ca5cc324738f",
+        "chatSessionId": "sess_bd95d52b-c47f-44ec-9a64-24faf7d3a5d7",
+        "timestamp": 1795030985984
+      }
+    ],
+    "11.3 Update `apps/web/.env.example` and extend `apps/web/test/lint.test.ts`": [
+      {
+        "executionId": "54e52421-bef2-4dcc-b538-ca5cc324738f",
+        "chatSessionId": "sess_bd95d52b-c47f-44ec-9a64-24faf7d3a5d7",
+        "timestamp": 1795030841362
+      },
+      {
+        "executionId": "54e52421-bef2-4dcc-b538-ca5cc324738f",
+        "chatSessionId": "sess_bd95d52b-c47f-44ec-9a64-24faf7d3a5d7",
+        "timestamp": 1795030986019
+      }
+    ],
+    "11.2 Write `apps/web/test/webhook-routes.test.ts` and extend `apps/web/test/proxy.test.ts`": [
+      {
+        "executionId": "54e52421-bef2-4dcc-b538-ca5cc324738f",
+        "chatSessionId": "sess_bd95d52b-c47f-44ec-9a64-24faf7d3a5d7",
+        "timestamp": 1795030990244
+      },
+      {
+        "executionId": "54e52421-bef2-4dcc-b538-ca5cc324738f",
+        "chatSessionId": "sess_bd95d52b-c47f-44ec-9a64-24faf7d3a5d7",
+        "timestamp": 1795031136206
+      }
+    ],
+    "11. Add the webhook routes and Channel_Env configuration": [
+      {
+        "executionId": "54e52421-bef2-4dcc-b538-ca5cc324738f",
+        "chatSessionId": "sess_bd95d52b-c47f-44ec-9a64-24faf7d3a5d7",
+        "timestamp": 1795031136253
+      }
+    ],
+    "12. Checkpoint: web": [
+      {
+        "executionId": "f6c4ce4e-5c73-4841-be68-a25e54bbf6ca",
+        "chatSessionId": "sess_216a9990-7b57-4d54-b333-5ec22dac0d03",
+        "timestamp": 1795031287119
+      },
+      {
+        "executionId": "f6c4ce4e-5c73-4841-be68-a25e54bbf6ca",
+        "chatSessionId": "sess_216a9990-7b57-4d54-b333-5ec22dac0d03",
+        "timestamp": 1795031465999
+      }
+    ],
+    "13.1 Write `packages/agent/scripts/whatsapp-live-check.ts`": [
+      {
+        "executionId": "44769167-3bf6-40dc-9031-258a38cc59f5",
+        "chatSessionId": "sess_bc63d2c9-a7ef-4a51-8da2-3e6f95debf2a",
+        "timestamp": 1795031584142
+      },
+      {
+        "executionId": "44769167-3bf6-40dc-9031-258a38cc59f5",
+        "chatSessionId": "sess_bc63d2c9-a7ef-4a51-8da2-3e6f95debf2a",
+        "timestamp": 1795031730067
+      }
+    ],
+    "13. Add the manual live-check script": [
+      {
+        "executionId": "44769167-3bf6-40dc-9031-258a38cc59f5",
+        "chatSessionId": "sess_bc63d2c9-a7ef-4a51-8da2-3e6f95debf2a",
+        "timestamp": 1795031730101
+      }
+    ],
+    "14. Final checkpoint": [
+      {
+        "executionId": "c0cb29f8-8aea-4cc9-ad74-7aa58c4accb7",
+        "chatSessionId": "sess_33042d66-513f-4681-be73-7e342533703d",
+        "timestamp": 1795031768906
+      },
+      {
+        "executionId": "c0cb29f8-8aea-4cc9-ad74-7aa58c4accb7",
+        "chatSessionId": "sess_33042d66-513f-4681-be73-7e342533703d",
+        "timestamp": 1795031859628
       }
     ]
   }
