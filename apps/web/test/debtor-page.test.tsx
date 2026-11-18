@@ -36,6 +36,7 @@ const mocks = vi.hoisted(() => ({
   getBankRate: vi.fn(),
   getDebtorData: vi.fn(),
   listPendingDrafts: vi.fn(),
+  listSendState: vi.fn(),
   getDraftForSupplier: vi.fn(),
 }));
 
@@ -55,10 +56,14 @@ vi.mock("@dues-banshee/db", async (importOriginal) => ({
   getBankRate: mocks.getBankRate,
   getDebtorData: mocks.getDebtorData,
   listPendingDrafts: mocks.listPendingDrafts,
+  listSendState: mocks.listSendState,
   getDraftForSupplier: mocks.getDraftForSupplier,
 }));
 // The DraftCard's server actions import the agent; no model is ever called from these tests.
-vi.mock("@dues-banshee/agent", () => ({
+vi.mock("@dues-banshee/agent", async (importOriginal) => ({
+  // Pure helpers the page loader uses for the send controls; they never call a model or the network.
+  readChannelEnv: (await importOriginal<typeof import("@dues-banshee/agent")>()).readChannelEnv,
+  buildOutboundText: (await importOriginal<typeof import("@dues-banshee/agent")>()).buildOutboundText,
   approveDraft: vi.fn(),
   editDraft: vi.fn(),
   rejectDraft: vi.fn(),
@@ -257,6 +262,10 @@ beforeEach(() => {
   mocks.getBankRate.mockReset().mockResolvedValue(BANK_RATE);
   mocks.getDebtorData.mockReset().mockResolvedValue(debtorData([sharmaRecord()]));
   mocks.listPendingDrafts.mockReset().mockResolvedValue([]);
+  mocks.listSendState.mockReset().mockResolvedValue({
+    buyerHasNumber: false,
+    invoices: [SHARMA_INVOICE_ID, PAID_INVOICE_ID].map((invoiceId) => ({ invoiceId, sendableDrafts: [], lastSent: null })),
+  });
   mocks.getDraftForSupplier.mockReset().mockResolvedValue(null);
   errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
   nowSpy = vi.spyOn(Date, "now").mockReturnValue(NOW);
@@ -531,7 +540,8 @@ describe("DebtorPage notices (Req 7.6)", () => {
     expect(expired).toContain('role="alert"');
 
     const unknown = await render(BUYER_ID, { notice: "<script>alert(1)</script>" });
-    expect(unknown).not.toContain("<script>");
+    // React adds its own form-replay <script> now that the page has a form, so look for the injected text.
+    expect(unknown).not.toContain("alert(1)");
     expect(unknown).not.toContain('role="status"');
     expect(unknown).not.toContain('role="alert"');
   });
@@ -586,29 +596,27 @@ describe("DebtorPage Invoice_Panels and placeholders (Req 8.1, 8.2, 4.4)", () =>
     expect(panel).toContain("Next: WhatsApp nudge");
   });
 
-  it("renders the placeholders disabled, each described by its 'Arrives with …' text", async () => {
+  it("renders 'Send pay link' disabled with its reason and 'Start call' disabled with 'Arrives with voice call'", async () => {
     const panel = panelHtml(await render(), SHARMA_INVOICE_ID);
-
     const pay = /<button [^>]*>Send pay link<\/button>/.exec(panel)?.[0];
     const call = /<button [^>]*>Start call<\/button>/.exec(panel)?.[0];
     expect(pay).toBeDefined();
     expect(call).toBeDefined();
     for (const button of [pay!, call!]) {
-      expect(button).toContain('type="button"');
       expect(button).toMatch(/\sdisabled(=""|\s|>)/);
     }
-
+    expect(call).toContain('type="button"');
     const payTarget = /aria-describedby="([^"]+)"/.exec(pay!)?.[1];
     const callTarget = /aria-describedby="([^"]+)"/.exec(call!)?.[1];
-    expect(payTarget).toBe(`pay-link-note-${SHARMA_INVOICE_ID}`);
+    expect(payTarget).toBe(`send-note-${SHARMA_INVOICE_ID}`);
     expect(callTarget).toBe(`start-call-note-${SHARMA_INVOICE_ID}`);
-    expect(panel).toMatch(new RegExp(`<span [^>]*id="${payTarget}"[^>]*>Arrives with WhatsApp</span>`));
+    expect(panel).toMatch(new RegExp(`<span [^>]*id="${payTarget}"[^>]*>Approve a WhatsApp draft first</span>`));
     expect(panel).toMatch(new RegExp(`<span [^>]*id="${callTarget}"[^>]*>Arrives with voice call</span>`));
-    // No form, handler or link: the buttons do nothing in this spec.
-    expect(panel).not.toContain("<form");
-    expect(panel).not.toContain("onclick");
+    expect(panel).not.toContain("Arrives with WhatsApp");
+    // No Sendable_Draft: no "Open in WhatsApp" and no preview.
+    expect(panel).not.toContain("Open in WhatsApp");
+    expect(panel).not.toContain("<pre");
   });
-
   it("shows the placeholders on the unpaid panel only, not on a resurrected one", async () => {
     mocks.getDebtorData.mockResolvedValue(debtorData([sharmaRecord(), paidRecord()]));
 
@@ -620,9 +628,109 @@ describe("DebtorPage Invoice_Panels and placeholders (Req 8.1, 8.2, 4.4)", () =>
     expect(count(html, "Start call")).toBe(1);
     expect(unpaid).toContain("Send pay link");
     expect(paid).toContain('data-state="resurrected"');
-    for (const absent of ["Send pay link", "Start call", "Arrives with WhatsApp", "Arrives with voice call", "<button", "aria-describedby"]) {
+    for (const absent of ["Send pay link", "Start call", "Approve a WhatsApp draft first", "Arrives with voice call", "<button", "aria-describedby"]) {
       expect(paid).not.toContain(absent);
     }
+  });
+});
+
+describe("DebtorPage send controls with every Channel_Env value unset (Req 4.3, 4.4, 4.5, 8.5)", () => {
+  const CHANNEL_ENV_NAMES = [
+    "TWILIO_ACCOUNT_SID",
+    "TWILIO_AUTH_TOKEN",
+    "TWILIO_WHATSAPP_FROM",
+    "RAZORPAY_KEY_ID",
+    "RAZORPAY_KEY_SECRET",
+    "RAZORPAY_WEBHOOK_SECRET",
+    "PUBLIC_BASE_URL",
+    "TWILIO_SANDBOX_JOIN_CODE",
+    "DEMO_BUYER_WHATSAPP",
+  ];
+  const BODY = "Namaste Sharma ji, yeh ek vinamra reminder hai.";
+  const BASIS = "Basis: MSMED-15 (MSMED Act 2006, s.15); MSMED-16 (MSMED Act 2006, s.16)";
+
+  beforeEach(() => {
+    for (const name of CHANNEL_ENV_NAMES) vi.stubEnv(name, undefined);
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  function sendState(buyerHasNumber: boolean, withDraft: boolean) {
+    return {
+      buyerHasNumber,
+      invoices: [
+        {
+          invoiceId: SHARMA_INVOICE_ID,
+          sendableDrafts: withDraft
+            ? [
+                {
+                  draftId: DRAFT_ID,
+                  step: "whatsapp_nudge",
+                  approvalDay: "2026-11-12",
+                  createdAt: new Date(1000),
+                  bodyText: BODY,
+                  ruleIds: ["MSMED-15", "MSMED-16"],
+                },
+              ]
+            : [],
+          lastSent: null,
+        },
+      ],
+    };
+  }
+
+  /** The Send pay link button and the text its aria-describedby points to. */
+  function sendButton(panel: string): { button: string; reason: string | null } {
+    const button = /<button [^>]*>Send pay link<\/button>/.exec(panel)?.[0];
+    if (button === undefined) throw new Error("no Send pay link button");
+    const target = /aria-describedby="([^"]+)"/.exec(button)?.[1];
+    const reason =
+      target === undefined
+        ? null
+        : (new RegExp(`<span [^>]*id="${target}"[^>]*>([^<]*)</span>`).exec(panel)?.[1] ?? null);
+    return { button, reason };
+  }
+
+  it("renders the Demo_Seed page without error and disables Send pay link: no Sendable_Draft", async () => {
+    const html = await render();
+    const { button, reason } = sendButton(panelHtml(html, SHARMA_INVOICE_ID));
+
+    expect(html).toMatch(/<h1[^>]*>Sharma Traders<\/h1>/);
+    expect(html).not.toContain(LOAD_FAILED);
+    expect(button).toMatch(/\sdisabled(=""|\s|>)/);
+    expect(reason).toBe("Approve a WhatsApp draft first");
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+  it("disables Send pay link with 'No WhatsApp number for this buyer' and keeps Open in WhatsApp", async () => {
+    mocks.listSendState.mockResolvedValue(sendState(false, true));
+
+    const html = await render();
+    const panel = panelHtml(html, SHARMA_INVOICE_ID);
+    const { button, reason } = sendButton(panel);
+
+    expect(button).toMatch(/\sdisabled(=""|\s|>)/);
+    expect(reason).toBe("No WhatsApp number for this buyer");
+    expect(panel).toMatch(/<button [^>]*>Open in WhatsApp<\/button>/);
+    expect(/<button [^>]*>Open in WhatsApp<\/button>/.exec(panel)?.[0]).not.toMatch(/\sdisabled/);
+    expect(visibleText(panel)).toContain(
+      `${BODY} Pay ${SHARMA_PRINCIPAL} here: &lt;link created on send&gt; ${BASIS} Reminders a supplier sends to its own buyers. Not legal advice.`,
+    );
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+  it("disables Send pay link with 'WhatsApp sender not configured' when the buyer has a number", async () => {
+    mocks.listSendState.mockResolvedValue(sendState(true, true));
+
+    const html = await render();
+    const panel = panelHtml(html, SHARMA_INVOICE_ID);
+    const { button, reason } = sendButton(panel);
+
+    expect(button).toMatch(/\sdisabled(=""|\s|>)/);
+    expect(reason).toBe("WhatsApp sender not configured");
+    expect(panel).toMatch(/<button [^>]*>Open in WhatsApp<\/button>/);
+    expect(errorSpy).not.toHaveBeenCalled();
   });
 });
 
@@ -650,7 +758,8 @@ describe("DebtorPage Drafts (Req 7.1, 7.5)", () => {
     expect(html).not.toContain(OTHER_DRAFT_ID);
     expect(html).not.toContain("Gupta Engineering Works");
     // Four forms per card: save edit, approve, redraft, reject.
-    expect(count(html, "<form")).toBe(8);
+    // 4 forms per Draft, plus the one "Send pay link" form of the Sharma invoice panel.
+    expect(count(html, "<form")).toBe(9);
     expect(count(html, 'name="returnTo"')).toBe(8);
     expect(count(html, `name="returnTo" value="/debtors/${BUYER_ID}"`)).toBe(8);
     expect(visibleText(html)).not.toContain("No drafts waiting for this buyer");

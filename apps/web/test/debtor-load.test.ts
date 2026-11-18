@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   getBankRate: vi.fn(),
   getDebtorData: vi.fn(),
   listPendingDrafts: vi.fn(),
+  listSendState: vi.fn(),
 }));
 
 vi.mock("@dues-banshee/db", async (importOriginal) => ({
@@ -23,6 +24,7 @@ vi.mock("@dues-banshee/db", async (importOriginal) => ({
   getBankRate: mocks.getBankRate,
   getDebtorData: mocks.getDebtorData,
   listPendingDrafts: mocks.listPendingDrafts,
+  listSendState: mocks.listSendState,
 }));
 
 import { loadDebtorData } from "@/lib/debtor/load";
@@ -70,6 +72,7 @@ beforeEach(() => {
   mocks.getBankRate.mockReset().mockResolvedValue(BANK_RATE);
   mocks.getDebtorData.mockReset().mockResolvedValue(DEBTOR_DATA);
   mocks.listPendingDrafts.mockReset().mockResolvedValue([]);
+  mocks.listSendState.mockReset().mockResolvedValue({ buyerHasNumber: false, invoices: [] });
   errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 });
 

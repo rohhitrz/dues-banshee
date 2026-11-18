@@ -88,7 +88,12 @@ export default async function DebtorPage({
       ) : (
         <div className={styles.list}>
           {view.panels.map((panel) => (
-            <InvoicePanel key={panel.panelId} panel={panel} today={view.today} />
+            <InvoicePanel
+              key={panel.panelId}
+              panel={panel}
+              today={view.today}
+              send={result.send[panel.tombstone.id] ?? null}
+            />
           ))}
         </div>
       )}

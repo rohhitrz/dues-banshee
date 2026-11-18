@@ -23,6 +23,10 @@
     "8.9 Write property test `packages/agent/test/mask.property.test.ts`": {
       "status": "passed",
       "lastRunTimestamp": 1795026135457
+    },
+    "10.2 Write property test `apps/web/test/send-control-state.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1795026849583
     }
   },
   "executionHistory": {
@@ -492,6 +496,102 @@
         "executionId": "693f618d-a70f-4724-b21d-b5c93cc9c3e8",
         "chatSessionId": "sess_a9a9d6fa-0774-4990-893c-a2dd92704bc5",
         "timestamp": 1795026226326
+      }
+    ],
+    "9. Checkpoint: agent": [
+      {
+        "executionId": "4ab47491-4781-4654-9a94-c5ff9059f200",
+        "chatSessionId": "sess_29d32b0d-e1a2-4111-aa89-8345d53e1b73",
+        "timestamp": 1795026428047
+      },
+      {
+        "executionId": "4ab47491-4781-4654-9a94-c5ff9059f200",
+        "chatSessionId": "sess_29d32b0d-e1a2-4111-aa89-8345d53e1b73",
+        "timestamp": 1795026496215
+      }
+    ],
+    "10.1 Implement `apps/web/lib/send/messages.ts` and `apps/web/lib/send/control-state.ts`": [
+      {
+        "executionId": "9c8000ad-32bc-45a8-b491-5509d07bcd26",
+        "chatSessionId": "sess_78791887-2533-4ebe-beee-8228daf2046a",
+        "timestamp": 1795026624374
+      },
+      {
+        "executionId": "9c8000ad-32bc-45a8-b491-5509d07bcd26",
+        "chatSessionId": "sess_78791887-2533-4ebe-beee-8228daf2046a",
+        "timestamp": 1795026756193
+      }
+    ],
+    "10.2 Write property test `apps/web/test/send-control-state.property.test.ts`": [
+      {
+        "executionId": "9c8000ad-32bc-45a8-b491-5509d07bcd26",
+        "chatSessionId": "sess_78791887-2533-4ebe-beee-8228daf2046a",
+        "timestamp": 1795026761120
+      },
+      {
+        "executionId": "9c8000ad-32bc-45a8-b491-5509d07bcd26",
+        "chatSessionId": "sess_78791887-2533-4ebe-beee-8228daf2046a",
+        "timestamp": 1795026881111
+      }
+    ],
+    "10.3 Implement `apps/web/app/(debtor)/debtors/[id]/send-actions.ts`": [
+      {
+        "executionId": "9c8000ad-32bc-45a8-b491-5509d07bcd26",
+        "chatSessionId": "sess_78791887-2533-4ebe-beee-8228daf2046a",
+        "timestamp": 1795026761355
+      },
+      {
+        "executionId": "9c8000ad-32bc-45a8-b491-5509d07bcd26",
+        "chatSessionId": "sess_78791887-2533-4ebe-beee-8228daf2046a",
+        "timestamp": 1795026881783
+      }
+    ],
+    "10.4 Write `apps/web/test/send-actions.test.ts`": [
+      {
+        "executionId": "9c8000ad-32bc-45a8-b491-5509d07bcd26",
+        "chatSessionId": "sess_78791887-2533-4ebe-beee-8228daf2046a",
+        "timestamp": 1795026903617
+      },
+      {
+        "executionId": "9c8000ad-32bc-45a8-b491-5509d07bcd26",
+        "chatSessionId": "sess_78791887-2533-4ebe-beee-8228daf2046a",
+        "timestamp": 1795027243829
+      }
+    ],
+    "10.5 Implement `components/debtor/send-controls.tsx` (+ `.module.css`) and wire it into the Debtor_Page": [
+      {
+        "executionId": "9c8000ad-32bc-45a8-b491-5509d07bcd26",
+        "chatSessionId": "sess_78791887-2533-4ebe-beee-8228daf2046a",
+        "timestamp": 1795026903674
+      },
+      {
+        "executionId": "9c8000ad-32bc-45a8-b491-5509d07bcd26",
+        "chatSessionId": "sess_78791887-2533-4ebe-beee-8228daf2046a",
+        "timestamp": 1795027244634
+      }
+    ],
+    "10.6 Write `apps/web/test/send-controls.test.tsx` and extend `candle-timeline.test.ts` and `debtor-page.test.tsx`": [
+      {
+        "executionId": "9c8000ad-32bc-45a8-b491-5509d07bcd26",
+        "chatSessionId": "sess_78791887-2533-4ebe-beee-8228daf2046a",
+        "timestamp": 1795027245406
+      },
+      {
+        "executionId": "9c8000ad-32bc-45a8-b491-5509d07bcd26",
+        "chatSessionId": "sess_78791887-2533-4ebe-beee-8228daf2046a",
+        "timestamp": 1795027509836
+      }
+    ],
+    "10. Add the send actions and SendControls to the Debtor_Page": [
+      {
+        "executionId": "9c8000ad-32bc-45a8-b491-5509d07bcd26",
+        "chatSessionId": "sess_78791887-2533-4ebe-beee-8228daf2046a",
+        "timestamp": 1795027509876
+      },
+      {
+        "executionId": "9c8000ad-32bc-45a8-b491-5509d07bcd26",
+        "chatSessionId": "sess_78791887-2533-4ebe-beee-8228daf2046a",
+        "timestamp": 1795027526073
       }
     ]
   }

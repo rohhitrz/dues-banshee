@@ -2,20 +2,24 @@ import type { CalendarDate } from "@dues-banshee/engine";
 import type { InvoicePanelView } from "@/lib/debtor/build-debtor-view";
 import { bankRateMissingText } from "@/components/graveyard/bank-rate-message";
 import { CAVEAT_TEXT } from "@/components/graveyard/tombstone";
+import type { SendControlsData } from "@/lib/debtor/build-send-controls";
 import { PlaceholderActions } from "./placeholder-actions";
+import { SendControls } from "./send-controls";
 import styles from "./invoice-panel.module.css";
 
 export interface InvoicePanelProps {
   panel: InvoicePanelView;
   /** Today, used only for the "Bank rate not configured for <Today>" text. */
   today: CalendarDate;
+  /** The send controls data of this invoice; null renders no send controls. */
+  send: SendControlsData | null;
 }
 
 /**
  * One invoice of the buyer. Every figure comes from the Tombstone_View the Graveyard_Builder produced; this
  * component only lays it out. No money maths: amounts arrive as already-formatted strings.
  */
-export function InvoicePanel({ panel, today }: InvoicePanelProps) {
+export function InvoicePanel({ panel, today, send }: InvoicePanelProps) {
   const view = panel.tombstone;
 
   return (
@@ -38,6 +42,8 @@ export function InvoicePanel({ panel, today }: InvoicePanelProps) {
       {view.caveat === "registered_after_supply" ? <p className={styles.caveat}>{CAVEAT_TEXT}</p> : null}
       {panel.promiseUntilText === null ? null : <p className={styles.promise}>{panel.promiseUntilText}</p>}
       <p className={styles.next}>{view.nextLabel}</p>
+      {panel.showPlaceholders && send !== null ? <SendControls data={send} /> : null}
+      {!panel.showPlaceholders && send?.sentText ? <p className={styles.line}>{send.sentText}</p> : null}
       {panel.showPlaceholders ? <PlaceholderActions invoiceId={view.id} /> : null}
     </section>
   );

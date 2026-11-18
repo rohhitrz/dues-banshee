@@ -484,6 +484,26 @@ describe("buildCandleTimeline: mixed fixture at 2026-11-12 (Req 10.2)", () => {
   });
 });
 
+describe("a sent Escalation_Event (Req 5.4)", () => {
+  it("gives the entry 'WhatsApp nudge sent' on the event's occurred_on date", () => {
+    const events: DebtorEventRow[] = [
+      { id: "ev-sent", invoiceId: "inv-sharma", step: "whatsapp_nudge", action: "sent", occurredOn: "2026-11-12" },
+    ];
+    expect(timelineFor(SHARMA_BUYER, [sharmaRecord()], events, []).filter((e) => e.kind === "ladder")).toEqual([
+      {
+        kind: "ladder",
+        date: "2026-11-12",
+        dateText: "12 Nov 2026",
+        text: "WhatsApp nudge sent",
+        invoiceNumber: "LPC/26-27/0412",
+        rowId: "ev-sent",
+        lit: true,
+        tone: "bone",
+      },
+    ]);
+  });
+});
+
 describe("ACTION_TEXT (Req 5.4, 5.5)", () => {
   it("maps each action to its literal text", () => {
     expect(ACTION_TEXT).toEqual({

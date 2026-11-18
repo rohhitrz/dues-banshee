@@ -180,30 +180,30 @@ Commit rule for every top-level task (git-workflow.md): one Conventional Commit 
     - Covers `maskNumber` and the serialized `send_whatsapp` payloads (`sent`, `handoff`, `failed`, any `polls`) and `whatsapp_inbound` payloads (with a `whatsapp:` prefixed sender and any `Body`); `numRuns` ≥ 100
     - **Validates: Requirements 5.6, 7.3**
 
-- [ ] 9. Checkpoint: agent
+- [x] 9. Checkpoint: agent
   - From the repo root run `pnpm -r --if-present test && pnpm -r --if-present typecheck && pnpm -r --if-present lint` (covers `packages/engine`, `packages/db`, `packages/agent`, `apps/web`); ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. Add the send actions and SendControls to the Debtor_Page
+- [-] 10. Add the send actions and SendControls to the Debtor_Page
   - Commit: `feat(web): add send pay link and open in whatsapp to the debtor page`
-  - [ ] 10.1 Implement `apps/web/lib/send/messages.ts` and `apps/web/lib/send/control-state.ts`
+  - [x] 10.1 Implement `apps/web/lib/send/messages.ts` and `apps/web/lib/send/control-state.ts`
     - `outcomeMessage(outcome, sandboxJoinCode)` → `{ text, role }` with the exact texts of design.md "Error Handling" and Req 4.6: "Queued with Twilio. Delivery is not tracked." / "Opened in WhatsApp. Tap Send on your phone." (`status`); "This draft can't be sent", "This draft was approved on <D MMM YYYY>. Approve a fresh draft to send today.", "Not sent: <WAIT_TEXT[reason] | STEP_TEXT[step]>", "Payments are not configured", the payment-link failure text, "Message too long for WhatsApp (max 1,600 characters)", the Req 1.3 sandbox text with `join <code>` or "send the join code from the Twilio sandbox page", the Req 1.7 not-sent text, the record-failed text (`alert`)
     - `pickSendableDraft` (max by `approvalDay`, `createdAt`, `id`) and `sendControlState` with precedence `no_draft` > `no_number` > `sender_not_configured` > `ready`
     - _Requirements: 1.3, 1.7, 2.3, 2.5, 2.6, 3.4, 3.5, 3.8, 4.1, 4.3, 4.4, 4.5, 4.6_
-  - [ ] 10.2 Write property test `apps/web/test/send-control-state.property.test.ts`
+  - [x] 10.2 Write property test `apps/web/test/send-control-state.property.test.ts`
     - **Property 4: Send control state and draft choice**
     - **Validates: Requirements 4.1, 4.3, 4.4, 4.5**
-  - [ ] 10.3 Implement `apps/web/app/(debtor)/debtors/[id]/send-actions.ts`
+  - [x] 10.3 Implement `apps/web/app/(debtor)/debtors/[id]/send-actions.ts`
     - `"use server"` `sendPayLink` and `openInWhatsApp` (`useActionState` signature, return `SendView`); read only `draftId` and `today`; supplier id only from `auth()`; no `supplierId` → `redirect("/signin")`; `SupplierNotFoundError` → `redirect("/signin?error=SessionExpired")` outside any `try` (the `withSupplier`/`STALE_URL` pattern of `approvals/actions.ts`); Today via `resolveSupplierToday`; deps per request from `readChannelEnv(process.env)`, `globalThis.fetch` and the Twilio_Sandbox defaults; unexpected error → `record_failed` with `console.error` only; `revalidatePath("/debtors/<buyerId>")` after any outcome that wrote a row; `approvals/actions.ts` unchanged
     - _Requirements: 2.1, 2.7, 2.9, 2.10, 4.2, 4.6, 8.1, 8.2_
-  - [ ] 10.4 Write `apps/web/test/send-actions.test.ts`
+  - [x] 10.4 Write `apps/web/test/send-actions.test.ts`
     - Mocks `@/auth`, `next/navigation`, `next/cache`, `fetch` via `vi.stubGlobal` with `fakeHttp`: no session → `/signin`, no call, no row; stale → one redirect to `/signin?error=SessionExpired`, never a 500; forged `supplierId`, amount, text and phone number fields ignored; the Demo_Override applies only to the demo supplier; each outcome gives its exact text and role; sandbox text with `TWILIO_SANDBOX_JOIN_CODE` set and unset; `openInWhatsApp` returns the WaMe_Link URL and `sendPayLink` never does; no Channel_Env secret in any returned `SendView`
     - _Requirements: 1.3, 2.1, 2.7, 2.10, 4.6, 8.2, 9.4, 9.11_
-  - [ ] 10.5 Implement `components/debtor/send-controls.tsx` (+ `.module.css`) and wire it into the Debtor_Page
+  - [x] 10.5 Implement `components/debtor/send-controls.tsx` (+ `.module.css`) and wire it into the Debtor_Page
     - Client component: Outbound_Text preview `<pre>` built with `buildOutboundText` and `"<link created on send>"`; "Send pay link" `<button>` enabled only in `ready`, else `disabled` with `aria-describedby` to "Approve a WhatsApp draft first" / "No WhatsApp number for this buyer" / "WhatsApp sender not configured"; "Open in WhatsApp" absent for `no_draft`, enabled otherwise; each in a `<form>` with `useActionState`, hidden `draftId` and (with an override) `today`; both disabled while either is pending; one `<p role>` result; synchronous `window.open("about:blank", "_blank")` with `opener = null`, then `location.href = url` or close, with a plain-link fallback when blocked; "Sent on <D MMM YYYY> via <Twilio sandbox | your WhatsApp>"; 44 × 44 targets, disabled text `#A9A497` without opacity
     - `components/debtor/placeholder-actions.tsx` keeps only "Start call" / "Arrives with voice call"; `lib/debtor/load.ts` adds `listSendState` and the `twilioReady` boolean (only booleans reach the client); `invoice-panel.tsx` and `page.tsx` render SendControls per Invoice_Panel; the Graveyard_Page is unchanged
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10, 8.5_
         - Notes: SendControls is a client component: it must import nothing from @dues-banshee/agent, @dues-banshee/db or twilio. Build the preview string on the server in lib/debtor/load.ts with buildOutboundText and pass it as a prop. Add a lint test asserting send-controls.tsx has no such imports.
-  - [ ] 10.6 Write `apps/web/test/send-controls.test.tsx` and extend `candle-timeline.test.ts` and `debtor-page.test.tsx`
+  - [x] 10.6 Write `apps/web/test/send-controls.test.tsx` and extend `candle-timeline.test.ts` and `debtor-page.test.tsx`
     - SendControls: each "Send pay link" state with exact text and `aria-describedby`; the exact preview with "<link created on send>" (marker and no-marker bodies); "Open in WhatsApp" absent for `no_draft`; both disabled while pending; exact WaMe_Link URL for a fixed fictional number and Outbound_Text and exact `https://wa.me/?text=<encoded>` for null; "Sent on 12 Nov 2026 via Twilio sandbox" and "via your WhatsApp"; "Start call" still disabled with "Arrives with voice call"
     - A `wa_me` handoff through `openInWhatsApp` on PGlite writes one `wa_me` `handed_off` Message_Row and one `sent` Escalation_Event; `candle-timeline.test.ts` gains a `sent` event giving "WhatsApp nudge sent"
     - `debtor-page.test.tsx`: with every Channel_Env value unset, the Demo_Seed page renders without error and "Send pay link" is in a disabled state of Req 4.3–4.5
