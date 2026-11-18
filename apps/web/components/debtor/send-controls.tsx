@@ -15,6 +15,8 @@ export interface SendControlsProps {
 /** A result with the order in which it came back, so the newer of the two forms' results is the one shown. */
 type Stamped = SendView & { seq: number };
 
+/** Shown when the "Open in WhatsApp" action rejects (network drop, server crash): nothing is known about the send. */
+const GENERIC_FAILURE_TEXT = "Something went wrong. Try again.";
 const REASON_TEXT = {
   no_draft: "Approve a WhatsApp draft first",
   no_number: "No WhatsApp number for this buyer",
@@ -37,7 +39,14 @@ export function SendControls({ data }: SendControlsProps) {
     return { ...view, seq: seq.current };
   }, null);
   const [openResult, openAction, openPending] = useActionState<Stamped | null, FormData>(async (prev, form) => {
-    const view = await openInWhatsApp(prev, form);
+    let view: SendView;
+    try {
+      view = await openInWhatsApp(prev, form);
+    } catch {
+      // Without a result the blank tab would stay open and the rejection would reach the error boundary.
+      // An alert without a `url` makes the effect below close the tab.
+      view = { invoiceId, text: GENERIC_FAILURE_TEXT, role: "alert" };
+    }
     seq.current += 1;
     return { ...view, seq: seq.current };
   }, null);

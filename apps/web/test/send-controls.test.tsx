@@ -337,6 +337,23 @@ describe("Open in WhatsApp (Req 4.2, 4.4)", () => {
     expect(container.querySelector("[role]")?.textContent).toBe("Payments are not configured");
   });
 
+  it("closes the blank tab and shows the generic failure text when the action rejects", async () => {
+    mocks.openInWhatsApp.mockRejectedValue(new Error("network down"));
+    const tab = fakeTab();
+    stubOpen(tab);
+    await mount();
+    await submit("Open in WhatsApp");
+    expect(tab.close).toHaveBeenCalledTimes(1);
+    expect(tab.location.href).toBe("");
+    const results = container.querySelectorAll("[role]");
+    expect(results).toHaveLength(1);
+    expect(results[0]?.getAttribute("role")).toBe("alert");
+    expect(results[0]?.textContent).toBe("Something went wrong. Try again.");
+    expect(container.querySelector("a")).toBeNull();
+    // The controls are usable again.
+    expect(mustButton("Send pay link").disabled).toBe(false);
+    expect(mustButton("Open in WhatsApp").disabled).toBe(false);
+  });
   it("offers a plain link to the same URL when the browser blocks the new tab", async () => {
     const url = `https://wa.me/919000000001?text=${ENCODED}`;
     mocks.openInWhatsApp.mockResolvedValue({ invoiceId: INVOICE_ID, text: HANDED_OFF_TEXT, role: "status", url });
