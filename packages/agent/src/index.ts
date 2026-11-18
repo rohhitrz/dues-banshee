@@ -14,3 +14,19 @@ export type { InvoiceOutcome, LadderRunResult } from "./run-ladder";
 export { approveDraft, editDraft, rejectDraft, redraft } from "./decide";
 export type { DecideDeps, DecideResult, RedraftDeps } from "./decide";
 export type { NewDraft } from "@dues-banshee/db";
+export { readChannelEnv } from "./channel/env";
+export type { ChannelEnv } from "./channel/env";
+export { parseE164 } from "./channel/message-channel";
+export type {
+  ChannelErrorKind,
+  ChannelResult,
+  E164,
+  MessageChannel,
+  PollRecord,
+  SendRequest,
+} from "./channel/message-channel";
+export { createWaMeLink, waMeUrl } from "./channel/wa-me";
+export { buildOutboundText, payLinkLine } from "./channel/outbound-text";
+export type { OutboundTextResult } from "./channel/outbound-text";
+export { sendCheckHistory } from "./channel/send-check";
+export { maskNumber } from "./channel/mask";

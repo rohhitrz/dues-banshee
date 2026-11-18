@@ -9,6 +9,7 @@ export default defineConfig({
     include: ["**/*.test.ts", "**/*.test.tsx"],
     exclude: ["**/node_modules/**", "**/.next/**"],
     environment: "node",
+    setupFiles: ["test/setup/fetch-guard.ts"],
     // next-auth imports "next/server" without an extension, which Node's ESM loader rejects. Inlining it
     // lets Vite resolve that import, so tests can use the real AuthError and CredentialsSignin classes.
     server: { deps: { inline: ["next-auth"] } },
