@@ -253,6 +253,8 @@ export const paymentLinks = pgTable(
     check("payment_links_amount_range", sql`${t.amountPaise} between 1 and ${sql.raw(String(MAX_PAISE))}`),
     // One Pay_Link per Draft.
     uniqueIndex("payment_links_draft_id_key").on(t.draftId),
+    // The Razorpay webhook finds the link by this id, so two rows must never share one.
+    uniqueIndex("payment_links_provider_link_id_key").on(t.providerLinkId),
   ],
 );
 

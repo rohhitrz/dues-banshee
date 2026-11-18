@@ -345,7 +345,9 @@ describe("insertPayLink", () => {
         link: { providerLinkId: "plink_test_0002", url: "https://rzp.example/plink_test_0002", amountPaise: 41_200_000 },
       }),
     ).toBe("duplicate");
-
+    // The same Razorpay link id for another Draft is a duplicate too, not an error.
+    const second = await insertDraft(w.t, w.invoiceId);
+    expect(await insertPayLink(w.t.db, { ...row, draftId: second })).toBe("duplicate");
     const stored = await w.t.db
       .select({
         invoiceId: paymentLinks.invoiceId,

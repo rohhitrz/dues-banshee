@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "payment_links_provider_link_id_key" ON "payment_links" USING btree ("provider_link_id");

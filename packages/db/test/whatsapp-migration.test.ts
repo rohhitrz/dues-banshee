@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { RESET_TABLES } from "../src/reset";
 import * as schema from "../src/schema";
-import { buyers, suppliers, webhookEvents } from "../src/schema";
+import { buyers, invoices, paymentLinks, suppliers, webhookEvents } from "../src/schema";
 import { seed } from "../src/seed";
 import { cloneTestDb, createTestDb, type TestDb } from "../src/testing";
 
@@ -122,7 +122,9 @@ describe("existing data across migration 0003", () => {
     const journal = JSON.parse(readFileSync(journalPath, "utf8")) as {
       entries: { tag: string }[];
     };
-    journal.entries = journal.entries.filter((entry) => entry.tag !== "0003_whatsapp_channel");
+    journal.entries = journal.entries.filter(
+      (entry) => entry.tag !== "0003_whatsapp_channel" && entry.tag !== "0004_payment_links_provider_link_id_key",
+    );
     expect(journal.entries.map((entry) => entry.tag)).toEqual([
       "0000_opposite_piledriver",
       "0001_loud_praxagora",
@@ -269,6 +271,78 @@ describe("migration 0003 objects", () => {
   });
 });
 
+describe("migration 0004: payment_links_provider_link_id_key", () => {
+  const link = (invoiceId: string, providerLinkId: string, draftId: string | null = null) => ({
+    invoiceId,
+    providerLinkId,
+    url: `https://rzp.example/${providerLinkId}`,
+    amountPaise: 1_000_000,
+    status: "created",
+    draftId,
+  });
+  async function twoInvoiceIds(t: TestDb): Promise<[string, string]> {
+    await seed(t.db);
+    const rows = await t.db.select({ id: invoices.id }).from(invoices).orderBy(invoices.id).limit(2);
+    const [a, b] = rows;
+    if (a === undefined || b === undefined) throw new Error("seed has fewer than two invoices");
+    return [a.id, b.id];
+  }
+  it("has the unique index on provider_link_id under its exact name", async () => {
+    const result = await template.pglite.query<{ tablename: string; indexdef: string }>(
+      `select tablename, indexdef from pg_indexes where indexname = 'payment_links_provider_link_id_key'`,
+    );
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0]?.tablename).toBe("payment_links");
+    expect(result.rows[0]?.indexdef).toContain("CREATE UNIQUE INDEX");
+    expect(result.rows[0]?.indexdef).toContain("(provider_link_id)");
+  });
+  it("rejects a second row with the same provider_link_id, even for another invoice", async () => {
+    const t = await freshDb();
+    const [first, second] = await twoInvoiceIds(t);
+    await t.db.insert(paymentLinks).values(link(first, "plink_test_0001"));
+    const failure = await failureOf(t.db.insert(paymentLinks).values(link(second, "plink_test_0001")));
+    expect(failure).toEqual({ code: UNIQUE_VIOLATION, constraint: "payment_links_provider_link_id_key" });
+    await t.db.insert(paymentLinks).values(link(second, "plink_test_0002"));
+    const rows = await t.db.select({ id: paymentLinks.providerLinkId }).from(paymentLinks);
+    expect(rows.map((row) => row.id).sort()).toEqual(["plink_test_0001", "plink_test_0002"]);
+  });
+  it("keeps existing payment_links rows when it is applied on top of 0003", async () => {
+    const folder = mkdtempSync(join(tmpdir(), "whatsapp-migration-0004-"));
+    const pglite = new PGlite();
+    try {
+      const upTo0003 = join(folder, "up-to-0003");
+      cpSync(MIGRATIONS_FOLDER, upTo0003, { recursive: true });
+      const journalPath = join(upTo0003, "meta", "_journal.json");
+      const journal = JSON.parse(readFileSync(journalPath, "utf8")) as { entries: { tag: string }[] };
+      journal.entries = journal.entries.filter((entry) => entry.tag !== "0004_payment_links_provider_link_id_key");
+      writeFileSync(journalPath, JSON.stringify(journal));
+      const db = drizzle(pglite, { schema });
+      await migrate(db, { migrationsFolder: upTo0003 });
+      const before = await pglite.query(`select 1 from pg_indexes where indexname = 'payment_links_provider_link_id_key'`);
+      expect(before.rows).toEqual([]);
+      await pglite.exec(`
+        insert into suppliers (id, name, udyam_number, supplier_category, supplier_activity)
+          values ('00000000-0000-0000-0000-000000000001', 'Test Supplier', 'UDYAM-MH-00-0000001', 'micro', 'manufacturing');
+        insert into buyers (id, supplier_id, name, name_key)
+          values ('00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'Sharma Traders', 'sharma traders');
+        insert into invoices (id, supplier_id, buyer_id, invoice_number, invoice_number_key, invoice_date, accepted_on, amount_paise, supplier_category, supplier_activity)
+          values ('00000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002', 'INV-001', 'inv-001', '2026-09-02', '2026-09-02', 41200000, 'micro', 'manufacturing');
+        insert into payment_links (id, invoice_id, provider_link_id, url, amount_paise, status)
+          values ('00000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000003', 'plink_test_0001', 'https://rzp.example/plink_test_0001', 41200000, 'created');
+      `);
+      await migrate(db, { migrationsFolder: MIGRATIONS_FOLDER });
+      const rows = await pglite.query(`select id, provider_link_id, status from payment_links`);
+      expect(rows.rows).toEqual([
+        { id: "00000000-0000-0000-0000-000000000005", provider_link_id: "plink_test_0001", status: "created" },
+      ]);
+      const after = await pglite.query(`select 1 from pg_indexes where indexname = 'payment_links_provider_link_id_key'`);
+      expect(after.rows).toHaveLength(1);
+    } finally {
+      await pglite.close();
+      rmSync(folder, { recursive: true, force: true });
+    }
+  });
+});
 describe("seed demoBuyerWhatsapp", () => {
   async function numbersByBuyer(t: TestDb): Promise<Record<string, string | null>> {
     const rows = await t.db.select({ name: buyers.name, whatsappNumber: buyers.whatsappNumber }).from(buyers);

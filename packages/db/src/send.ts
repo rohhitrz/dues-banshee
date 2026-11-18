@@ -15,6 +15,7 @@ const SENDABLE_STEPS = ["whatsapp_nudge", "whatsapp_paylink"] as const;
 const CLAIM_LEASE_SECONDS = 360;
 
 const PAY_LINK_DRAFT_INDEX = "payment_links_draft_id_key";
+const PAY_LINK_PROVIDER_INDEX = "payment_links_provider_link_id_key";
 const SENT_MESSAGE_INDEX = "messages_one_sent_per_draft";
 
 /** A Razorpay Payment Link as the send path stores and reuses it. */
@@ -161,7 +162,8 @@ export async function releaseSend(db: Db, draftId: string): Promise<void> {
 
 /**
  * Stores the Pay_Link of a Draft (status `created`). A second link for the same Draft is rejected
- * by `payment_links_draft_id_key` and returned as `"duplicate"`; any other error is rethrown.
+ * by `payment_links_draft_id_key`, and a Razorpay link id that is already stored by
+ * `payment_links_provider_link_id_key`; both return `"duplicate"`. Any other error is rethrown.
  */
 export async function insertPayLink(
   db: Db,
@@ -179,7 +181,9 @@ export async function insertPayLink(
     });
     return "ok";
   } catch (error) {
-    if (isUniqueViolation(error, PAY_LINK_DRAFT_INDEX)) return "duplicate";
+    if (isUniqueViolation(error, PAY_LINK_DRAFT_INDEX) || isUniqueViolation(error, PAY_LINK_PROVIDER_INDEX)) {
+      return "duplicate";
+    }
     throw error;
   }
 }
