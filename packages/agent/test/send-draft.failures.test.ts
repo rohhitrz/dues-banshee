@@ -4,6 +4,7 @@
 // Requirements: 1.3, 1.7, 3.2, 5.3, 5.6, 5.7, 9.11
 import { drafts, escalationEvents, messages, paymentLinks } from "@dues-banshee/db";
 import type { TestDb } from "@dues-banshee/db/testing";
+import { formatINR } from "@dues-banshee/engine";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { sendDraft } from "../src/channel/send-draft";
 import type { SendDeps, SendOutcome } from "../src/channel/send-draft";
@@ -15,6 +16,8 @@ import {
   MOCK_PAY_LINK_URL,
   QUEUED_POLL,
   RAZORPAY_LINKS_URL,
+  SHARMA_AMOUNT_PAISE,
+  SHARMA_INVOICE_NUMBER,
   TWILIO_BASE,
   TWILIO_CREATE_URL,
   TWILIO_MESSAGE_SID,
@@ -104,6 +107,34 @@ function expectOneSendRow(rows: Awaited<ReturnType<typeof toolRowsSince>>) {
   return row;
 }
 
+/** The Outbound_Text for the demo nudge at 2026-11-12 (Engine figures via formatINR), as `sendDraft` builds it. */
+function outboundText(): string {
+  const body =
+    `Namaste Sharma Traders ji, invoice ${SHARMA_INVOICE_NUMBER} ka ${formatINR(SHARMA_AMOUNT_PAISE, "full")} 17 Oct 2026 ko due tha. ` +
+    `Tab se ${formatINR(512794, "full")} byaaj jud chuka hai (7 Oct 2026 ki bank rate par).`;
+  const payLine = `Pay ${formatINR(SHARMA_AMOUNT_PAISE, "full")} here: ${MOCK_PAY_LINK_URL}`;
+  const basis = "Basis: MSMED-15 (MSMED Act 2006, s.15); MSMED-16 (MSMED Act 2006, s.16)";
+  const disclaimer = "Reminders a supplier sends to its own buyers. Not legal advice.";
+  return `${body}\n\n${payLine}\n\n${basis}\n${disclaimer}`;
+}
+/** One Message_Row as stored, with only the generated `id` and `createdAt` left open. */
+function messageRow(
+  w: SendWorld & { draftId: string },
+  over: { status: "failed" | "sent"; providerMessageId: string | null; errorCode: string | null },
+) {
+  return {
+    id: expect.any(String) as unknown,
+    invoiceId: w.invoiceId,
+    channel: "twilio_sandbox",
+    direction: "outbound",
+    body: outboundText(),
+    status: over.status,
+    draftId: w.draftId,
+    providerMessageId: over.providerMessageId,
+    errorCode: over.errorCode,
+    createdAt: expect.any(Date) as unknown,
+  };
+}
 describe("sendDraft: Twilio 63015 on the create call", () => {
   it("records one failed Message_Row, no event, releases the claim and retries with the stored Pay_Link", async () => {
     const w = await world();
@@ -115,16 +146,9 @@ describe("sendDraft: Twilio 63015 on the create call", () => {
     expect(first.h.http.calls("POST", RAZORPAY_LINKS_URL)).toHaveLength(1);
     expect(first.h.http.calls("GET", `${TWILIO_BASE}/Messages/`)).toHaveLength(0);
 
-    const rows = await w.db.select().from(messages);
-    expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({
-      channel: "twilio_sandbox",
-      direction: "outbound",
-      status: "failed",
-      draftId: w.draftId,
-      providerMessageId: null,
-      errorCode: "63015",
-    });
+    expect(await w.db.select().from(messages)).toEqual([
+      messageRow(w, { status: "failed", providerMessageId: null, errorCode: "63015" }),
+    ]);
     expect(await sentEvents(w)).toEqual([]);
     expect(await claimOf(w)).toBeNull();
 
@@ -148,7 +172,13 @@ describe("sendDraft: Twilio 63015 on the create call", () => {
     expect(retryText).toContain(MOCK_PAY_LINK_URL);
     expect(await sentEvents(w)).toHaveLength(1);
     const after = await w.db.select().from(messages);
-    expect(after.map((m) => m.status).sort()).toEqual(["failed", "sent"]);
+    expect(after).toHaveLength(2);
+    expect(after).toEqual(
+      expect.arrayContaining([
+        messageRow(w, { status: "failed", providerMessageId: null, errorCode: "63015" }),
+        messageRow(w, { status: "sent", providerMessageId: TWILIO_MESSAGE_SID, errorCode: null }),
+      ]),
+    );
   });
 });
 
@@ -162,14 +192,9 @@ describe("sendDraft: Twilio status polls", () => {
     expect(h.http.calls("GET", `${TWILIO_BASE}/Messages/`)).toHaveLength(1);
     expect(h.clock.sleeps).toEqual([]);
 
-    const stored = await w.db.select().from(messages);
-    expect(stored).toHaveLength(1);
-    expect(stored[0]).toMatchObject({
-      status: "failed",
-      errorCode: "63015",
-      providerMessageId: TWILIO_MESSAGE_SID,
-      draftId: w.draftId,
-    });
+    expect(await w.db.select().from(messages)).toEqual([
+      messageRow(w, { status: "failed", providerMessageId: TWILIO_MESSAGE_SID, errorCode: "63015" }),
+    ]);
     expect(await sentEvents(w)).toEqual([]);
     expect(await claimOf(w)).toBeNull();
     expect(expectOneSendRow(rows).output).toEqual({
@@ -190,13 +215,9 @@ describe("sendDraft: Twilio status polls", () => {
     expect(h.http.calls("GET", `${TWILIO_BASE}/Messages/`)).toHaveLength(3);
     expect(h.clock.sleeps).toEqual([2000, 2000]);
 
-    const stored = await w.db.select().from(messages);
-    expect(stored).toHaveLength(1);
-    expect(stored[0]).toMatchObject({
-      status: "failed",
-      errorCode: "30008",
-      providerMessageId: TWILIO_MESSAGE_SID,
-    });
+    expect(await w.db.select().from(messages)).toEqual([
+      messageRow(w, { status: "failed", providerMessageId: TWILIO_MESSAGE_SID, errorCode: "30008" }),
+    ]);
     expect(await sentEvents(w)).toEqual([]);
     expect(await claimOf(w)).toBeNull();
     expect(expectOneSendRow(rows).output).toEqual({
@@ -219,7 +240,9 @@ describe("sendDraft: Twilio status polls", () => {
       providerMessageId: TWILIO_MESSAGE_SID,
       polls: [QUEUED_RECORD, QUEUED_RECORD, QUEUED_RECORD],
     });
-    expect((await w.db.select().from(messages)).map((m) => m.status)).toEqual(["sent"]);
+    expect(await w.db.select().from(messages)).toEqual([
+      messageRow(w, { status: "sent", providerMessageId: TWILIO_MESSAGE_SID, errorCode: null }),
+    ]);
     expect(await sentEvents(w)).toHaveLength(1);
   });
 
@@ -233,7 +256,9 @@ describe("sendDraft: Twilio status polls", () => {
       providerMessageId: TWILIO_MESSAGE_SID,
       polls: [{ error: "network", httpStatus: null }],
     });
-    expect((await w.db.select().from(messages)).map((m) => m.status)).toEqual(["sent"]);
+    expect(await w.db.select().from(messages)).toEqual([
+      messageRow(w, { status: "sent", providerMessageId: TWILIO_MESSAGE_SID, errorCode: null }),
+    ]);
     expect(await sentEvents(w)).toHaveLength(1);
   });
 });
