@@ -1,4 +1,4 @@
-import { fromEpochDay, isValidCalendarDate, type CalendarDate } from "@dues-banshee/engine";
+import { isValidCalendarDate, istCalendarDate, type CalendarDate } from "@dues-banshee/engine";
 
 /** Earliest and latest `?today=` override the demo accepts (inclusive). */
 export const DEMO_MIN: CalendarDate = "2024-01-01";
@@ -10,14 +10,10 @@ export interface ResolvedToday {
   override: CalendarDate | null;
 }
 
-const IST_OFFSET_MS = 19_800_000; // +05:30
-const DAY_MS = 86_400_000;
 const STRICT_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-/** The IST calendar date at `nowMs` (epoch milliseconds). Pure: the caller supplies the clock. */
-export function istDate(nowMs: number): CalendarDate {
-  return fromEpochDay(Math.floor((nowMs + IST_OFFSET_MS) / DAY_MS));
-}
+/** Moved into the Engine (whatsapp-channel task 1.1) as `istCalendarDate`; re-exported so callers stay unchanged. */
+export { istCalendarDate as istDate } from "@dues-banshee/engine";
 
 /**
  * True when `value` is a usable `?today=` override: a strict YYYY-MM-DD real calendar date within
@@ -39,7 +35,7 @@ export function isValidTodayOverride(value: unknown): value is CalendarDate {
 export function resolveToday(nowMs: number, raw: string | string[] | undefined): ResolvedToday {
   const value = Array.isArray(raw) ? raw[0] : raw;
   if (isValidTodayOverride(value)) return { today: value, override: value };
-  return { today: istDate(nowMs), override: null };
+  return { today: istCalendarDate(nowMs), override: null };
 }
 /** Moved into the Engine (escalation-ladder task 2.1); re-exported so dashboard-ui callers stay unchanged. */
 export { formatDisplayDate } from "@dues-banshee/engine";

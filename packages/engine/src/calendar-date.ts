@@ -68,6 +68,14 @@ export function fromEpochDay(epochDay: number): CalendarDate {
   return `${pad(year, 4)}-${pad(month, 2)}-${pad(day, 2)}`;
 }
 
+const IST_OFFSET_MS = 19_800_000; // Asia/Kolkata, UTC+05:30, no DST
+const DAY_MS = 86_400_000;
+
+/** The IST calendar date at `nowMs` (epoch milliseconds). Pure: the caller supplies the clock. */
+export function istCalendarDate(nowMs: number): CalendarDate {
+  return fromEpochDay(Math.floor((nowMs + IST_OFFSET_MS) / DAY_MS));
+}
+
 export function addDays(d: CalendarDate, n: number): CalendarDate {
   return fromEpochDay(toEpochDay(d) + n);
 }
