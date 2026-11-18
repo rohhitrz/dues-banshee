@@ -43,10 +43,15 @@ Sharma Traders tombstone → escalation draft approved by the owner → WhatsApp
 - **Non-goals:** editing invoices, more screens, 5,000-invoice scale (polish), source-lint gaps (guardrails-evals), `/import` stale-session error (polish).
 
 ### 4. whatsapp-channel — risky tier, Supervised, 1 review
-- **Outbound only:** an approved template plus a Razorpay test payment link, sent only after owner approval, only to verified test numbers.
-- **Razorpay "payment link paid" webhook** → invoice marked paid → the tombstone resurrects.
-- **Inbound replies:** log only, no logic.
-- Submit templates at the start of the spec, because Meta approval takes time.
+- **Why not Meta:** our Meta WhatsApp accounts are locked (error 131031, new unverified business portfolio, 18 Nov). Meta Cloud API is roadmap, after business verification.
+- **Sender behind one `MessageChannel` interface:**
+  - primary: **Twilio WhatsApp Sandbox**: a free-form message inside the 24-hour window the buyer opens by sending `join <code>`; only to numbers that joined the sandbox
+  - backup: a **wa.me click-to-send** link (message prefilled, the owner taps Send on their own phone), shown next to the send button
+- **Outbound only after owner approval:** the approved draft text plus a Razorpay test-mode payment link for the amount from engine output (`formatINR`). Re-check `nextEscalationStep` at send time (approve-vs-promise race). Switch on "Send pay link" on the debtor page.
+- **Razorpay `payment_link.paid` webhook** (signature-verified, idempotent) → invoice marked paid → the tombstone resurrects.
+- **Inbound replies:** Twilio inbound webhook, signature-verified, log only, no logic.
+- **Tests:** mock Twilio and Razorpay in CI (no live calls); webhook signature and idempotency tests; one optional manual live check.
+- **Non-goals:** Meta Cloud API, message templates, voice.
 
 ### 5. buyer-voice-call — risky tier, Supervised, 2 reviews
 - **Browser WebRTC** with OpenAI `gpt-realtime-2.1-mini`, behind the `VoiceProvider` interface. Sarvam is the fallback only.
