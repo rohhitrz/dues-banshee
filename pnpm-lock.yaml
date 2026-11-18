@@ -97,8 +97,8 @@ importers:
         specifier: 19.3.1
         version: 19.3.1
       twilio:
-        specifier: 6.3.1
-        version: 6.3.1(debug@4.4.3)
+        specifier: 6.3.0
+        version: 6.3.0(debug@4.4.3)
       zod:
         specifier: 4.6.7
         version: 4.6.7
@@ -2817,8 +2817,8 @@ packages:
     engines: {node: '>=18.0.0'}
     hasBin: true
 
-  twilio@6.3.1:
-    resolution: {integrity: sha512-2LmXuZmgqgHUwK+CT6U2p6MAWxk+A8M9MVVv1ZcuOoapm51Go+1u/JNNd1mjOzKg8WRS9+NIDv2NWbLe0ENPUA==}
+  twilio@6.3.0:
+    resolution: {integrity: sha512-F7/jJQ3dh060ByUV1sWPhVJLxIaezuIXydksdZkmPbMI/jnRxX256CL+knxGcFBuu908qbH22JLK/sK1L+1SMg==}
     engines: {node: '>=20.0.0'}
 
   type-check@0.4.0:
@@ -5602,7 +5602,7 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
 
-  twilio@6.3.1(debug@4.4.3):
+  twilio@6.3.0(debug@4.4.3):
     dependencies:
       axios: 1.21.1(debug@4.4.3)
       dayjs: 1.11.23
