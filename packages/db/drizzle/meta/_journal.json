@@ -22,6 +22,13 @@
       "when": 1794597455454,
       "tag": "0002_greedy_bug",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795014466299,
+      "tag": "0003_whatsapp_channel",
+      "breakpoints": true
     }
   ]
 }

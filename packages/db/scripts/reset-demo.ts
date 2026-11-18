@@ -2,13 +2,14 @@ import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createDb, type Db } from "../src/client";
 import { resetDemo } from "../src/reset";
+import type { SeedOptions } from "../src/seed";
 
 export const REFUSAL_MESSAGE = "Refusing to reset: this deletes every supplier, buyer and invoice. Re-run with --yes.";
 
 /** What `main` needs from the outside world. Tests pass stubs. */
 export interface ResetDemoDeps {
   createDb: (url: string) => { db: Db; close: () => Promise<void> };
-  resetDemo: (db: Db) => Promise<void>;
+  resetDemo: (db: Db, opts?: SeedOptions) => Promise<void>;
   log: (message: string) => void;
   error: (message: string) => void;
 }
@@ -58,7 +59,8 @@ export async function main(
 
   const { db, close } = deps.createDb(url);
   try {
-    await deps.resetDemo(db);
+    const demoBuyerWhatsapp = env["DEMO_BUYER_WHATSAPP"];
+    await deps.resetDemo(db, demoBuyerWhatsapp === undefined ? {} : { demoBuyerWhatsapp });
     deps.log("Demo data reset.");
     return 0;
   } catch (err) {

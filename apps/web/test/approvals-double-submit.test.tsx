@@ -61,6 +61,7 @@ function pendingItem(): DraftWithContext {
     document: null,
     createdOn: "2026-11-12",
     decidedAt: null,
+    sendClaimedAt: null,
     createdAt: new Date(0),
   };
   return { draft, buyerId: "buyer-sharma", buyerName: "Sharma Traders", invoiceNumber: "LPC/26-27/0412" } as unknown as DraftWithContext;

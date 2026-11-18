@@ -29,7 +29,7 @@ export interface LadderRecord {
   buyerName: string;
   invoiceNumber: string;
   /** Ordered by `occurred_on`, then row id. All actions are returned. */
-  steps: { step: LadderStep; occurredOn: CalendarDate; action: EscalationAction }[];
+  steps: { step: LadderStep; occurredOn: CalendarDate; action: EscalationAction; draftId: string | null }[];
   /** Ordered by `recorded_on`, then row id. */
   promises: { promisedDate: CalendarDate; amountPaise: Paise; recordedOn: CalendarDate }[];
   pendingDraftId: string | null;
@@ -75,17 +75,24 @@ export type InsertDraftResult = { kind: "ok"; draftId: string } | { kind: "pendi
 const PENDING_INDEX = "drafts_one_pending_per_invoice";
 const UNIQUE_VIOLATION = "23505";
 
-/** Walks the `cause` chain (Drizzle wraps driver errors) looking for the pending-Draft unique violation. */
-function isPendingDraftViolation(error: unknown): boolean {
+/**
+ * Walks the `cause` chain (Drizzle wraps driver errors) looking for a unique violation (`23505`)
+ * on the named constraint or index.
+ */
+export function isUniqueViolation(error: unknown, constraintName: string): boolean {
   const seen = new Set<unknown>();
   let current: unknown = error;
   while (typeof current === "object" && current !== null && !seen.has(current)) {
     seen.add(current);
     const { code, constraint, cause } = current as { code?: unknown; constraint?: unknown; cause?: unknown };
-    if (code === UNIQUE_VIOLATION && constraint === PENDING_INDEX) return true;
+    if (code === UNIQUE_VIOLATION && constraint === constraintName) return true;
     current = cause;
   }
   return false;
+}
+
+function isPendingDraftViolation(error: unknown): boolean {
+  return isUniqueViolation(error, PENDING_INDEX);
 }
 
 /**
@@ -114,6 +121,7 @@ export async function listLadderRecords(db: Db, supplierId: string, invoiceId?: 
       step: escalationEvents.step,
       occurredOn: escalationEvents.occurredOn,
       action: escalationEvents.action,
+      draftId: escalationEvents.draftId,
     })
     .from(escalationEvents)
     .innerJoin(invoices, eq(invoices.id, escalationEvents.invoiceId))
@@ -140,7 +148,7 @@ export async function listLadderRecords(db: Db, supplierId: string, invoiceId?: 
 
   const stepsBy = new Map<string, LadderRecord["steps"]>();
   for (const s of stepRows) {
-    const item = { step: s.step, occurredOn: s.occurredOn, action: s.action };
+    const item = { step: s.step, occurredOn: s.occurredOn, action: s.action, draftId: s.draftId };
     const list = stepsBy.get(s.invoiceId);
     if (list) list.push(item);
     else stepsBy.set(s.invoiceId, [item]);

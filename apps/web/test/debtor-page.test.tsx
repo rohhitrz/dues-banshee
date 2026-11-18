@@ -182,6 +182,7 @@ function draftFor(id: string, record: GraveyardInvoiceRecord): DraftWithContext 
     document: null,
     createdOn: "2026-11-12",
     decidedAt: null,
+    sendClaimedAt: null,
     createdAt: new Date(1000),
   };
   return {

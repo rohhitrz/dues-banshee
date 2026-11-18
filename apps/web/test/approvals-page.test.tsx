@@ -139,6 +139,7 @@ function draftItem(options: {
     document: null,
     createdOn: "2026-11-12",
     decidedAt: null,
+    sendClaimedAt: null,
     createdAt: new Date(options.createdAt),
   };
   return {

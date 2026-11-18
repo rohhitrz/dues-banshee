@@ -182,10 +182,10 @@ describe("listLadderRecords", () => {
     const [record] = await listLadderRecords(t.db, supplierId, sharmaId);
 
     expect(record?.steps).toEqual([
-      { step: "whatsapp_nudge", occurredOn: "2026-10-20", action: "approved" },
-      { step: "whatsapp_paylink", occurredOn: "2026-11-02", action: "approved" },
-      { step: "voice_call", occurredOn: "2026-11-05", action: "drafted" },
-      { step: "whatsapp_nudge", occurredOn: TODAY, action: "drafted" },
+      { step: "whatsapp_nudge", occurredOn: "2026-10-20", action: "approved", draftId: null },
+      { step: "whatsapp_paylink", occurredOn: "2026-11-02", action: "approved", draftId: null },
+      { step: "voice_call", occurredOn: "2026-11-05", action: "drafted", draftId: null },
+      { step: "whatsapp_nudge", occurredOn: TODAY, action: "drafted", draftId: inserted.draftId },
     ]);
     expect(record?.pendingDraftId).toBe(inserted.draftId);
   });
@@ -203,7 +203,9 @@ describe("supplier scoping", () => {
     const demoRecords = await listLadderRecords(t.db, supplierId);
     expect(demoRecords).toHaveLength(6);
     expect(demoRecords.map((r) => r.invoiceNumber)).not.toContain("OTH/26-27/0001");
-    expect(demoRecords.flatMap((r) => r.steps)).toEqual([{ step: "whatsapp_nudge", occurredOn: TODAY, action: "drafted" }]);
+    expect(demoRecords.flatMap((r) => r.steps)).toEqual([
+      { step: "whatsapp_nudge", occurredOn: TODAY, action: "drafted", draftId: demoInserted.draftId },
+    ]);
     expect(demoRecords.map((r) => r.pendingDraftId).filter((id) => id !== null)).toEqual([demoInserted.draftId]);
     expect(await listLadderRecords(t.db, supplierId, other.invoice.id)).toEqual([]);
     expect((await listPendingDrafts(t.db, supplierId)).map((d) => d.draft.id)).toEqual([demoInserted.draftId]);
@@ -214,7 +216,7 @@ describe("supplier scoping", () => {
     expect(otherRecords.map((r) => [r.invoiceNumber, r.buyerName, r.pendingDraftId])).toEqual([
       ["OTH/26-27/0001", "Sharma Traders", other.draftId],
     ]);
-    expect(otherRecords[0]?.steps).toEqual([{ step: "whatsapp_nudge", occurredOn: "2026-10-01", action: "drafted" }]);
+    expect(otherRecords[0]?.steps).toEqual([{ step: "whatsapp_nudge", occurredOn: "2026-10-01", action: "drafted", draftId: other.draftId }]);
     expect(await listLadderRecords(t.db, other.supplier.id, sharmaId)).toEqual([]);
     expect((await listPendingDrafts(t.db, other.supplier.id)).map((d) => d.draft.id)).toEqual([other.draftId]);
     expect(await getDraftForSupplier(t.db, other.supplier.id, demoInserted.draftId)).toBeNull();

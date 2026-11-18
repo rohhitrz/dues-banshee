@@ -8,7 +8,7 @@ import type { EscalationAction, LadderRecord } from "@dues-banshee/db";
 import { arbCalendarDate, arbCoveredInvoice, arbLadderConfig, arbToday } from "../../engine/test/arbitraries";
 import { engineHistory } from "../src/core/history";
 
-const ACTIONS: readonly EscalationAction[] = ["drafted", "edited", "approved", "rejected", "expired"];
+const ACTIONS: readonly EscalationAction[] = ["drafted", "edited", "approved", "rejected", "expired", "sent"];
 
 type HistoryInput = Pick<LadderRecord, "steps" | "promises">;
 type StepRow = LadderRecord["steps"][number];
@@ -18,6 +18,7 @@ const arbStepRow: fc.Arbitrary<StepRow> = fc.record({
   step: fc.constantFrom(...LADDER_STEPS),
   occurredOn: arbCalendarDate(),
   action: fc.constantFrom(...ACTIONS),
+  draftId: fc.option(fc.uuid(), { nil: null }),
 });
 
 const arbPromiseRow: fc.Arbitrary<PromiseRow> = fc.record({

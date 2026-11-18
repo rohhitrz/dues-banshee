@@ -7,9 +7,10 @@ if (!url) {
   process.exit(1);
 }
 
+const demoBuyerWhatsapp = process.env["DEMO_BUYER_WHATSAPP"];
 const { db, close } = createDb(url);
 try {
-  await seed(db);
+  await seed(db, demoBuyerWhatsapp === undefined ? {} : { demoBuyerWhatsapp });
   console.log("Demo data seeded.");
 } finally {
   await close();

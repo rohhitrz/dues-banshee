@@ -111,10 +111,21 @@ describe("migration 0002 backfill", () => {
     const pglite = new PGlite();
     try {
       await migrate(drizzle(pglite, { schema }), { migrationsFolder: dir });
-      await seed(drizzle(pglite, { schema }));
+      // Raw SQL: `seed` writes columns of the current schema, which this older database lacks.
       await pglite.query(
-        `INSERT INTO escalation_events (invoice_id, step, occurred_on)
-         SELECT id, 'whatsapp_nudge', '2026-10-20' FROM invoices WHERE invoice_number = $1`,
+        `WITH s AS (
+           INSERT INTO suppliers (name, udyam_number, supplier_category, supplier_activity)
+           VALUES ('Pre-migration Supplier', 'UDYAM-MH-00-0000000', 'micro', 'manufacturing') RETURNING id
+         ), b AS (
+           INSERT INTO buyers (supplier_id, name, name_key) SELECT id, 'Sharma Traders', 'sharma traders' FROM s RETURNING id, supplier_id
+         ), i AS (
+           INSERT INTO invoices (supplier_id, buyer_id, invoice_number, invoice_number_key, invoice_date, accepted_on,
+                                 amount_paise, supplier_category, supplier_activity)
+           SELECT supplier_id, id, $1, 'lpc/26-27/0412', '2026-09-02', '2026-09-02', 41200000, 'micro', 'manufacturing' FROM b
+           RETURNING id
+         )
+         INSERT INTO escalation_events (invoice_id, step, occurred_on)
+         SELECT id, 'whatsapp_nudge', '2026-10-20' FROM i`,
         [SHARMA],
       );
       // Apply every committed migration; 0000 and 0001 are skipped, 0002 runs over the existing row.

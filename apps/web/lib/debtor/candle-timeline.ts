@@ -35,6 +35,7 @@ export const ACTION_TEXT = {
   approved: "approved",
   rejected: "rejected",
   expired: "expired",
+  sent: "sent",
 } as const satisfies Record<EscalationAction, string>;
 
 const KIND_RANK: Record<EntryKind, number> = { invoice: 0, due: 1, ladder: 2, promise: 3, payment: 4 };

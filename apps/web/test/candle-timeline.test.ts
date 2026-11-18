@@ -492,6 +492,7 @@ describe("ACTION_TEXT (Req 5.4, 5.5)", () => {
       approved: "approved",
       rejected: "rejected",
       expired: "expired",
+      sent: "sent",
     });
   });
 });

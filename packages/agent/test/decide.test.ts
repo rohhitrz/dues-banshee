@@ -208,7 +208,7 @@ describe("approveDraft", () => {
     // The approved step now counts in the ladder history.
     const record = (await listLadderRecords(f.t.db, f.supplierId, f.sharmaInvoiceId))[0];
     expect(record?.steps.filter((s) => s.action === "approved")).toEqual([
-      { step: "whatsapp_nudge", occurredOn: TODAY, action: "approved" },
+      { step: "whatsapp_nudge", occurredOn: TODAY, action: "approved", draftId: f.draftId },
     ]);
     expect(record?.pendingDraftId).toBeNull();
   });

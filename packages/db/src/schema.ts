@@ -45,6 +45,7 @@ export const escalationAction = pgEnum("escalation_action", [
   "approved",
   "rejected",
   "expired",
+  "sent",
 ]);
 
 // Column helpers. Dates are calendar days (string mode, "YYYY-MM-DD"); instants are timestamptz.
@@ -80,10 +81,13 @@ export const buyers = pgTable(
       .references(() => suppliers.id, { onDelete: "restrict" }),
     name: text("name").notNull(),
     nameKey: text("name_key").notNull(),
+    /** E.164 WhatsApp number, e.g. `+919000000001`. Null until the owner or the demo seed sets it. */
+    whatsappNumber: text("whatsapp_number"),
     createdAt: createdAt(),
   },
   (t) => [
     unique("buyers_supplier_name_key").on(t.supplierId, t.nameKey),
+    check("buyers_whatsapp_number_e164", sql`${t.whatsappNumber} ~ '^\\+[1-9][0-9]{7,14}$'`),
     // Target of the composite foreign key on invoices.
     unique("buyers_id_supplier_key").on(t.id, t.supplierId),
   ],
@@ -147,6 +151,8 @@ export const drafts = pgTable(
     document: bytea("document"),
     createdOn: day("created_on").notNull(),
     decidedAt: timestamp("decided_at", { withTimezone: true }),
+    /** Set while one send request holds the claim on this Draft; cleared on failure, expires after a lease. */
+    sendClaimedAt: timestamp("send_claimed_at", { withTimezone: true }),
     createdAt: createdAt(),
   },
   (t) => [
@@ -157,8 +163,14 @@ export const drafts = pgTable(
     check("drafts_body_not_blank", sql`btrim(${t.bodyText}) <> ''`),
   ],
 );
-/** What an `edited` or `rejected` event records: the text before and after, or the reject reason. */
-export type EscalationDetail = { before: string; after: string } | { reason: string | null };
+/**
+ * What an `edited`, `rejected` or `sent` event records: the text before and after, the reject
+ * reason, or the channel and the Message_Row of a send.
+ */
+export type EscalationDetail =
+  | { before: string; after: string }
+  | { reason: string | null }
+  | { channel: "twilio_sandbox" | "wa_me"; messageRowId: string };
 /** Only rows with `action = 'approved'` count as ladder steps; the rest are the Draft audit trail. */
 export const escalationEvents = pgTable("escalation_events", {
   id: id(),
@@ -183,15 +195,27 @@ export const promises = pgTable(
   (t) => [check("promises_amount_range", sql`${t.amountPaise} between 1 and ${sql.raw(String(MAX_PAISE))}`)],
 );
 
-export const messages = pgTable("messages", {
-  id: id(),
-  invoiceId: invoiceId(),
-  channel: text("channel").notNull(),
-  direction: text("direction").notNull(),
-  body: text("body").notNull(),
-  status: text("status").notNull(),
-  createdAt: createdAt(),
-});
+export const messages = pgTable(
+  "messages",
+  {
+    id: id(),
+    invoiceId: invoiceId(),
+    channel: text("channel").notNull(),
+    direction: text("direction").notNull(),
+    body: text("body").notNull(),
+    status: text("status").notNull(),
+    draftId: uuid("draft_id").references(() => drafts.id, { onDelete: "restrict" }),
+    providerMessageId: text("provider_message_id"),
+    errorCode: text("error_code"),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    // One Sent_Message per Draft. `failed` rows are not limited.
+    uniqueIndex("messages_one_sent_per_draft")
+      .on(t.draftId)
+      .where(sql`${t.status} IN ('sent', 'handed_off')`),
+  ],
+);
 
 export const calls = pgTable("calls", {
   id: id(),
@@ -220,9 +244,28 @@ export const paymentLinks = pgTable(
     url: text("url").notNull(),
     amountPaise: paise("amount_paise").notNull(),
     status: text("status").notNull(),
+    draftId: uuid("draft_id").references(() => drafts.id, { onDelete: "restrict" }),
+    /** The Today in effect when the link was created (the demo supplier's Payment_Day). */
+    createdOn: day("created_on"),
     createdAt: createdAt(),
   },
-  (t) => [check("payment_links_amount_range", sql`${t.amountPaise} between 1 and ${sql.raw(String(MAX_PAISE))}`)],
+  (t) => [
+    check("payment_links_amount_range", sql`${t.amountPaise} between 1 and ${sql.raw(String(MAX_PAISE))}`),
+    // One Pay_Link per Draft.
+    uniqueIndex("payment_links_draft_id_key").on(t.draftId),
+  ],
+);
+
+/** Provider event ids already processed, so a repeated webhook delivery is a no-op. */
+export const webhookEvents = pgTable(
+  "webhook_events",
+  {
+    id: id(),
+    provider: text("provider").notNull(),
+    eventId: text("event_id").notNull(),
+    receivedAt: timestamp("received_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique("webhook_events_provider_event_id_key").on(t.provider, t.eventId)],
 );
 
 export const agentRuns = pgTable("agent_runs", {
@@ -261,4 +304,5 @@ export type CallRow = typeof calls.$inferSelect;
 export type ApprovalRow = typeof approvals.$inferSelect;
 export type PaymentLinkRow = typeof paymentLinks.$inferSelect;
 export type AgentRunRow = typeof agentRuns.$inferSelect;
+export type WebhookEventRow = typeof webhookEvents.$inferSelect;
 export type ConfigRow = typeof config.$inferSelect;
