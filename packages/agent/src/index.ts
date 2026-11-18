@@ -30,3 +30,14 @@ export { buildOutboundText, payLinkLine } from "./channel/outbound-text";
 export type { OutboundTextResult } from "./channel/outbound-text";
 export { sendCheckHistory } from "./channel/send-check";
 export { maskNumber } from "./channel/mask";
+export { createTwilioSandbox } from "./channel/twilio-sandbox";
+export { createRazorpayClient } from "./channel/razorpay";
+export type { CreateLinkBody, PayLinkInfo, RazorpayClient, RazorpayResult } from "./channel/razorpay";
+export {
+  MAX_OUTBOUND_LENGTH,
+  createPayLinkPayload,
+  findPayLinkPayload,
+  sendDraft,
+  sendWhatsappPayload,
+} from "./channel/send-draft";
+export type { SendDeps, SendInput, SendOutcome, ToolPayload } from "./channel/send-draft";
