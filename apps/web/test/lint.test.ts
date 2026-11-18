@@ -1,5 +1,6 @@
 // Node types are needed for fileURLToPath; the ESLint Node API runs in the Vitest process.
 /// <reference types="node" />
+import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -294,5 +295,167 @@ describe("debtor screen source scans", () => {
 
   it("types ACTION_TEXT in lib/debtor/candle-timeline.ts with satisfies Record<EscalationAction, string>", () => {
     expect(actionTextIsExhaustive(readFileSync(join(WEB_ROOT, "lib/debtor/candle-timeline.ts"), "utf8"))).toBe(true);
+  });
+});
+
+// Feature: whatsapp-channel, Reqs 1.1, 8.1, 8.2, 8.3: provider hosts, env names, secrets and env files.
+
+/** Provider hosts that only a `packages/agent` Message_Channel or Razorpay client may name (Req 1.1). */
+const PROVIDER_HOSTS = /api\.twilio\.com|\bwa\.me\b|api\.razorpay\.com/;
+
+/** True when the code (comments removed) of `source` names a provider host. */
+function namesProviderHost(source: string): boolean {
+  return PROVIDER_HOSTS.test(stripComments(source));
+}
+
+/** The Channel_Env names of Req 8.1, in `.env.example`. */
+const CHANNEL_ENV_NAMES = [
+  "TWILIO_ACCOUNT_SID",
+  "TWILIO_AUTH_TOKEN",
+  "TWILIO_WHATSAPP_FROM",
+  "TWILIO_SANDBOX_JOIN_CODE",
+  "RAZORPAY_KEY_ID",
+  "RAZORPAY_KEY_SECRET",
+  "RAZORPAY_WEBHOOK_SECRET",
+  "PUBLIC_BASE_URL",
+  "DEMO_BUYER_WHATSAPP",
+] as const;
+
+/** Names that `.env.example` lists with an empty value, one `NAME=` per line. */
+function emptyEnvNames(text: string): string[] {
+  return text
+    .split(/\r?\n/)
+    .map((line) => /^([A-Z][A-Z0-9_]*)=$/.exec(line)?.[1])
+    .filter((name): name is string => name !== undefined);
+}
+
+/** `+91` followed by ten digits, with an optional space or hyphen between (Req 8.3). */
+const INDIAN_NUMBER = /\+91[ -]?[0-9]{10}(?![0-9])/g;
+/** The only phone numbers that may appear in tracked files (Req 8.3), written without separators. */
+const FICTIONAL_NUMBERS: ReadonlySet<string> = new Set(["+919000000001", "+919000000002", "+919000000099"]);
+
+/** Descriptions of every secret-shaped value or real-looking phone number in `text`. */
+function findSecretShapes(text: string): string[] {
+  const found: string[] = [];
+  if (/\bAC[0-9a-f]{32}\b/.test(text)) found.push("Twilio account SID");
+  if (/\brzp_(?:test|live)_[A-Za-z0-9]{14}/.test(text)) found.push("Razorpay key id");
+  for (const match of text.matchAll(INDIAN_NUMBER)) {
+    if (!FICTIONAL_NUMBERS.has(match[0].replace(/[ -]/g, ""))) found.push("phone number");
+  }
+  return found;
+}
+
+/** Repo-relative paths of every git-tracked file. */
+function trackedFiles(): string[] {
+  const out = execFileSync("git", ["ls-files", "-z"], { cwd: REPO_ROOT, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  return out.split("\0").filter((p) => p !== "");
+}
+
+/** True when git ignores `relativePath` (it need not exist). */
+function isGitIgnored(relativePath: string): boolean {
+  return spawnSync("git", ["check-ignore", "-q", "--", relativePath], { cwd: REPO_ROOT }).status === 0;
+}
+
+/** Repo-relative paths of every local env file (`.env`, `.env.*`) outside dependency and build folders. */
+function listEnvFiles(dir: string, prefix = ""): string[] {
+  const files: string[] = [];
+  for (const entry of readdirSync(dir)) {
+    const rel = prefix === "" ? entry : `${prefix}/${entry}`;
+    const full = join(dir, entry);
+    if (statSync(full).isDirectory()) {
+      if (!["node_modules", ".git", ".next", ".turbo", ".vercel", "dist", "coverage"].includes(entry)) files.push(...listEnvFiles(full, rel));
+    } else if (entry === ".env" || entry.startsWith(".env.")) {
+      files.push(rel);
+    }
+  }
+  return files.sort();
+}
+
+describe("whatsapp-channel provider hosts (Req 1.1)", () => {
+  it("detects each provider host in code but not in a comment", () => {
+    expect(namesProviderHost('fetch("https://api.twilio.com/2010-04-01/x")')).toBe(true);
+    expect(namesProviderHost('const u = "https://wa.me/?text=hi";')).toBe(true);
+    expect(namesProviderHost("const u = `https://api.razorpay.com/v1/payment_links`;")).toBe(true);
+    expect(namesProviderHost("// hands the owner a wa.me link\nconst a = 1;")).toBe(false);
+    expect(namesProviderHost("/** Twilio at api.twilio.com */ const a = 1;")).toBe(false);
+    expect(namesProviderHost('const swa = "dewa.mex";')).toBe(false);
+  });
+
+  it("names api.twilio.com, wa.me and api.razorpay.com in no apps/web source outside tests", () => {
+    const sources = listWebSources(WEB_ROOT);
+    expect(sources.length).toBeGreaterThan(0);
+    const offenders = sources.filter((file) => namesProviderHost(readFileSync(file, "utf8"))).map((file) => file.slice(WEB_ROOT.length));
+    expect(offenders).toEqual([]);
+  });
+});
+
+describe("whatsapp-channel .env.example (Reqs 8.1, 8.2)", () => {
+  const example = readFileSync(join(WEB_ROOT, ".env.example"), "utf8");
+
+  it("lists every Channel_Env name with an empty value", () => {
+    const names = emptyEnvNames(example);
+    for (const name of CHANNEL_ENV_NAMES) expect(names).toContain(name);
+  });
+
+  it("keeps the existing entries and gives no entry a value", () => {
+    const names = emptyEnvNames(example);
+    for (const name of ["DATABASE_URL", "AUTH_SECRET", "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "LADDER_RUN_SECRET"]) expect(names).toContain(name);
+    const assigned = example.split(/\r?\n/).filter((line) => /^[A-Z][A-Z0-9_]*=/.test(line));
+    expect(assigned.filter((line) => !/^[A-Z][A-Z0-9_]*=$/.test(line))).toEqual([]);
+  });
+
+  it("detects a non-empty or misspelled entry", () => {
+    expect(emptyEnvNames("TWILIO_AUTH_TOKEN=\nPUBLIC_BASE_URL=https://x.example\nTWILIO_AUTH_TOKEN =\n")).toEqual(["TWILIO_AUTH_TOKEN"]);
+  });
+});
+
+describe("whatsapp-channel secrets and phone numbers in tracked files (Reqs 8.2, 8.3)", () => {
+  // Built from pieces so this file does not contain a secret-shaped literal itself.
+  const SID = `AC${"0123456789abcdef".repeat(2)}`;
+  const TEN = `${"98765"}${"43210"}`;
+  const KEY = `rzp_${"test"}_${"AbCd1234EfGh56"}`;
+
+  it("detects a Twilio SID, a Razorpay key id and a non-fictional +91 number", () => {
+    expect(findSecretShapes(`sid ${SID}`)).toEqual(["Twilio account SID"]);
+    expect(findSecretShapes(`key ${KEY}`)).toEqual(["Razorpay key id"]);
+    expect(findSecretShapes(`key ${KEY.replace("test", "live")}`)).toEqual(["Razorpay key id"]);
+    expect(findSecretShapes(`call +91 ${TEN}`)).toEqual(["phone number"]);
+    expect(findSecretShapes(`call +91-${TEN}`)).toEqual(["phone number"]);
+    expect(findSecretShapes(`call +91${TEN}`)).toEqual(["phone number"]);
+  });
+
+  it("allows only the fictional fixture numbers and ignores near misses", () => {
+    expect(findSecretShapes("+919000000001 +919000000002 +919000000099 +91 9000000001")).toEqual([]);
+    expect(findSecretShapes(`AC${"0".repeat(31)} x${SID}0 rzp_test_short`)).toEqual([]);
+    expect(findSecretShapes("+91 12345")).toEqual([]);
+  });
+
+  it("finds no Twilio SID, Razorpay key id or real-looking +91 number in any git-tracked file", () => {
+    const files = trackedFiles();
+    expect(files).toContain("apps/web/.env.example");
+    const offenders: string[] = [];
+    for (const file of files) {
+      const full = join(REPO_ROOT, file);
+      if (!existsSync(full) || statSync(full).size > 2_000_000) continue;
+      const bytes = readFileSync(full);
+      if (bytes.includes(0)) continue; // binary
+      for (const shape of new Set(findSecretShapes(bytes.toString("utf8")))) offenders.push(`${file}: ${shape}`);
+    }
+    expect(offenders).toEqual([]);
+  });
+});
+
+describe("whatsapp-channel local env files (Req 8.2)", () => {
+  it("git-ignores every local env file except apps/web/.env.example", () => {
+    const envFiles = listEnvFiles(REPO_ROOT).filter((p) => p !== "apps/web/.env.example");
+    expect(envFiles.filter((p) => !isGitIgnored(p))).toEqual([]);
+  });
+
+  it("git-ignores the usual local env names, whether or not the files exist, and tracks no env file but the example", () => {
+    for (const name of [".env", ".env.local", ".env.production", "apps/web/.env", "apps/web/.env.local", "apps/web/.env.development.local"]) {
+      expect(isGitIgnored(name), name).toBe(true);
+    }
+    expect(isGitIgnored("apps/web/.env.example")).toBe(false);
+    expect(trackedFiles().filter((p) => /(^|\/)\.env(\.|$)/.test(p))).toEqual(["apps/web/.env.example"]);
   });
 });

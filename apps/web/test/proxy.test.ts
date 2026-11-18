@@ -308,3 +308,29 @@ describe("proxy: module shape", () => {
     ]);
   });
 });
+
+// Feature: whatsapp-channel, Req 8.6, 8.7, 9.15: the webhooks have no session, only a signature, so the
+// proxy must not run on them. A pattern is `/literal` or `/literal/:name*`; no other form is in use.
+describe("proxy: webhook routes are not guarded", () => {
+  const patternToRegExp = (pattern: string): RegExp => {
+    const star = pattern.endsWith("/:path*");
+    const base = star ? pattern.slice(0, -"/:path*".length) : pattern;
+    expect(base).not.toContain(":");
+    return new RegExp(`^${base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}${star ? "(?:/.*)?" : ""}$`);
+  };
+  const matchedBy = (path: string): string[] => (config.matcher as string[]).filter((p) => patternToRegExp(p).test(path));
+
+  it.each(["/api/webhooks/razorpay", "/api/webhooks/twilio"])("matches no pattern for %s", (path) => {
+    expect(matchedBy(path)).toEqual([]);
+  });
+
+  it("matches nothing under /api/webhooks", () => {
+    expect(matchedBy("/api/webhooks/razorpay/extra")).toEqual([]);
+    expect(matchedBy("/api/webhooks")).toEqual([]);
+  });
+
+  it("still matches a guarded route with the same helper (control)", () => {
+    expect(matchedBy("/api/import/preview")).toEqual(["/api/import/:path*"]);
+    expect(matchedBy("/debtors/abc")).toEqual(["/debtors/:path*"]);
+  });
+});
