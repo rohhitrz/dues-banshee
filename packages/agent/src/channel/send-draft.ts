@@ -163,7 +163,10 @@ async function sendCheck(db: Db, ctx: SendContext, today: CalendarDate): Promise
   return decision;
 }
 
-/** Step 8: the stored Pay_Link, else a lookup, else a create (then a lookup again on `already_attempted`). */
+/**
+ * Step 8: the stored Pay_Link, else a lookup, else a create (then a lookup again on `already_attempted`).
+ * A link whose amount differs from the invoice's is `"failed"`.
+ */
 async function resolvePayLink(
   deps: SendDeps & { razorpay: RazorpayClient },
   ctx: SendContext,
@@ -173,6 +176,8 @@ async function resolvePayLink(
   const invoiceId = ctx.draft.invoiceId;
   const draftId = ctx.draft.id;
   if (ctx.payLink !== null) {
+    // A stored link for a different amount must never reach the buyer.
+    if (ctx.payLink.amountPaise !== ctx.invoice.amountPaise) return "failed";
     return {
       providerLinkId: ctx.payLink.providerLinkId,
       url: ctx.payLink.url,
@@ -215,6 +220,8 @@ async function resolvePayLink(
     }
   }
 
+  // A link Razorpay returned for another amount is neither stored nor sent.
+  if (link.amountPaise !== ctx.invoice.amountPaise) return "failed";
   const stored = await insertPayLink(db, { invoiceId, draftId, link, createdOn: today });
   return stored === "duplicate" ? "duplicate" : link;
 }

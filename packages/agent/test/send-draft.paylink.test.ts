@@ -260,6 +260,42 @@ describe("sendDraft: whatsapp_paylink Draft with the Pay_Link_Marker at 2026-11-
     expect(tools.filter((t) => t === "send_whatsapp")).toEqual([]);
   });
 
+  it("refuses a stored Pay_Link whose amount differs from the invoice: pay_link_failed, no Twilio call, claim released", async () => {
+    const w = await paylinkWorld();
+    await insertPayLink(w.db, {
+      invoiceId: w.invoiceId,
+      draftId: w.draftId,
+      link: { providerLinkId: MOCK_PAY_LINK_ID, url: MOCK_PAY_LINK_URL, amountPaise: SHARMA_AMOUNT_PAISE - 100 },
+      createdOn: DEMO_TODAY,
+    });
+    const { outcome, h } = await run(w, { lookup: [], create: [] });
+    expect(outcome).toEqual<SendOutcome>({ kind: "pay_link_failed" });
+    expect(h.http.requests).toEqual([]);
+    expect(twilioCreates(h)).toHaveLength(0);
+    const draft = (await w.db.select().from(drafts)).find((d) => d.id === w.draftId);
+    expect(draft?.sendClaimedAt).toBeNull();
+    expect(await w.db.select().from(messages)).toEqual([]);
+    expect((await w.db.select().from(paymentLinks)).map((l) => l.amountPaise)).toEqual([SHARMA_AMOUNT_PAISE - 100]);
+  });
+  it("refuses a found Pay_Link whose amount differs from the invoice: pay_link_failed, nothing stored, no Twilio call", async () => {
+    const w = await paylinkWorld();
+    const wrongAmount: FakeResponse = {
+      json: {
+        count: 1,
+        payment_links: [{ ...razorpayLink(w.draftId, SHARMA_AMOUNT_PAISE + 100), id: FOUND_ID, short_url: FOUND_URL }],
+      },
+    };
+    const { outcome, h } = await run(w, { lookup: [wrongAmount], create: [] });
+    expect(outcome).toEqual<SendOutcome>({ kind: "pay_link_failed" });
+    expect(razorpayLookups(h)).toHaveLength(1);
+    expect(razorpayCreates(h)).toHaveLength(0);
+    expect(twilioCreates(h)).toHaveLength(0);
+    expect(h.http.unmatched).toEqual([]);
+    expect(await w.db.select().from(paymentLinks)).toEqual([]);
+    expect(await w.db.select().from(messages)).toEqual([]);
+    const draft = (await w.db.select().from(drafts)).find((d) => d.id === w.draftId);
+    expect(draft?.sendClaimedAt).toBeNull();
+  });
   it("reuses a stored Pay_Link with no Razorpay call and no find or create Tool_Log row", async () => {
     const w = await paylinkWorld();
     const stored = await insertPayLink(w.db, {
