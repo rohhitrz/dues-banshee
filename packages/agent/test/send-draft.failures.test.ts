@@ -260,6 +260,21 @@ describe("sendDraft: recordSent forced to fail", () => {
     expect(again.h.http.requests).toEqual([]);
   });
 
+  it("after a Twilio `sent` and an expired lease → claimSend refuses and Twilio is not called again", async () => {
+    const w = await world();
+    const first = await attempt(w, "twilio_sandbox", {}, failingRecord);
+    expect(first.outcome).toEqual<SendOutcome>({ kind: "record_failed" });
+    expect(first.h.http.calls("POST", TWILIO_CREATE_URL)).toHaveLength(1);
+    await w.t.pglite.query("update drafts set send_claimed_at = now() - make_interval(secs => 361) where id = $1", [
+      w.draftId,
+    ]);
+    const again = await attempt(w, "twilio_sandbox");
+    expect(again.outcome).toEqual<SendOutcome>({ kind: "cannot_send" });
+    expect(again.h.http.calls("POST", TWILIO_CREATE_URL)).toHaveLength(0);
+    expect(again.h.http.requests).toEqual([]);
+    expect(await w.db.select().from(messages)).toEqual([]);
+    expect(await sentEvents(w)).toEqual([]);
+  });
   it("after a wa_me handoff → record_failed, nothing persisted, claim released", async () => {
     const w = await world();
     const { h, outcome, rows } = await attempt(w, "wa_me", {}, failingRecord);

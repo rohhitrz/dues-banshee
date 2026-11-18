@@ -14,6 +14,7 @@ import {
   releaseSend,
 } from "../src/send";
 import { cloneTestDb, createTestDb, type TestDb } from "../src/testing";
+import { logToolCall } from "../src/tool-log";
 import { recordWebhookEvent } from "../src/webhooks";
 
 const SHARMA = "LPC/26-27/0412";
@@ -284,6 +285,44 @@ describe("claimSend and releaseSend", () => {
   });
 });
 
+describe("claimSend and the send_whatsapp Tool_Log", () => {
+  async function expireClaim(w: World): Promise<void> {
+    await w.t.db
+      .update(drafts)
+      .set({ sendClaimedAt: sql`now() - make_interval(secs => 361)` })
+      .where(eq(drafts.id, w.draftId));
+  }
+  it("refuses a Draft with a `sent` send_whatsapp row even after the lease expired", async () => {
+    const w = await world();
+    expect(await claimSend(w.t.db, w.supplierId, w.draftId)).toBe(true);
+    await logToolCall(w.t.db, {
+      tool: "send_whatsapp",
+      invoiceId: w.invoiceId,
+      input: { invoiceId: w.invoiceId, draftId: w.draftId, channel: "twilio_sandbox" },
+      output: { kind: "sent", providerMessageId: "SM1", polls: [] },
+    });
+    await expireClaim(w);
+    expect(await claimSend(w.t.db, w.supplierId, w.draftId)).toBe(false);
+    await releaseSend(w.t.db, w.draftId);
+    expect(await claimSend(w.t.db, w.supplierId, w.draftId)).toBe(false);
+  });
+  it("is not blocked by a failed or handoff row, another tool, or another Draft's `sent` row", async () => {
+    const w = await world();
+    const other = await insertDraft(w.t, w.invoiceId);
+    const row = (tool: string, draftId: string, kind: string) => ({
+      tool,
+      invoiceId: w.invoiceId,
+      input: { invoiceId: w.invoiceId, draftId },
+      output: { kind },
+    });
+    await logToolCall(w.t.db, row("send_whatsapp", w.draftId, "failed"));
+    await logToolCall(w.t.db, row("send_whatsapp", w.draftId, "handoff"));
+    await logToolCall(w.t.db, row("find_payment_link", w.draftId, "sent"));
+    await logToolCall(w.t.db, row("send_whatsapp", other, "sent"));
+    await logToolCall(w.t.db, { tool: "send_whatsapp", invoiceId: null, input: { draftId: w.draftId }, output: null });
+    expect(await claimSend(w.t.db, w.supplierId, w.draftId)).toBe(true);
+  });
+});
 describe("insertPayLink", () => {
   it("accepts the first Pay_Link for a Draft and reports the second as duplicate", async () => {
     const w = await world();

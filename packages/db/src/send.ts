@@ -3,7 +3,7 @@ import { and, asc, desc, eq, inArray, isNull, lt, notExists, or, sql } from "dri
 import type { Db } from "./client";
 import { insertEscalationEvent, getDraftForSupplier, isUniqueViolation, listLadderRecords } from "./ladder";
 import type { DraftWithContext, LadderRecord } from "./ladder";
-import { buyers, drafts, escalationEvents, invoices, messages, paymentLinks } from "./schema";
+import { agentRuns, buyers, drafts, escalationEvents, invoices, messages, paymentLinks } from "./schema";
 
 /** The two channels a send can use; also the `messages.channel` value. */
 export type SendChannel = "twilio_sandbox" | "wa_me";
@@ -99,7 +99,8 @@ export async function getSendContext(db: Db, supplierId: string, draftId: string
 /**
  * Takes the send claim on a Draft of this supplier with one conditional `UPDATE … FROM invoices`.
  * It succeeds only for an `approved` WhatsApp Draft that has no Sent_Message and whose claim is
- * unset or older than the 360-second lease. Two overlapping calls serialise on the row lock, so
+ * unset or older than the 360-second lease, and that has no `send_whatsapp` Tool_Log row recording a
+ * Twilio `sent` (the message may have gone out without a Message_Row). Two overlapping calls serialise on the row lock, so
  * only one gets `true`.
  */
 export async function claimSend(db: Db, supplierId: string, draftId: string): Promise<boolean> {
@@ -123,6 +124,20 @@ export async function claimSend(db: Db, supplierId: string, draftId: string): Pr
             .select({ one: sql`1` })
             .from(messages)
             .where(and(eq(messages.draftId, drafts.id), inArray(messages.status, ["sent", "handed_off"]))),
+        ),
+        // Twilio said `sent` but `recordSent` failed: the Tool_Log row is the only trace of the message,
+        // so an expired lease must not let a retry message the buyer a second time.
+        notExists(
+          db
+            .select({ one: sql`1` })
+            .from(agentRuns)
+            .where(
+              and(
+                eq(agentRuns.tool, "send_whatsapp"),
+                sql`${agentRuns.input}->>'draftId' = ${drafts.id}::text`,
+                sql`${agentRuns.output}->>'kind' = 'sent'`,
+              ),
+            ),
         ),
       ),
     )
