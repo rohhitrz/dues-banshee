@@ -179,8 +179,11 @@ interface Responses {
   twilioPolls?: readonly FakeResponse[];
 }
 
-/** The four provider routes. By default: no link yet, one created link, a Twilio SID, then a failed first poll. */
-function useProviders(draftId: string, over: Responses = {}): FakeHttp {
+/**
+ * The four provider routes. By default: no link yet, one created link for `amountPaise` (it must equal the
+ * invoice's, or the send path refuses it), a Twilio SID, then a failed first poll.
+ */
+function useProviders(draftId: string, over: Responses = {}, amountPaise = 41_200_000): FakeHttp {
   return useHttp([
     {
       method: "GET",
@@ -192,7 +195,7 @@ function useProviders(draftId: string, over: Responses = {}): FakeHttp {
       url: RAZORPAY_LINKS_URL,
       responses: over.create ?? [
         {
-          json: { id: "plink_demo0000000001", short_url: PAY_LINK_URL, amount: 41_200_000, reference_id: draftId },
+          json: { id: "plink_demo0000000001", short_url: PAY_LINK_URL, amount: amountPaise, reference_id: draftId },
         },
       ],
     },
@@ -485,7 +488,7 @@ describe("the today override applies only to the demo supplier", () => {
   it("another supplier's override is ignored: Today is the real IST date and the Draft is handed off", async () => {
     const other = await otherSupplier();
     mocks.auth.mockResolvedValue({ supplierId: other.supplierId });
-    useProviders(other.draftId);
+    useProviders(other.draftId, {}, 1_000_000);
 
     const view = await act(openInWhatsApp, { draftId: other.draftId, today: "2027-03-10" });
 
