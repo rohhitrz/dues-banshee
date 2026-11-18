@@ -1,5 +1,6 @@
 import {
   claimSend,
+  getPayLinkForDraft,
   getSendContext,
   insertFailedMessage,
   insertPayLink,
@@ -165,11 +166,13 @@ async function sendCheck(db: Db, ctx: SendContext, today: CalendarDate): Promise
 
 /**
  * Step 8: the stored Pay_Link, else a lookup, else a create (then a lookup again on `already_attempted`).
- * A link whose amount differs from the invoice's is `"failed"`.
+ * A link whose amount differs from the invoice's is `"failed"`. If another request stores its link first,
+ * the stored link is used. `"duplicate"` is returned only if that link cannot be read back.
  */
 async function resolvePayLink(
   deps: SendDeps & { razorpay: RazorpayClient },
   ctx: SendContext,
+  supplierId: string,
   today: CalendarDate,
 ): Promise<PayLinkInfo | "failed" | "duplicate"> {
   const { db, razorpay } = deps;
@@ -223,7 +226,12 @@ async function resolvePayLink(
   // A link Razorpay returned for another amount is neither stored nor sent.
   if (link.amountPaise !== ctx.invoice.amountPaise) return "failed";
   const stored = await insertPayLink(db, { invoiceId, draftId, link, createdOn: today });
-  return stored === "duplicate" ? "duplicate" : link;
+  if (stored === "ok") return link;
+  // Another request stored its link first: continue with the stored one (the unique index makes it the only one).
+  const winner = await getPayLinkForDraft(db, supplierId, draftId);
+  if (winner === null) return "duplicate";
+  if (winner.amountPaise !== ctx.invoice.amountPaise) return "failed";
+  return { providerLinkId: winner.providerLinkId, url: winner.url, amountPaise: winner.amountPaise };
 }
 
 /**
@@ -291,7 +299,7 @@ export async function sendDraft(deps: SendDeps, input: SendInput): Promise<SendO
 
   try {
     // 8. Pay_Link.
-    const link = await resolvePayLink({ ...deps, razorpay }, ctx, today);
+    const link = await resolvePayLink({ ...deps, razorpay }, ctx, supplierId, today);
     if (link === "failed") return await fail({ kind: "pay_link_failed" });
     if (link === "duplicate") return await fail({ kind: "cannot_send" });
 

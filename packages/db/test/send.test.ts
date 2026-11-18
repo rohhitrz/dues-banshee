@@ -6,6 +6,7 @@ import { buyers, drafts, escalationEvents, invoices, messages, paymentLinks, sup
 import { seed } from "../src/seed";
 import {
   claimSend,
+  getPayLinkForDraft,
   getSendContext,
   insertFailedMessage,
   insertPayLink,
@@ -321,6 +322,16 @@ describe("claimSend and the send_whatsapp Tool_Log", () => {
     await logToolCall(w.t.db, row("send_whatsapp", other, "sent"));
     await logToolCall(w.t.db, { tool: "send_whatsapp", invoiceId: null, input: { draftId: w.draftId }, output: null });
     expect(await claimSend(w.t.db, w.supplierId, w.draftId)).toBe(true);
+  });
+});
+describe("getPayLinkForDraft", () => {
+  it("returns the stored Pay_Link for its supplier only", async () => {
+    const w = await world();
+    expect(await getPayLinkForDraft(w.t.db, w.supplierId, w.draftId)).toBeNull();
+    await insertPayLink(w.t.db, { invoiceId: w.invoiceId, draftId: w.draftId, link: PAY_LINK, createdOn: "2026-11-12" });
+    expect(await getPayLinkForDraft(w.t.db, w.supplierId, w.draftId)).toEqual({ ...PAY_LINK, createdOn: "2026-11-12" });
+    expect(await getPayLinkForDraft(w.t.db, w.otherSupplierId, w.draftId)).toBeNull();
+    expect(await getPayLinkForDraft(w.t.db, w.supplierId, UNKNOWN_ID)).toBeNull();
   });
 });
 describe("insertPayLink", () => {

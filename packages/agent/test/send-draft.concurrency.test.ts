@@ -7,7 +7,7 @@ import type { TestDb } from "@dues-banshee/db/testing";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { sendDraft } from "../src/channel/send-draft";
 import type { SendDeps, SendOutcome } from "../src/channel/send-draft";
-import type { FakeResponseSpec } from "../src/testing/fake-http";
+import type { FakeResponse, FakeResponseSpec } from "../src/testing/fake-http";
 import {
   DEMO_TODAY,
   MOCK_PAY_LINK_ID,
@@ -199,44 +199,68 @@ describe("sendDraft: the unique indexes hold when the claim does not", () => {
     expect(await sentEvents(w)).toHaveLength(1);
   });
 
-  it("returns cannot_send when another request stored the Pay_Link first, and releases the claim", async () => {
+  /** A lookup that, while this request is looking, lets a request that got past the claim store its own link. */
+  function racingLookup(w: SendWorld, draftId: string, rival: { url: string; amountPaise: number }): FakeResponse[] {
+    return [
+      async (): Promise<FakeResponseSpec> => {
+        const stored = await insertPayLink(w.db, {
+          invoiceId: w.invoiceId,
+          draftId,
+          link: { providerLinkId: "plink_other", url: rival.url, amountPaise: rival.amountPaise },
+          createdOn: DEMO_TODAY,
+        });
+        expect(stored).toEqual("ok");
+        return { json: { count: 0, payment_links: [] } };
+      },
+    ];
+  }
+  it("continues the send with the stored Pay_Link when another request stored it first", async () => {
     const w = await world();
     const draftId = await draftAndApproveSharma(w);
     const h = buildSendHarness(w.db, {
       routes: providerRoutes(draftId, {
-        // A request that got past the claim stores its link while this one is looking.
-        lookup: [
-          async (): Promise<FakeResponseSpec> => {
-            const stored = await insertPayLink(w.db, {
-              invoiceId: w.invoiceId,
-              draftId,
-              link: { providerLinkId: "plink_other", url: "https://rzp.io/i/other", amountPaise: SHARMA_AMOUNT_PAISE },
-              createdOn: DEMO_TODAY,
-            });
-            expect(stored).toEqual("ok");
-            return { json: { count: 0, payment_links: [] } };
-          },
-        ],
+        lookup: racingLookup(w, draftId, { url: "https://rzp.io/i/other", amountPaise: SHARMA_AMOUNT_PAISE }),
       }),
     });
-
     const outcome = await sendDraft(h.deps, {
       supplierId: w.supplierId,
       draftId,
       today: DEMO_TODAY,
       channel: "twilio_sandbox",
     });
-
-    expect(outcome).toEqual<SendOutcome>({ kind: "cannot_send" });
-    expect(h.http.calls("POST", TWILIO_CREATE_URL)).toHaveLength(0);
+    expect(outcome).toEqual<SendOutcome>({ kind: "sent" });
+    // This request's own create call went out, but only the stored link is kept and sent.
     const links = await w.db.select().from(paymentLinks);
     expect(links.map((l) => l.providerLinkId)).toEqual(["plink_other"]);
+    const twilioCalls = h.http.calls("POST", TWILIO_CREATE_URL);
+    expect(twilioCalls).toHaveLength(1);
+    const body = (twilioCalls[0]?.body as { Body: string }).Body;
+    expect(body).toContain("https://rzp.io/i/other");
+    expect(body).not.toContain(MOCK_PAY_LINK_URL);
+    expect(await sentMessages(w)).toHaveLength(1);
+    expect(await sentEvents(w)).toHaveLength(1);
+    expect(h.http.unmatched).toEqual([]);
+  });
+  it("returns pay_link_failed when the Pay_Link stored first has another amount, and releases the claim", async () => {
+    const w = await world();
+    const draftId = await draftAndApproveSharma(w);
+    const h = buildSendHarness(w.db, {
+      routes: providerRoutes(draftId, {
+        lookup: racingLookup(w, draftId, { url: "https://rzp.io/i/other", amountPaise: SHARMA_AMOUNT_PAISE - 100 }),
+      }),
+    });
+    const outcome = await sendDraft(h.deps, {
+      supplierId: w.supplierId,
+      draftId,
+      today: DEMO_TODAY,
+      channel: "twilio_sandbox",
+    });
+    expect(outcome).toEqual<SendOutcome>({ kind: "pay_link_failed" });
+    expect(h.http.calls("POST", TWILIO_CREATE_URL)).toHaveLength(0);
     expect(await w.db.select().from(messages)).toHaveLength(0);
     expect(await sentEvents(w)).toHaveLength(0);
-    // The claim was released: a new request can take it.
     expect(await claimSend(w.db, w.supplierId, draftId)).toBe(true);
   });
-
   it("returns cannot_send when another request recorded the Sent_Message first, and releases the claim", async () => {
     const w = await world();
     const draftId = await draftAndApproveSharma(w);

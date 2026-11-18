@@ -38,6 +38,25 @@ export interface SendContext extends DraftWithContext {
   record: LadderRecord;
 }
 
+/** The stored Pay_Link of a Draft, only if its invoice belongs to `supplierId`; `null` if there is none. */
+export async function getPayLinkForDraft(
+  db: Db,
+  supplierId: string,
+  draftId: string,
+): Promise<(PayLinkInfo & { createdOn: CalendarDate | null }) | null> {
+  const [link] = await db
+    .select({
+      providerLinkId: paymentLinks.providerLinkId,
+      url: paymentLinks.url,
+      amountPaise: paymentLinks.amountPaise,
+      createdOn: paymentLinks.createdOn,
+    })
+    .from(paymentLinks)
+    .innerJoin(invoices, eq(invoices.id, paymentLinks.invoiceId))
+    .where(and(eq(invoices.supplierId, supplierId), eq(paymentLinks.draftId, draftId)))
+    .limit(1);
+  return link === undefined ? null : link;
+}
 /**
  * Reads one Draft with its send facts, only if its invoice belongs to `supplierId`. Returns `null`
  * for an unknown id and for another supplier's Draft (the two look the same to the caller).
@@ -68,17 +87,7 @@ export async function getSendContext(db: Db, supplierId: string, draftId: string
     )
     .limit(1);
 
-  const [link] = await db
-    .select({
-      providerLinkId: paymentLinks.providerLinkId,
-      url: paymentLinks.url,
-      amountPaise: paymentLinks.amountPaise,
-      createdOn: paymentLinks.createdOn,
-    })
-    .from(paymentLinks)
-    .innerJoin(invoices, eq(invoices.id, paymentLinks.invoiceId))
-    .where(and(eq(invoices.supplierId, supplierId), eq(paymentLinks.draftId, draftId)))
-    .limit(1);
+  const link = await getPayLinkForDraft(db, supplierId, draftId);
 
   const [buyer] = await db
     .select({ whatsappNumber: buyers.whatsappNumber })
@@ -90,7 +99,7 @@ export async function getSendContext(db: Db, supplierId: string, draftId: string
     ...ctx,
     approvalDay,
     hasSentMessage: sent !== undefined,
-    payLink: link === undefined ? null : link,
+    payLink: link,
     buyerNumber: buyer?.whatsappNumber ?? null,
     record,
   };
