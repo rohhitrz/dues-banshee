@@ -1,0 +1,498 @@
+{
+  "pbtResults": {
+    "4.7 Write property test `packages/agent/test/outbound-text.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1795022499485
+    },
+    "4.9 Write property test `packages/agent/test/send-check.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1795022499566
+    },
+    "4.3 Write property test `packages/agent/test/channel-env.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1795022506276
+    },
+    "4.5 Write property test `packages/agent/test/wa-me.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1795022512008
+    },
+    "8.4 Write property test `packages/agent/test/razorpay-event.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1795025602378
+    },
+    "8.9 Write property test `packages/agent/test/mask.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1795026135457
+    }
+  },
+  "executionHistory": {
+    "1.1 Implement `istCalendarDate(nowMs): CalendarDate` in `packages/engine` and export it from `index.ts`": [
+      {
+        "executionId": "a7e7f005-bc4e-42c3-bdef-abc4987f1b7e",
+        "chatSessionId": "sess_2437ea7f-082c-45bf-8458-92195dece0aa",
+        "timestamp": 1795009255062
+      },
+      {
+        "executionId": "a7e7f005-bc4e-42c3-bdef-abc4987f1b7e",
+        "chatSessionId": "sess_2437ea7f-082c-45bf-8458-92195dece0aa",
+        "timestamp": 1795009400843
+      }
+    ],
+    "1.2 Write `packages/engine/test/ist-calendar-date.test.ts`": [
+      {
+        "executionId": "a7e7f005-bc4e-42c3-bdef-abc4987f1b7e",
+        "chatSessionId": "sess_2437ea7f-082c-45bf-8458-92195dece0aa",
+        "timestamp": 1795009401152
+      },
+      {
+        "executionId": "a7e7f005-bc4e-42c3-bdef-abc4987f1b7e",
+        "chatSessionId": "sess_2437ea7f-082c-45bf-8458-92195dece0aa",
+        "timestamp": 1795010047369
+      }
+    ],
+    "1. Move the IST calendar-date rule into the Engine": [
+      {
+        "executionId": "a7e7f005-bc4e-42c3-bdef-abc4987f1b7e",
+        "chatSessionId": "sess_2437ea7f-082c-45bf-8458-92195dece0aa",
+        "timestamp": 1795010047398
+      }
+    ],
+    "2.1 Update `packages/db/src/schema.ts`, generate and hand-check `drizzle/0003_*.sql`": [
+      {
+        "executionId": "a80926a1-9a9f-4e2c-b097-57966918e951",
+        "chatSessionId": "sess_0f7ea52a-9201-46b1-8b31-07ac2952e4b5",
+        "timestamp": 1795014126089
+      },
+      {
+        "executionId": "a80926a1-9a9f-4e2c-b097-57966918e951",
+        "chatSessionId": "sess_0f7ea52a-9201-46b1-8b31-07ac2952e4b5",
+        "timestamp": 1795015382713
+      }
+    ],
+    "2.2 Implement `packages/db/src/send.ts` and export it from `index.ts`": [
+      {
+        "executionId": "a80926a1-9a9f-4e2c-b097-57966918e951",
+        "chatSessionId": "sess_0f7ea52a-9201-46b1-8b31-07ac2952e4b5",
+        "timestamp": 1795015403644
+      },
+      {
+        "executionId": "a80926a1-9a9f-4e2c-b097-57966918e951",
+        "chatSessionId": "sess_0f7ea52a-9201-46b1-8b31-07ac2952e4b5",
+        "timestamp": 1795015622998
+      }
+    ],
+    "2.3 Implement `packages/db/src/webhooks.ts` and export it from `index.ts`": [
+      {
+        "executionId": "a80926a1-9a9f-4e2c-b097-57966918e951",
+        "chatSessionId": "sess_0f7ea52a-9201-46b1-8b31-07ac2952e4b5",
+        "timestamp": 1795015403879
+      },
+      {
+        "executionId": "a80926a1-9a9f-4e2c-b097-57966918e951",
+        "chatSessionId": "sess_0f7ea52a-9201-46b1-8b31-07ac2952e4b5",
+        "timestamp": 1795015623553
+      }
+    ],
+    "2.4 Write `packages/db/test/whatsapp-migration.test.ts` (PGlite)": [
+      {
+        "executionId": "a80926a1-9a9f-4e2c-b097-57966918e951",
+        "chatSessionId": "sess_0f7ea52a-9201-46b1-8b31-07ac2952e4b5",
+        "timestamp": 1795015627979
+      },
+      {
+        "executionId": "a80926a1-9a9f-4e2c-b097-57966918e951",
+        "chatSessionId": "sess_0f7ea52a-9201-46b1-8b31-07ac2952e4b5",
+        "timestamp": 1795015785977
+      }
+    ],
+    "2.5 Write `packages/db/test/send.test.ts` (PGlite)": [
+      {
+        "executionId": "a80926a1-9a9f-4e2c-b097-57966918e951",
+        "chatSessionId": "sess_0f7ea52a-9201-46b1-8b31-07ac2952e4b5",
+        "timestamp": 1795015628341
+      },
+      {
+        "executionId": "a80926a1-9a9f-4e2c-b097-57966918e951",
+        "chatSessionId": "sess_0f7ea52a-9201-46b1-8b31-07ac2952e4b5",
+        "timestamp": 1795015786214
+      }
+    ],
+    "2. Add the whatsapp-channel schema, migration and db queries": [
+      {
+        "executionId": "a80926a1-9a9f-4e2c-b097-57966918e951",
+        "chatSessionId": "sess_0f7ea52a-9201-46b1-8b31-07ac2952e4b5",
+        "timestamp": 1795015786259
+      }
+    ],
+    "3. Checkpoint: engine and db": [
+      {
+        "executionId": "194f6a46-6444-4687-80ba-0d39132bccd2",
+        "chatSessionId": "sess_f14fae26-1a80-436d-a0c1-218515ac9d56",
+        "timestamp": 1795021461139
+      },
+      {
+        "executionId": "194f6a46-6444-4687-80ba-0d39132bccd2",
+        "chatSessionId": "sess_f14fae26-1a80-436d-a0c1-218515ac9d56",
+        "timestamp": 1795021529246
+      }
+    ],
+    "4. Add the pure channel pieces and the HTTP test boundary": [
+      {
+        "executionId": "1c64fd05-455d-4fc8-9077-253db03b5e8a",
+        "chatSessionId": "sess_0a6dc39f-8dbd-4f23-ba3b-30d5a6dbfff9",
+        "timestamp": 1795021702222
+      },
+      {
+        "executionId": "1c64fd05-455d-4fc8-9077-253db03b5e8a",
+        "chatSessionId": "sess_0a6dc39f-8dbd-4f23-ba3b-30d5a6dbfff9",
+        "timestamp": 1795022542969
+      }
+    ],
+    "4.1 Add the test boundary and the `twilio` dependency": [
+      {
+        "executionId": "1c64fd05-455d-4fc8-9077-253db03b5e8a",
+        "chatSessionId": "sess_0a6dc39f-8dbd-4f23-ba3b-30d5a6dbfff9",
+        "timestamp": 1795022555551
+      }
+    ],
+    "4.2 Implement `packages/agent/src/channel/env.ts`": [
+      {
+        "executionId": "1c64fd05-455d-4fc8-9077-253db03b5e8a",
+        "chatSessionId": "sess_0a6dc39f-8dbd-4f23-ba3b-30d5a6dbfff9",
+        "timestamp": 1795022555787
+      }
+    ],
+    "4.3 Write property test `packages/agent/test/channel-env.property.test.ts`": [
+      {
+        "executionId": "1c64fd05-455d-4fc8-9077-253db03b5e8a",
+        "chatSessionId": "sess_0a6dc39f-8dbd-4f23-ba3b-30d5a6dbfff9",
+        "timestamp": 1795022556592
+      }
+    ],
+    "4.4 Implement `packages/agent/src/channel/message-channel.ts` and `channel/wa-me.ts`": [
+      {
+        "executionId": "1c64fd05-455d-4fc8-9077-253db03b5e8a",
+        "chatSessionId": "sess_0a6dc39f-8dbd-4f23-ba3b-30d5a6dbfff9",
+        "timestamp": 1795022557140
+      }
+    ],
+    "4.5 Write property test `packages/agent/test/wa-me.property.test.ts`": [
+      {
+        "executionId": "1c64fd05-455d-4fc8-9077-253db03b5e8a",
+        "chatSessionId": "sess_0a6dc39f-8dbd-4f23-ba3b-30d5a6dbfff9",
+        "timestamp": 1795022557953
+      }
+    ],
+    "4.6 Implement `packages/agent/src/channel/outbound-text.ts`": [
+      {
+        "executionId": "1c64fd05-455d-4fc8-9077-253db03b5e8a",
+        "chatSessionId": "sess_0a6dc39f-8dbd-4f23-ba3b-30d5a6dbfff9",
+        "timestamp": 1795022558743
+      }
+    ],
+    "4.7 Write property test `packages/agent/test/outbound-text.property.test.ts`": [
+      {
+        "executionId": "1c64fd05-455d-4fc8-9077-253db03b5e8a",
+        "chatSessionId": "sess_0a6dc39f-8dbd-4f23-ba3b-30d5a6dbfff9",
+        "timestamp": 1795022559244
+      }
+    ],
+    "4.8 Implement `packages/agent/src/channel/send-check.ts`": [
+      {
+        "executionId": "1c64fd05-455d-4fc8-9077-253db03b5e8a",
+        "chatSessionId": "sess_0a6dc39f-8dbd-4f23-ba3b-30d5a6dbfff9",
+        "timestamp": 1795022560050
+      }
+    ],
+    "4.9 Write property test `packages/agent/test/send-check.property.test.ts`": [
+      {
+        "executionId": "1c64fd05-455d-4fc8-9077-253db03b5e8a",
+        "chatSessionId": "sess_0a6dc39f-8dbd-4f23-ba3b-30d5a6dbfff9",
+        "timestamp": 1795022560835
+      }
+    ],
+    "4.10 Implement `packages/agent/src/channel/mask.ts`": [
+      {
+        "executionId": "1c64fd05-455d-4fc8-9077-253db03b5e8a",
+        "chatSessionId": "sess_0a6dc39f-8dbd-4f23-ba3b-30d5a6dbfff9",
+        "timestamp": 1795022561621
+      }
+    ],
+    "5.1 Implement `packages/agent/src/channel/twilio-sandbox.ts`": [
+      {
+        "executionId": "24912c7e-16ae-479d-b6eb-914ef6d85e89",
+        "chatSessionId": "sess_de080375-a8db-42ec-b816-45bd64719622",
+        "timestamp": 1795022853770
+      },
+      {
+        "executionId": "24912c7e-16ae-479d-b6eb-914ef6d85e89",
+        "chatSessionId": "sess_de080375-a8db-42ec-b816-45bd64719622",
+        "timestamp": 1795022945575
+      }
+    ],
+    "5.3 Implement `packages/agent/src/channel/razorpay.ts`": [
+      {
+        "executionId": "24912c7e-16ae-479d-b6eb-914ef6d85e89",
+        "chatSessionId": "sess_de080375-a8db-42ec-b816-45bd64719622",
+        "timestamp": 1795022854067
+      },
+      {
+        "executionId": "24912c7e-16ae-479d-b6eb-914ef6d85e89",
+        "chatSessionId": "sess_de080375-a8db-42ec-b816-45bd64719622",
+        "timestamp": 1795022946539
+      }
+    ],
+    "5.2 Write `packages/agent/test/twilio-sandbox.test.ts`": [
+      {
+        "executionId": "24912c7e-16ae-479d-b6eb-914ef6d85e89",
+        "chatSessionId": "sess_de080375-a8db-42ec-b816-45bd64719622",
+        "timestamp": 1795022952304
+      },
+      {
+        "executionId": "24912c7e-16ae-479d-b6eb-914ef6d85e89",
+        "chatSessionId": "sess_de080375-a8db-42ec-b816-45bd64719622",
+        "timestamp": 1795023156020
+      }
+    ],
+    "5.4 Write `packages/agent/test/razorpay-client.test.ts`": [
+      {
+        "executionId": "24912c7e-16ae-479d-b6eb-914ef6d85e89",
+        "chatSessionId": "sess_de080375-a8db-42ec-b816-45bd64719622",
+        "timestamp": 1795022952390
+      },
+      {
+        "executionId": "24912c7e-16ae-479d-b6eb-914ef6d85e89",
+        "chatSessionId": "sess_de080375-a8db-42ec-b816-45bd64719622",
+        "timestamp": 1795023156513
+      }
+    ],
+    "5. Add the Twilio_Sandbox and Razorpay clients": [
+      {
+        "executionId": "24912c7e-16ae-479d-b6eb-914ef6d85e89",
+        "chatSessionId": "sess_de080375-a8db-42ec-b816-45bd64719622",
+        "timestamp": 1795023076733
+      },
+      {
+        "executionId": "24912c7e-16ae-479d-b6eb-914ef6d85e89",
+        "chatSessionId": "sess_de080375-a8db-42ec-b816-45bd64719622",
+        "timestamp": 1795023156541
+      }
+    ],
+    "6. Checkpoint: channel pieces": [
+      {
+        "executionId": "acae257f-f82f-4199-a2d2-cdfdf51f770b",
+        "chatSessionId": "sess_c302a902-0437-4c13-a5ef-e75b2f1b3314",
+        "timestamp": 1795023207222
+      },
+      {
+        "executionId": "acae257f-f82f-4199-a2d2-cdfdf51f770b",
+        "chatSessionId": "sess_c302a902-0437-4c13-a5ef-e75b2f1b3314",
+        "timestamp": 1795023273268
+      }
+    ],
+    "7.1 Implement `packages/agent/src/channel/send-draft.ts` and export the channel API from `packages/agent/src/index.ts`": [
+      {
+        "executionId": "833942e2-5a35-4f51-abe3-eaf1373a626e",
+        "chatSessionId": "sess_f5e99188-b272-4077-b28a-fb883e55cac0",
+        "timestamp": 1795023484220
+      },
+      {
+        "executionId": "833942e2-5a35-4f51-abe3-eaf1373a626e",
+        "chatSessionId": "sess_f5e99188-b272-4077-b28a-fb883e55cac0",
+        "timestamp": 1795023692154
+      }
+    ],
+    "7.2 Write `packages/agent/test/send-draft.demo.test.ts`": [
+      {
+        "executionId": "833942e2-5a35-4f51-abe3-eaf1373a626e",
+        "chatSessionId": "sess_f5e99188-b272-4077-b28a-fb883e55cac0",
+        "timestamp": 1795023699381
+      },
+      {
+        "executionId": "833942e2-5a35-4f51-abe3-eaf1373a626e",
+        "chatSessionId": "sess_f5e99188-b272-4077-b28a-fb883e55cac0",
+        "timestamp": 1795024221262
+      }
+    ],
+    "7.3 Write `packages/agent/test/send-draft.paylink.test.ts`": [
+      {
+        "executionId": "833942e2-5a35-4f51-abe3-eaf1373a626e",
+        "chatSessionId": "sess_f5e99188-b272-4077-b28a-fb883e55cac0",
+        "timestamp": 1795024222390
+      },
+      {
+        "executionId": "833942e2-5a35-4f51-abe3-eaf1373a626e",
+        "chatSessionId": "sess_f5e99188-b272-4077-b28a-fb883e55cac0",
+        "timestamp": 1795025017411
+      }
+    ],
+    "7.4 Write `packages/agent/test/send-draft.refusals.test.ts`": [
+      {
+        "executionId": "833942e2-5a35-4f51-abe3-eaf1373a626e",
+        "chatSessionId": "sess_f5e99188-b272-4077-b28a-fb883e55cac0",
+        "timestamp": 1795024223075
+      },
+      {
+        "executionId": "833942e2-5a35-4f51-abe3-eaf1373a626e",
+        "chatSessionId": "sess_f5e99188-b272-4077-b28a-fb883e55cac0",
+        "timestamp": 1795025017483
+      }
+    ],
+    "7.5 Write `packages/agent/test/send-draft.concurrency.test.ts`": [
+      {
+        "executionId": "833942e2-5a35-4f51-abe3-eaf1373a626e",
+        "chatSessionId": "sess_f5e99188-b272-4077-b28a-fb883e55cac0",
+        "timestamp": 1795024223660
+      },
+      {
+        "executionId": "833942e2-5a35-4f51-abe3-eaf1373a626e",
+        "chatSessionId": "sess_f5e99188-b272-4077-b28a-fb883e55cac0",
+        "timestamp": 1795025017532
+      }
+    ],
+    "7.6 Write `packages/agent/test/send-draft.failures.test.ts`": [
+      {
+        "executionId": "833942e2-5a35-4f51-abe3-eaf1373a626e",
+        "chatSessionId": "sess_f5e99188-b272-4077-b28a-fb883e55cac0",
+        "timestamp": 1795024224207
+      },
+      {
+        "executionId": "833942e2-5a35-4f51-abe3-eaf1373a626e",
+        "chatSessionId": "sess_f5e99188-b272-4077-b28a-fb883e55cac0",
+        "timestamp": 1795025017604
+      }
+    ],
+    "7. Implement sendDraft": [
+      {
+        "executionId": "833942e2-5a35-4f51-abe3-eaf1373a626e",
+        "chatSessionId": "sess_f5e99188-b272-4077-b28a-fb883e55cac0",
+        "timestamp": 1795025017642
+      },
+      {
+        "executionId": "833942e2-5a35-4f51-abe3-eaf1373a626e",
+        "chatSessionId": "sess_f5e99188-b272-4077-b28a-fb883e55cac0",
+        "timestamp": 1795025025210
+      },
+      {
+        "executionId": "833942e2-5a35-4f51-abe3-eaf1373a626e",
+        "chatSessionId": "sess_f5e99188-b272-4077-b28a-fb883e55cac0",
+        "timestamp": 1795025131122
+      }
+    ],
+    "8.1 Implement `packages/agent/src/webhooks/razorpay-signature.ts`": [
+      {
+        "executionId": "693f618d-a70f-4724-b21d-b5c93cc9c3e8",
+        "chatSessionId": "sess_a9a9d6fa-0774-4990-893c-a2dd92704bc5",
+        "timestamp": 1795025341594
+      },
+      {
+        "executionId": "693f618d-a70f-4724-b21d-b5c93cc9c3e8",
+        "chatSessionId": "sess_a9a9d6fa-0774-4990-893c-a2dd92704bc5",
+        "timestamp": 1795025427257
+      }
+    ],
+    "8.3 Implement `packages/agent/src/webhooks/razorpay-event.ts`": [
+      {
+        "executionId": "693f618d-a70f-4724-b21d-b5c93cc9c3e8",
+        "chatSessionId": "sess_a9a9d6fa-0774-4990-893c-a2dd92704bc5",
+        "timestamp": 1795025341650
+      },
+      {
+        "executionId": "693f618d-a70f-4724-b21d-b5c93cc9c3e8",
+        "chatSessionId": "sess_a9a9d6fa-0774-4990-893c-a2dd92704bc5",
+        "timestamp": 1795025428296
+      }
+    ],
+    "8.2 Write property test `packages/agent/test/razorpay-signature.property.test.ts`": [
+      {
+        "executionId": "693f618d-a70f-4724-b21d-b5c93cc9c3e8",
+        "chatSessionId": "sess_a9a9d6fa-0774-4990-893c-a2dd92704bc5",
+        "timestamp": 1795025439975
+      },
+      {
+        "executionId": "693f618d-a70f-4724-b21d-b5c93cc9c3e8",
+        "chatSessionId": "sess_a9a9d6fa-0774-4990-893c-a2dd92704bc5",
+        "timestamp": 1795025622301
+      }
+    ],
+    "8.4 Write property test `packages/agent/test/razorpay-event.property.test.ts`": [
+      {
+        "executionId": "693f618d-a70f-4724-b21d-b5c93cc9c3e8",
+        "chatSessionId": "sess_a9a9d6fa-0774-4990-893c-a2dd92704bc5",
+        "timestamp": 1795025440025
+      },
+      {
+        "executionId": "693f618d-a70f-4724-b21d-b5c93cc9c3e8",
+        "chatSessionId": "sess_a9a9d6fa-0774-4990-893c-a2dd92704bc5",
+        "timestamp": 1795025623309
+      }
+    ],
+    "8.5 Implement `packages/agent/src/webhooks/razorpay.ts` and export it from `packages/agent/src/index.ts`": [
+      {
+        "executionId": "693f618d-a70f-4724-b21d-b5c93cc9c3e8",
+        "chatSessionId": "sess_a9a9d6fa-0774-4990-893c-a2dd92704bc5",
+        "timestamp": 1795025630464
+      },
+      {
+        "executionId": "693f618d-a70f-4724-b21d-b5c93cc9c3e8",
+        "chatSessionId": "sess_a9a9d6fa-0774-4990-893c-a2dd92704bc5",
+        "timestamp": 1795025761800
+      }
+    ],
+    "8.6 Write `packages/agent/test/razorpay-webhook.test.ts` (PGlite)": [
+      {
+        "executionId": "693f618d-a70f-4724-b21d-b5c93cc9c3e8",
+        "chatSessionId": "sess_a9a9d6fa-0774-4990-893c-a2dd92704bc5",
+        "timestamp": 1795025768704
+      },
+      {
+        "executionId": "693f618d-a70f-4724-b21d-b5c93cc9c3e8",
+        "chatSessionId": "sess_a9a9d6fa-0774-4990-893c-a2dd92704bc5",
+        "timestamp": 1795026016987
+      }
+    ],
+    "8.7 Implement `packages/agent/src/webhooks/twilio.ts` and export it from `packages/agent/src/index.ts`": [
+      {
+        "executionId": "693f618d-a70f-4724-b21d-b5c93cc9c3e8",
+        "chatSessionId": "sess_a9a9d6fa-0774-4990-893c-a2dd92704bc5",
+        "timestamp": 1795025768758
+      },
+      {
+        "executionId": "693f618d-a70f-4724-b21d-b5c93cc9c3e8",
+        "chatSessionId": "sess_a9a9d6fa-0774-4990-893c-a2dd92704bc5",
+        "timestamp": 1795026017249
+      }
+    ],
+    "8.8 Write `packages/agent/test/twilio-webhook.test.ts` (PGlite)": [
+      {
+        "executionId": "693f618d-a70f-4724-b21d-b5c93cc9c3e8",
+        "chatSessionId": "sess_a9a9d6fa-0774-4990-893c-a2dd92704bc5",
+        "timestamp": 1795026029997
+      },
+      {
+        "executionId": "693f618d-a70f-4724-b21d-b5c93cc9c3e8",
+        "chatSessionId": "sess_a9a9d6fa-0774-4990-893c-a2dd92704bc5",
+        "timestamp": 1795026225263
+      }
+    ],
+    "8.9 Write property test `packages/agent/test/mask.property.test.ts`": [
+      {
+        "executionId": "693f618d-a70f-4724-b21d-b5c93cc9c3e8",
+        "chatSessionId": "sess_a9a9d6fa-0774-4990-893c-a2dd92704bc5",
+        "timestamp": 1795026030339
+      },
+      {
+        "executionId": "693f618d-a70f-4724-b21d-b5c93cc9c3e8",
+        "chatSessionId": "sess_a9a9d6fa-0774-4990-893c-a2dd92704bc5",
+        "timestamp": 1795026226278
+      }
+    ],
+    "8. Add the Razorpay and Twilio webhook handlers": [
+      {
+        "executionId": "693f618d-a70f-4724-b21d-b5c93cc9c3e8",
+        "chatSessionId": "sess_a9a9d6fa-0774-4990-893c-a2dd92704bc5",
+        "timestamp": 1795026226326
+      }
+    ]
+  }
+}

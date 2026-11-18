@@ -41,3 +41,20 @@ export {
   sendWhatsappPayload,
 } from "./channel/send-draft";
 export type { SendDeps, SendInput, SendOutcome, ToolPayload } from "./channel/send-draft";
+export { handleRazorpayWebhook, razorpayWebhookPayload } from "./webhooks/razorpay";
+export type {
+  RazorpayLogOutcome,
+  RazorpayWebhookDeps,
+  RazorpayWebhookRequest,
+} from "./webhooks/razorpay";
+export { razorpaySignatureValid } from "./webhooks/razorpay-signature";
+export {
+  PAYMENT_LINK_PAID,
+  classifyRazorpayEvent,
+  parseRazorpayEvent,
+  paymentDay,
+} from "./webhooks/razorpay-event";
+export type { ParsedRazorpayEvent, RazorpayOutcome, StoredPayLink } from "./webhooks/razorpay-event";
+export { EMPTY_TWIML, INBOUND_BODY_MAX, handleTwilioInbound, whatsappInboundPayload } from "./webhooks/twilio";
+export type { TwilioInboundDeps, TwilioInboundRequest, WhatsappInboundInput } from "./webhooks/twilio";
+export type { WebhookResponse } from "./webhooks/response";
