@@ -18,11 +18,15 @@ export async function POST(req: Request): Promise<Response> {
   const { db, close } = getDb();
   let result: WebhookResponse;
   try {
-    // Only needed once the handler gets past the 503/401 checks, so skip the lookup without a secret.
-    const demoSupplierId =
-      env.razorpayWebhookSecret === undefined ? null : await findSupplierIdByUdyam(db, DEMO_SUPPLIER.udyamNumber);
+    // Lazy: the handler asks only for a signature-verified paid event, so an unsigned POST costs no query.
+    let demoSupplierId: Promise<string | null> | undefined;
+    const isDemoSupplier = async (supplierId: string): Promise<boolean> => {
+      demoSupplierId ??= findSupplierIdByUdyam(db, DEMO_SUPPLIER.udyamNumber);
+      const id = await demoSupplierId;
+      return id !== null && supplierId === id;
+    };
     result = await handleRazorpayWebhook(
-      { db, env, isDemoSupplier: (supplierId) => demoSupplierId !== null && supplierId === demoSupplierId },
+      { db, env, isDemoSupplier },
       { rawBody, signature, eventId },
     );
   } catch (err) {

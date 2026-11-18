@@ -1,3 +1,4 @@
+import { createHmac } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Feature: whatsapp-channel, Req 6.7, 6.11, 8.4, 8.6, 8.7, 9.15: the webhook routes.
@@ -85,6 +86,8 @@ afterEach(() => {
   vi.restoreAllMocks();
   mocks.close.mockClear();
   mocks.getDb.mockClear();
+  mocks.getDb.mockReset();
+  mocks.getDb.mockImplementation(() => ({ db: mocks.db, close: mocks.close }));
   mocks.revalidatePath.mockClear();
   mocks.findSupplierIdByUdyam.mockClear();
   mocks.razorpay.mockReset();
@@ -131,8 +134,39 @@ describe("POST /api/webhooks/razorpay", () => {
     expect(input.rawBody).toBe(RAW_BODY);
     expect(deps.db).toBe(mocks.db);
     expect(deps.env.razorpayWebhookSecret).toBe("whsec-for-tests");
-    expect(deps.isDemoSupplier("supplier-demo")).toBe(true);
-    expect(deps.isDemoSupplier("supplier-other")).toBe(false);
+    // Lazy: nothing is looked up until the handler asks, and then once for any number of asks.
+    expect(mocks.findSupplierIdByUdyam).not.toHaveBeenCalled();
+    expect(await deps.isDemoSupplier("supplier-demo")).toBe(true);
+    expect(await deps.isDemoSupplier("supplier-other")).toBe(false);
+    expect(mocks.findSupplierIdByUdyam).toHaveBeenCalledTimes(1);
+    expect(mocks.findSupplierIdByUdyam.mock.calls[0]?.[0]).toBe(mocks.db);
+  });
+  it("makes zero db queries for an unsigned or wrong-signature POST", async () => {
+    vi.stubEnv("RAZORPAY_WEBHOOK_SECRET", "whsec-for-tests");
+    const touched: string[] = [];
+    const watched = new Proxy(
+      {},
+      {
+        get: (_target, prop) => {
+          touched.push(String(prop));
+          throw new Error("db must not be used before the signature check");
+        },
+      },
+    );
+    const wrongSignature = createHmac("sha256", "some-other-secret").update(RAW_BODY).digest("hex");
+    for (const headers of [
+      { "x-razorpay-event-id": "evt_1" },
+      { "x-razorpay-signature": "abc", "x-razorpay-event-id": "evt_1" },
+      { "x-razorpay-signature": wrongSignature, "x-razorpay-event-id": "evt_1" },
+    ]) {
+      mocks.getDb.mockReturnValueOnce({ db: watched, close: mocks.close });
+      const res = await razorpayRoute.POST(razorpayRequest(headers));
+      expect(res.status).toBe(401);
+      expect(await res.json()).toEqual({ error: "invalid_signature" });
+    }
+    expect(touched).toEqual([]);
+    expect(mocks.findSupplierIdByUdyam).not.toHaveBeenCalled();
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
   });
 
   it("passes null for missing signature and event id headers", async () => {

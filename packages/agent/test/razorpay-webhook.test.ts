@@ -297,6 +297,31 @@ describe("handleRazorpayWebhook: rejected before any write", () => {
   });
 });
 
+describe("handleRazorpayWebhook: isDemoSupplier is lazy", () => {
+  it("is not called for an unset secret, a missing or wrong signature", async () => {
+    const w = await world();
+    const isDemoSupplier = vi.fn(() => true);
+    const base = signedRequest(paidEvent());
+    const cases = [
+      { d: deps(w, { secret: undefined }), req: base, status: 503 },
+      { d: deps(w), req: { ...base, signature: null }, status: 401 },
+      { d: deps(w), req: { ...base, signature: sign(base.rawBody, "some-other-secret") }, status: 401 },
+    ];
+    for (const c of cases) {
+      const res = await handleRazorpayWebhook({ ...c.d, isDemoSupplier }, c.req);
+      expect(res.status).toEqual(c.status);
+    }
+    expect(isDemoSupplier).not.toHaveBeenCalled();
+  });
+  it("is awaited, with the matching supplier id, when a signed paid event is applied", async () => {
+    const w = await world();
+    const isDemoSupplier = vi.fn(async (supplierId: string) => supplierId === w.supplierId);
+    const res = await handleRazorpayWebhook({ ...deps(w), isDemoSupplier }, signedRequest(paidEvent()));
+    expect(res.status).toEqual(200);
+    expect(isDemoSupplier.mock.calls).toEqual([[w.supplierId]]);
+    expect(await sharmaPaidOn(w)).toEqual("2026-11-12");
+  });
+});
 // ---------------------------------------------------------------------------
 // The paid event
 // ---------------------------------------------------------------------------

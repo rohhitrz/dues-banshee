@@ -20,8 +20,11 @@ export type RazorpayLogOutcome = RazorpayOutcome | "duplicate";
 export interface RazorpayWebhookDeps {
   db: Db;
   env: ChannelEnv;
-  /** True for the demo supplier, whose Payment_Day is the day its link was created. */
-  isDemoSupplier: (supplierId: string) => boolean;
+  /**
+   * True for the demo supplier, whose Payment_Day is the day its link was created. It may query the
+   * database, so the handler calls it only for a signature-verified, new, matching paid event.
+   */
+  isDemoSupplier: (supplierId: string) => boolean | Promise<boolean>;
 }
 
 export interface RazorpayWebhookRequest {
@@ -120,7 +123,7 @@ export async function handleRazorpayWebhook(
         await markPayLinkPaid(tx, link.payLinkId);
         if (outcome === "paid") {
           const day = paymentDay(
-            deps.isDemoSupplier(link.supplierId),
+            await deps.isDemoSupplier(link.supplierId),
             // Rows from before migration 0003 have no created_on: use the payment's own IST day.
             link.createdOn ?? istCalendarDate(event.paid.paymentCreatedAtSec * 1000),
             event.paid.paymentCreatedAtSec,
