@@ -12,11 +12,15 @@ export const FUTURE_TENSE_PATTERNS: readonly RegExp[] = [
   // H1: "{{due_date}} ko due hai"
   /\{\{due_date\}\} (?:ko|tak) due (?:hai|hoga|hogi|ho jayega)(?![\p{L}])/iu,
   // H2: "{{due_date}} tak payment karna hai"
-  /\{\{due_date\}\} (?:ko|tak) (?:payment|bhugtan) (?:karna hai|dena hai|hoga|due hai)(?![\p{L}])/iu,
-  // E1: "is due on {{due_date}}"
-  /(?:is|are|will be|falls|fall) due (?:on|by) \{\{due_date\}\}/iu,
-  // E2: "is payable by {{due_date}}"
-  /(?:is|are|will be) payable (?:on|by) \{\{due_date\}\}/iu,
+  /\{\{due_date\}\} (?:ko|tak) (?:payment|bhugtan) (?:karna hai|karna hoga|dena hai|hoga|due hai|due ho jayega)(?![\p{L}])/iu,
+  // E1: "is due on {{due_date}}", "becomes due on or before {{due_date}}", "is due for payment on {{due_date}}"
+  /(?:is|are|will be|falls|fall|becomes|become) due (?:for payment )?(?:on or before|on|by) \{\{due_date\}\}/iu,
+  // E2: "is payable by {{due_date}}", "is payable on or before {{due_date}}"
+  /(?:is|are|will be) payable (?:on or before|on|by) \{\{due_date\}\}/iu,
+  // E3: "pay {{principal}} by {{due_date}}" (one sentence; also "kindly pay", "clear", "settle")
+  /\b(?:pay|clear|settle)\b[^.!?]*?\b(?:by|before|on or before) \{\{due_date\}\}/iu,
+  // H3: "{{due_date}} tak bhugtan kar dein"
+  /\{\{due_date\}\} (?:tak|se pehle) (?:bhugtan|payment) kar(?:ein| ?dein| ?dijiye|na hoga)(?![\p{L}])/iu,
 ];
 
 /**
