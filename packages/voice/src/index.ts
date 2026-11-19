@@ -25,5 +25,14 @@ export type {
   ParsedArgs,
   RecordPromiseArgsT,
 } from "./tool-schemas";
+export { generateJoinToken, hashToken } from "./token";
+export { handleSession } from "./handlers";
+export type {
+  SessionDeps,
+  SessionErrorBody,
+  SessionResponse,
+  SessionSuccessBody,
+  VoiceHandlerResponse,
+} from "./handlers";
 export { buildInvoiceFacts, checkPromiseAmount } from "./invoice-facts";
 export type { BuildInvoiceFactsResult, InvoiceFacts } from "./invoice-facts";
