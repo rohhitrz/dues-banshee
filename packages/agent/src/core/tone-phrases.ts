@@ -16,7 +16,8 @@ export const THREAT_LIST: readonly string[] = [
   "police",
   "we will sue",
   // Hinglish
-  "warna",
+  "warna baat aage",
+  "warna dekh",
   "dekh lenge",
   "anjaam",
   "bhugatna padega",

@@ -15,7 +15,8 @@ const blocked = (reason: string, offending: string | null) => ({
 
 // The language split is explicit, so a new entry must be classified here on purpose.
 const HINGLISH_THREATS: ReadonlySet<string> = new Set([
-  "warna",
+  "warna baat aage",
+  "warna dekh",
   "dekh lenge",
   "anjaam",
   "bhugatna padega",
@@ -61,11 +62,13 @@ describe("toneCheck list entries", () => {
 
   it("matches whole words only", () => {
     expect(toneCheck(addressed("policy ke hisaab se"), "whatsapp_nudge")).toBeNull();
-    expect(toneCheck(addressed("warnaa"), "whatsapp_nudge")).toBeNull();
+    expect(toneCheck(addressed("warnaa baat aage"), "whatsapp_nudge")).toBeNull();
   });
 
   it.each(LADDER_STEPS)("threat and begging phrases apply on %s", (step) => {
-    expect(toneCheck(addressed("warna"), step)).toEqual(blocked("threat_phrase", "warna"));
+    expect(toneCheck(addressed("warna baat aage"), step)).toEqual(
+      blocked("threat_phrase", "warna baat aage"),
+    );
     expect(toneCheck(addressed("minnat"), step)).toEqual(blocked("begging_phrase", "minnat"));
   });
 });
@@ -109,14 +112,14 @@ describe("toneCheck address rule", () => {
   });
 
   it("runs the threat check before the begging check", () => {
-    expect(toneCheck(addressed("minnat hai, warna"), "whatsapp_nudge")).toEqual(
-      blocked("threat_phrase", "warna"),
+    expect(toneCheck(addressed("minnat hai, warna dekh lenge"), "whatsapp_nudge")).toEqual(
+      blocked("threat_phrase", "warna dekh"),
     );
   });
 
   it("reports the first threat entry in list order when several match", () => {
-    const text = addressed("anjaam bura hoga, warna");
-    expect(toneCheck(text, "whatsapp_nudge")).toEqual(blocked("threat_phrase", "warna"));
+    const text = addressed("anjaam bura hoga, warna dekh lenge");
+    expect(toneCheck(text, "whatsapp_nudge")).toEqual(blocked("threat_phrase", "warna dekh"));
   });
 });
 
@@ -186,6 +189,15 @@ describe("tone lists", () => {
     );
   });
 
+  it("passes a factual use of warna that is not a threat", () => {
+    const lines = [
+      "warna {{interest}} badhta rahega",
+      "warna supplier Facilitation Council mein refer kar sakta hai",
+    ];
+    for (const line of lines) {
+      expect(toneCheck(addressed(line), "legal_notice"), line).toBeNull();
+    }
+  });
   it("passes the accepted courtesy and fact lines", () => {
     const lines = [
       "Kripya {{pay_link}} se bhugtan kar dein.",

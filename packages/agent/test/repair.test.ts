@@ -26,7 +26,7 @@ const BLOCKED_RULE: ModelOutput = {
   ruleIds: ["MSMED-15", "MSMED-99"],
 };
 const BLOCKED_THREAT: ModelOutput = {
-  text: "Namaste {{buyer_name}} ji, {{principal}} ka bhugtan kar dein, warna dikkat hogi.",
+  text: "Namaste {{buyer_name}} ji, {{principal}} ka bhugtan kar dein, warna baat aage badhegi.",
   ruleIds: ["MSMED-15"],
 };
 const BLOCKED_TENSE: ModelOutput = {
@@ -186,19 +186,19 @@ describe("Repair_Call", () => {
     });
   });
 
-  it("repairs a tone block: an addressed warna draft, then a clean one", async () => {
+  it("repairs a tone block: an addressed warna-baat-aage draft, then a clean one", async () => {
     const primary = sequenceModel("mock-haiku", [BLOCKED_THREAT, GOOD]);
     const result = await draftStep({ db: t.db, models: models(primary).set }, input);
 
     expect(result.kind).toEqual("accepted");
     if (result.kind !== "accepted") return;
-    expect(result.draft.bodyText).not.toContain("warna");
+    expect(result.draft.bodyText).not.toContain("warna baat aage");
 
     const rows = await draftStepRows();
     expect(rows.map((r) => r.input.attempt)).toEqual(["initial", "repair"]);
     expect(rows[0]?.output).toEqual({
       modelOutput: BLOCKED_THREAT,
-      citation: { ok: false, reason: "threat_phrase", offending: "warna" },
+      citation: { ok: false, reason: "threat_phrase", offending: "warna baat aage" },
     });
     expect(rows[1]?.output).toEqual({
       modelOutput: GOOD,
@@ -207,7 +207,7 @@ describe("Repair_Call", () => {
 
     const second = primary.doGenerateCalls[1];
     if (second === undefined) throw new Error("expected a repair call");
-    expect(promptText(second)).toContain('"repair":{"reason":"threat_phrase","offending":"warna"}');
+    expect(promptText(second)).toContain('"repair":{"reason":"threat_phrase","offending":"warna baat aage"}');
   });
 
   it("fails with citation_blocked when both outputs speak of an overdue due date in the future tense", async () => {
