@@ -12,6 +12,7 @@ const BASE: DraftPromptInput = {
   allowed: ALLOWED,
   hasBankRate: true,
   caveat: undefined,
+  overdue: false,
   buyerName: "Sharma Traders",
   invoiceNumber: "LPC/26-27/0412",
 };
@@ -101,5 +102,24 @@ describe("draftPrompt", () => {
     expect(withRule.system).toContain("cite MSMED-2B");
     expect(dataBlock(withRule.prompt).rule_sources).toHaveProperty("MSMED-2B", RULE_SOURCES["MSMED-2B"]);
     expect(draftPrompt(BASE).system).not.toContain("cite MSMED-2B");
+  });
+
+  it("adds the Tense section with Hinglish and English examples only when overdue", () => {
+    const { system } = draftPrompt({ ...BASE, overdue: true });
+    expect(system).toContain("Tense:");
+    expect(system).toContain("The due date has passed. Write of it in the past tense");
+    expect(system).toContain('"{{due_date}} ko due tha"');
+    expect(system).toContain('"was due on {{due_date}}"');
+    // The section follows the Figures section.
+    expect(system.indexOf("Tense:")).toBeGreaterThan(system.indexOf("Figures:"));
+
+    const notOverdue = draftPrompt({ ...BASE, overdue: false }).system;
+    expect(notOverdue).not.toContain("Tense:");
+    expect(notOverdue).not.toContain("ko due tha");
+    expect(notOverdue).not.toContain("was due on");
+  });
+
+  it("leaves the data block the same whether or not the invoice is overdue", () => {
+    expect(draftPrompt({ ...BASE, overdue: true }).prompt).toEqual(draftPrompt({ ...BASE, overdue: false }).prompt);
   });
 });

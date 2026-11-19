@@ -10,6 +10,8 @@ export interface DraftPromptInput {
   allowed: readonly RuleId[];
   hasBankRate: boolean;
   caveat: Caveat | undefined;
+  /** True when the invoice's due date has passed: the draft must then speak of it in the past tense. */
+  overdue: boolean;
   /** Untrusted text: only ever placed in the data block, never in `system`. */
   buyerName: string;
   /** Untrusted text: only ever placed in the data block, never in `system`. */
@@ -92,6 +94,14 @@ function buildSystem(input: DraftPromptInput): string {
   }
   if (!input.hasBankRate) {
     lines.push("- No bank rate is available, so do not mention interest or the rate.");
+  }
+
+  if (input.overdue) {
+    lines.push(
+      "",
+      "Tense:",
+      '- The due date has passed. Write of it in the past tense, for example "{{due_date}} ko due tha" or "was due on {{due_date}}".',
+    );
   }
 
   lines.push(

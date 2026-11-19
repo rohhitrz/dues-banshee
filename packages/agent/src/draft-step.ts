@@ -1,10 +1,10 @@
 import { logToolCall } from "@dues-banshee/db";
 import type { Db, LadderRecord, NewDraft, Supplier } from "@dues-banshee/db";
-import { RULE_IDS } from "@dues-banshee/engine";
+import { RULE_IDS, dueDate } from "@dues-banshee/engine";
 import type { BankRate, CalendarDate, EscalationDecision } from "@dues-banshee/engine";
 import { allowedRuleIds } from "./core/allowed-rule-ids";
-import { validateCitations } from "./core/citations";
 import type { CitationResult } from "./core/citations";
+import { guardDraft } from "./core/draft-guard";
 import { buildFactSheet, fillPlaceholders } from "./core/fact-sheet";
 import { buildFinalText } from "./core/final-text";
 import type { DraftLanguage, ModelOutput } from "./core/model-output";
@@ -91,11 +91,15 @@ async function attemptDraft(
   // 1. Allowed rule IDs, Fact_Sheet and prompt.
   const allowed = allowedRuleIds(record, decision, today, bankRate);
   const facts = buildFactSheet(record, today, bankRate);
+  const due = dueDate(record.invoice);
+  const overdue = due.applicable && today > due.dueDate;
+  const guardCtx = { step, allowed, ruleIds: RULE_IDS, bankRateExists: bankRate !== null, overdue };
   const promptBase = {
     step,
     language,
     allowed,
     hasBankRate: bankRate !== null,
+    overdue,
     caveat: decision.caveat,
     buyerName: record.buyerName,
     invoiceNumber: record.invoiceNumber,
@@ -114,7 +118,7 @@ async function attemptDraft(
   // 3. Validate; on a block make one Repair_Call on the same model key, with no fallback.
   let output: ModelOutput = first.output;
   let modelId = first.modelId;
-  let citation = validateCitations(output, allowed, RULE_IDS, bankRate !== null);
+  let citation = guardDraft(output, guardCtx);
   setCitation(rows, citation);
   if (!citation.ok) {
     const repair = await callModel(
@@ -126,7 +130,7 @@ async function attemptDraft(
     if (!repair.ok) return { kind: "failed", errorKind: repair.errorKind };
     output = repair.output;
     modelId = repair.modelId;
-    citation = validateCitations(output, allowed, RULE_IDS, bankRate !== null);
+    citation = guardDraft(output, guardCtx);
     setCitation(rows, citation);
     if (!citation.ok) return { kind: "failed", errorKind: "citation_blocked" };
   }

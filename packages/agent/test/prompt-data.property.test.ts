@@ -59,13 +59,15 @@ describe("Property 8: Untrusted text stays inside the data block", () => {
         fc.uniqueArray(fc.constantFrom(...RULE_IDS), { minLength: 1 }),
         fc.boolean(),
         fc.constantFrom("registered_after_supply" as const, undefined),
-        (buyerName, invoiceNumber, repair, step, language, allowed, hasBankRate, caveat) => {
+        fc.boolean(),
+        (buyerName, invoiceNumber, repair, step, language, allowed, hasBankRate, caveat, overdue) => {
           const { system, prompt } = draftPrompt({
             step,
             language,
             allowed,
             hasBankRate,
             caveat,
+            overdue,
             buyerName,
             invoiceNumber,
             repair,
