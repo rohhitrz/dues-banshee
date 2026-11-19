@@ -62,12 +62,23 @@ const ALL_SOURCES = ["apps", "packages"].flatMap((d) => listSources(join(REPO_RO
  * matched as the `gpt-realtime` / `gpt-live-transcribe` family so a renamed variant cannot slip in.
  */
 const VOICE_MODEL_ID = /(?<![\w-])(?:gpt-realtime(?:-[\w.]+)*|gpt-live-transcribe)(?![\w-])/g;
-/** Banned_Model_IDs. A longer name that merely starts with one of them (`tts-1-hd-x`, `whisper-10`) is not a match. */
-const BANNED_MODEL_ID = /(?<![\w-])(?:gpt-4o-transcribe|whisper-1|tts-1-hd|tts-1|gpt-4o-mini-tts)(?![\w.-])/g;
+/**
+ * Banned_Model_IDs. A longer name that merely starts with one of them (`tts-1-hd-x`, `whisper-10`) is not a
+ * match. A trailing `.` does not hide an ID: `whisper-1.` and `tts-1.x` are caught. The one exception, a file
+ * name in a URL path, is `isUrlFileName`.
+ */
+const BANNED_MODEL_ID = /(?<![\w-])(?:gpt-4o-transcribe|whisper-1|tts-1-hd|tts-1|gpt-4o-mini-tts)(?![\w-])/g;
+
+/** True for a banned-looking name that is a file in a URL path (`https://example.com/tts-1.mp3`), not a model ID. */
+function isUrlFileName(source: string, match: RegExpMatchArray): boolean {
+  const start = match.index ?? 0;
+  return source[start - 1] === "/" && /^\.[A-Za-z0-9]{2,4}(?![\w])/.test(source.slice(start + match[0].length));
+}
 
 /** Model IDs named in `source`, in order of appearance. */
 function findModelIds(source: string): string[] {
-  return [...source.matchAll(VOICE_MODEL_ID), ...source.matchAll(BANNED_MODEL_ID)]
+  const banned = [...source.matchAll(BANNED_MODEL_ID)].filter((m) => !isUrlFileName(source, m));
+  return [...source.matchAll(VOICE_MODEL_ID), ...banned]
     .sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
     .map((m) => m[0]);
 }
@@ -94,6 +105,19 @@ describe("model ID scanner", () => {
       "tts-1-hd",
       "gpt-4o-mini-tts",
     ]);
+  });
+
+  it("catches a banned ID followed by a dot, as at the end of a sentence or in a version", () => {
+    expect(findModelIds("// do not use whisper-1.")).toEqual(["whisper-1"]);
+    expect(findModelIds('const m = "tts-1.x";')).toEqual(["tts-1"]);
+    expect(findModelIds("Never gpt-4o-transcribe. Or tts-1-hd.")).toEqual(["gpt-4o-transcribe", "tts-1-hd"]);
+  });
+
+  it("lets a file name in a URL path through, but not the same text outside a URL", () => {
+    expect(findModelIds('const e = "https://example.com/tts-1.mp3";')).toEqual([]);
+    expect(findModelIds('const e = "https://example.com/audio/whisper-1.wav";')).toEqual([]);
+    expect(findModelIds('const e = "tts-1.mp3";')).toEqual(["tts-1"]);
+    expect(findModelIds('const e = "https://example.com/tts-1";')).toEqual(["tts-1"]);
   });
 
   it("reports tts-1-hd once, not also as tts-1", () => {
@@ -182,12 +206,17 @@ function hasDirective(source: string, directive: "use client" | "use server"): b
   return new RegExp(`^(?:\\s|//[^\\n]*\\n|/\\*[\\s\\S]*?\\*/)*["']${directive}["']`).test(source);
 }
 
+/**
+ * Files under `apps/web/lib/call/` that the browser bundles. Listed by name, not by folder: `start-call.ts`,
+ * `callable.ts` and `call-copy.ts` sit in the same folder but are not browser files by folder.
+ */
+const CLIENT_LIB_FILES = new Set(["apps/web/lib/call/call-session.ts", "apps/web/lib/call/realtime-events.ts"]);
+
 /** Files that run in the browser: never allowed to name the key. */
 function isClientFile(file: string, source: string): boolean {
   return (
     hasDirective(source, "use client") ||
-    file.endsWith("/call-client.tsx") ||
-    file.startsWith("apps/web/lib/call/") ||
+    CLIENT_LIB_FILES.has(file) ||
     file.startsWith("apps/web/components/") ||
     file.startsWith("apps/web/app/(call)/")
   );
@@ -237,9 +266,16 @@ describe("OPENAI_API_KEY scanner", () => {
     expect(isServerFile("packages/voice/src/handlers.ts", "export {};")).toBe(true);
     expect(isServerFile("apps/web/app/(call)/call/[token]/call-client.tsx", '"use client";')).toBe(false);
     expect(isServerFile("apps/web/lib/call/call-session.ts", "export {};")).toBe(false);
+    expect(isServerFile("apps/web/lib/call/realtime-events.ts", "export {};")).toBe(false);
     expect(isServerFile("apps/web/components/debtor/start-call-controls.tsx", "export {};")).toBe(false);
     expect(isServerFile("apps/web/app/(call)/call/[token]/page.tsx", "export {};")).toBe(false);
     expect(isServerFile("apps/web/app/(app)/page.tsx", "export {};")).toBe(false);
+    // Not browser files by folder any more: the rest of lib/call/ is classified like the rest of lib/.
+    for (const file of ["start-call.ts", "callable.ts", "call-copy.ts"]) {
+      expect(isClientFile(`apps/web/lib/call/${file}`, "export {};")).toBe(false);
+      expect(isServerFile(`apps/web/lib/call/${file}`, "export {};")).toBe(true);
+    }
+    expect(isClientFile("apps/web/lib/call/start-call.ts", '"use client";\nexport {};')).toBe(true);
     expect(isServerFile("apps/web/next.config.ts", "export {};")).toBe(false);
   });
 });
@@ -254,7 +290,7 @@ describe("OPENAI_API_KEY is read only in server files (Req 3.3, 10.1, 11.11)", (
     expect(readers).toContain("packages/agent/scripts/live-check.ts");
   });
 
-  it("is never named in a client file, call-client.tsx or apps/web/lib/call/*", () => {
+  it("is never named in a client file (a \"use client\" file, call-session.ts, realtime-events.ts, components/, app/(call)/)", () => {
     const offenders = ALL_SOURCES.filter((file) => isClientFile(file, read(file)) && readsOpenAiKey(read(file)));
     expect(offenders).toEqual([]);
   });
@@ -277,5 +313,122 @@ describe("OPENAI_API_KEY is read only in server files (Req 3.3, 10.1, 11.11)", (
   it("is not exposed through the `env` block of next.config", () => {
     const config = stripComments(read("apps/web/next.config.ts"));
     expect(/OPENAI_API_KEY|VOICE_REALTIME_MODEL/.test(config)).toBe(false);
+  });
+});
+
+// --- browser files import no server code (design: Call_Client) --------------------------------------------------
+
+/** The browser files that hold the call UI and the session. Listed by name: the check must not skip one by accident. */
+const BROWSER_CALL_FILES = [
+  "apps/web/lib/call/call-session.ts",
+  "apps/web/lib/call/realtime-events.ts",
+  "apps/web/app/(call)/call/[token]/call-client.tsx",
+  "apps/web/components/debtor/start-call-controls.tsx",
+];
+
+/** Value imports these files may make. The server action file is "use server": the browser gets a reference only. */
+const ALLOWED_VALUE_IMPORTS = new Set([
+  "react",
+  "./realtime-events",
+  "@/lib/call/call-session",
+  "@/lib/call/call-copy",
+  "@/app/(debtor)/debtors/[id]/call-actions",
+]);
+
+interface ImportRef {
+  specifier: string;
+  /** `import type …` or `export type … from`: erased at build time. `import { type X }` is not. */
+  typeOnly: boolean;
+}
+
+/** Static imports, `export … from` and dynamic `import("…")` in `source`, comments removed. */
+function findImports(source: string): ImportRef[] {
+  const code = stripComments(source);
+  const refs: ImportRef[] = [];
+  for (const m of code.matchAll(/\b(?:import|export)\s+(type\s+)?(?:[^;"'`]*?\bfrom\s*)?["']([^"']+)["']/g)) {
+    refs.push({ specifier: m[2] ?? "", typeOnly: m[1] !== undefined });
+  }
+  for (const m of code.matchAll(/\bimport\s*\(\s*["']([^"']+)["']\s*\)/g)) {
+    refs.push({ specifier: m[1] ?? "", typeOnly: false });
+  }
+  return refs;
+}
+
+/** Why a browser file's imports are not allowed. Empty when they are. */
+function browserImportProblems(source: string): string[] {
+  const problems: string[] = [];
+  for (const { specifier, typeOnly } of findImports(source)) {
+    if (typeOnly) continue;
+    if (specifier.startsWith("@dues-banshee/")) {
+      problems.push(`${specifier}: must be \`import type\``);
+    } else if (!ALLOWED_VALUE_IMPORTS.has(specifier) && !/\.module\.css$/.test(specifier)) {
+      problems.push(`${specifier}: value import not allowed`);
+    }
+  }
+  return problems;
+}
+
+describe("browser import scanner", () => {
+  it("accepts type-only package imports and the allowed value imports", () => {
+    const ok = [
+      '"use client";',
+      'import { useEffect, useRef } from "react";',
+      'import type { Db } from "@dues-banshee/db";',
+      'import { routeRealtimeEvent } from "./realtime-events";',
+      "import {",
+      "  CALL_COPY,",
+      "  type CallView,",
+      '} from "@/lib/call/call-copy";',
+      'import { startCall, type StartCallView } from "@/app/(debtor)/debtors/[id]/call-actions";',
+      'import { startCallSession } from "@/lib/call/call-session";',
+      'import type { StartCallControlsData } from "@/lib/debtor/build-start-call-controls";',
+      'import styles from "./call-client.module.css";',
+      '// import { handleEnd } from "@dues-banshee/voice";',
+      "export const A = 1;",
+    ].join("\n");
+    expect(findImports(ok).map((i) => i.specifier)).toEqual([
+      "react",
+      "@dues-banshee/db",
+      "./realtime-events",
+      "@/lib/call/call-copy",
+      "@/app/(debtor)/debtors/[id]/call-actions",
+      "@/lib/call/call-session",
+      "@/lib/debtor/build-start-call-controls",
+      "./call-client.module.css",
+    ]);
+    expect(browserImportProblems(ok)).toEqual([]);
+  });
+
+  it("fails a sample with a value import from @dues-banshee/*, however it is written", () => {
+    expect(browserImportProblems('import { handleEnd } from "@dues-banshee/voice";')).toEqual([
+      "@dues-banshee/voice: must be `import type`",
+    ]);
+    // An inline `type` keeps a side-effect import under verbatimModuleSyntax: not allowed.
+    expect(browserImportProblems('import { type Db } from "@dues-banshee/db";')).toEqual([
+      "@dues-banshee/db: must be `import type`",
+    ]);
+    expect(browserImportProblems('import "@dues-banshee/agent";')).toEqual(["@dues-banshee/agent: must be `import type`"]);
+    expect(browserImportProblems('export { x } from "@dues-banshee/engine";')).toEqual([
+      "@dues-banshee/engine: must be `import type`",
+    ]);
+    expect(browserImportProblems('const m = await import("@dues-banshee/db");')).toEqual([
+      "@dues-banshee/db: must be `import type`",
+    ]);
+  });
+
+  it("fails a sample with a value import outside the allowed list", () => {
+    expect(browserImportProblems('import { getDb } from "@/lib/db";')).toEqual(["@/lib/db: value import not allowed"]);
+    expect(browserImportProblems('import { revalidatePath } from "next/cache";')).toEqual([
+      "next/cache: value import not allowed",
+    ]);
+    expect(browserImportProblems('import { x } from "./start-call";')).toEqual(["./start-call: value import not allowed"]);
+  });
+});
+
+describe("browser call files import no server code", () => {
+  it.each(BROWSER_CALL_FILES)("%s imports @dues-banshee/* as types only and nothing else but the allowed values", (file) => {
+    expect(ALL_SOURCES).toContain(file);
+    expect(isClientFile(file, read(file))).toBe(true);
+    expect(browserImportProblems(read(file))).toEqual([]);
   });
 });
