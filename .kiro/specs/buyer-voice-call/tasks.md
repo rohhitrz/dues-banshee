@@ -120,31 +120,35 @@ Commit rule (git-workflow steering): each parent task ends with one Conventional
     - _Requirements: 11.12_
     - Notes: The doc's first step is: Rohit runs `set -a; source apps/web/.env.local; set +a` then `pnpm --filter ./packages/db db:migrate` from the repo root. Do not push.
 
-- [ ] 7. Debtor_Page polish
-  - [ ] 7.1 Add call entries, voice promise text and the call details
+- [x] 7. Debtor_Page polish
+  - [x] 7.1 Add call entries, voice promise text and the call details
     - `EntryKind` `call`, `KIND_RANK`, `CALL_OUTCOME_TEXT satisfies Record<CallOutcome, string>`, `m:ss`, calls after Today excluded; promise text "(by voice)", "(by voice, partial)", " (replaced)" over Visible_Promises; `listBuyerVoiceCalls` (stale-end first, scoped via `invoices.supplier_id`) in `lib/debtor/load.ts`; closed `<details>` with escaped transcript lines and tool calls. Graveyard wisp unchanged (open item 1).
     - _Requirements: 7.3, 8.4, 9.3, 9.4, 9.5, 9.7_
-  - [ ] 7.2 Add "Promise due today" and confirm revalidation
+  - [x] 7.2 Add "Promise due today" and confirm revalidation
     - `build-debtor-view.ts`: "Promise to pay active until <D MMM YYYY>" only when `activePromiseUntil > today`, "Promise due today" when equal; update `apps/web/test/debtor-view.test.ts` for the new rule; confirm the tool and end routes revalidate `/` and `/debtors/<Buyer_Id>`.
     - _Requirements: 9.6, 9.8, 9.9_
-  - [ ] 7.3 Write property tests for the timeline and the promise text
+  - [x] 7.3 Write property tests for the timeline and the promise text
     - **Property 7: Timeline promise and call entries** (`apps/web/test/candle-timeline.property.test.ts`) — **Validates: Requirements 9.3, 9.4**
     - **Property 8: Promise text on the Invoice_Panel** (`apps/web/test/debtor-view.property.test.ts`) — **Validates: Requirements 9.8, 9.9**
-  - [ ] 7.4 Write Debtor_Page tests
+  - [x] 7.4 Write Debtor_Page tests
     - `debtor-page.test.tsx`: after a voice promise `2026-11-12` → `2026-11-20`, "Promise to pay active until 20 Nov 2026" and "Promised <formatINR(41712794)> by 20 Nov 2026 (by voice)"; at Today `2026-11-20` "Promise due today" and not the active text; each `call` entry text; details closed by default; transcript text escaped; another supplier's calls absent.
     - _Requirements: 8.4, 9.3–9.9, 11.5, 11.11_
 
-- [ ] 8. Voice lint and proxy test
-  - [ ] 8.1 Write `apps/web/test/voice-lint.test.ts`
+- [x] 8. Voice lint and proxy test
+  - [x] 8.1 Write `apps/web/test/voice-lint.test.ts`
     - Scan non-test `.ts/.tsx/.js/.mjs` under `apps/` and `packages/` (excluding `models.ts`, tests, Markdown, build output) for Realtime_Model / Transcribe_Model IDs and Banned_Model_IDs; no `package.json` lists `@openai/agents`; `OPENAI_API_KEY` read only in server files.
     - _Requirements: 3.3, 3.6, 3.8, 3.9, 10.1, 11.11_
-  - [ ] 8.2 Write `apps/web/test/proxy.test.ts`
+    - Notes: New file; do not edit lint.test.ts or money-lint.test.ts. Walk dirs with node:fs, skipping node_modules, .next, dist, test-results, e2e, any test/ dir, *.test.*, *.spec.*, *.d.ts and Markdown; strip comments before matching. Only packages/agent/src/models.ts may contain gpt-realtime-2.1-mini, gpt-realtime-2.1 or gpt-live-transcribe; no scanned file may contain a Banned_Model_ID. Key rule: a file whose code (comments stripped) contains OPENAI_API_KEY fails if it has "use client", sits under components/ or under app/(call)/; today's readers (call-actions.ts, api/voice/session/route.ts, lib/debtor/build-start-call-controls.ts, packages/agent/scripts/live-check.ts) must pass. Check every package.json (root, apps/*, packages/*) for @openai/agents in all dependency fields. Non-vacuous guards: scanned file count > 50, models.ts matches the ID pattern, a sample "use client" snippet using the key is flagged.
+  - [x] 8.2 Write `apps/web/test/proxy.test.ts`
     - Signed out: `/` and `/debtors/<id>` redirect to `/signin`; `/call/<token>` and `/api/voice/{session,tool,transcript,end}` not redirected; matcher unchanged.
     - _Requirements: 10.3, 11.10_
+    - Notes: Add a new describe block "proxy: voice routes" to the existing apps/web/test/proxy.test.ts; do not rewrite or remove existing tests and do not edit proxy.ts. Signed out: proxyHandler(fakeRequest(url, null, null)) for / and /debtors/<uuid> redirects to /signin. Not redirected: reuse the patternToRegExp/matchedBy helper from the "webhook routes are not guarded" block (lift it to file scope if needed) and assert matchedBy returns [] for /call/<token>, /api/voice/session, /api/voice/tool, /api/voice/transcript, /api/voice/end. "Matcher unchanged" = the existing config.matcher toEqual test stays as is.
 
-- [ ] 9. Final checkpoint: ensure all tests pass
+
+- [x] 9. Final checkpoint: ensure all tests pass
   - Run test, typecheck and lint in `packages/engine`, `packages/db`, `packages/agent`, `packages/voice` and `apps/web` with zero failures and zero errors; ask the user if questions arise.
   - _Requirements: 11.13_
+  - Notes: Also run `pnpm --filter web build`. Then ask the user to start `pnpm --filter web dev` in a separate terminal and run `pnpm --filter web e2e` (task 7 changed the debtor page). Do not push. Do not commit tasks.md or tasks.meta.json.
 
 ## Notes
 

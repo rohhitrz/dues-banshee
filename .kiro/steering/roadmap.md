@@ -41,7 +41,7 @@ Sharma Traders tombstone → escalation draft approved by the owner → WhatsApp
 - **Twilio inbound webhook:** signature-verified, log only.
 - **Roadmap (auto-send):** after Meta business verification succeeds, add an automatic sender (Meta Cloud API or a Twilio/BSP-registered sender) behind the same interface. Not in the hackathon scope.
 
-### 5. buyer-voice-call — risky tier, Supervised, 2 reviews (SHRUNK 19 Nov: happy path, target ≤ ~250 credits)
+### 5. buyer-voice-call — risky tier, Supervised, 2 reviews (DONE 19 Nov, ~410 credits)
 - **Why:** differentiates from Vasuli (WhatsApp/email/SMS only, no voice); the Innovation + Presentation demo moment.
 - **Flow:** owner clicks "Start call" on the debtor page (10:00–19:00 IST, Mon–Sat, max 1 call per buyer per day) → server creates a `voice_calls` row bound to the invoice + single-use token (10 min) → owner sends the link with the existing wa.me button, or opens it on the same laptop → `/call/[token]`: buyer taps "Join call".
 - **Connection:** server mints an ephemeral key (`POST /v1/realtime/client_secrets`, `expires_after` 60 s, `Cache-Control: no-store`) holding all session config: instructions from `voice-persona.md`, tools, voice `marin`, input transcription, `semantic_vad`. Browser: hand-rolled RTCPeerConnection + mic + `oai-events` data channel, SDP to `/v1/realtime/calls`. No `@openai/agents`. The standard key never reaches the browser. Behind `VoiceProvider` (Sarvam / GPT-Live = future providers).
@@ -58,6 +58,7 @@ Sharma Traders tombstone → escalation draft approved by the owner → WhatsApp
 - **Kill rule:** reliable on the live site by 24 Nov, else demo on one laptop only; still flaky on 26 Nov → leave it out of the video.
 - **Non-goals:** PSTN, server sideband connection, owner review of promises, DNC list, dispute tool, raw audio storage, GPT-Live.
 - **Persona:** `.kiro/steering/voice-persona.md`, buyer-facing section only (owner-facing commands are cut). Its "consent flag" = the buyer hearing the AI + recording disclosure and not objecting; an objection ends the call (outcome `consent_declined`).
+- **Deferred to polish:** a failed key mint uses up the buyer's 1-per-day call; the demo 20/day cap is checked at link creation, so it can be exceeded by one call per buyer; no server-side cap on the OpenAI session itself (client countdown only, accepted); a link made at 18:59 can be joined after 19:00; join token in host access logs (single-use, 10 min, accepted); "one paise" → "one paisa"; trim polite filler lines before tool calls.
 
 
 ### 6. guardrails-evals — risky-lite tier, Supervised, 1 review
