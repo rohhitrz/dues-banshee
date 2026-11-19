@@ -10,14 +10,16 @@ The calls happen over the internet, not the phone network. No raw audio is store
 
 Context, not a requirement: the kill rule in `roadmap.md` (reliable on the live site by 24 Nov, else a one-laptop demo; still flaky on 26 Nov, then left out of the video).
 
-Tests are mandatory in this spec. No test task may be marked optional. The manual live check (Requirement 11 criterion 9) is a manual step outside the test suite, and it is not a test task.
+Tests are mandatory in this spec. No test task may be marked optional. The manual live check (Requirement 11 criterion 12) is a manual step outside the test suite, and it is not a test task.
+
+Size constraint: design.md stays lean and tasks.md plans at most 10 parent tasks. Target cost: about 250 credits or less.
 
 Non-goals: PSTN calls; a server sideband connection to the Realtime session; `@openai/agents`; owner review of promises; a do-not-call list; a dispute tool that records dispute details; raw audio storage; GPT-Live; owner-facing voice commands; Sarvam (only the interface seam is built); changes to the Engine ladder rules.
 
 ## Glossary
 
 - **Engine**, **Decision**, **Engine_History**, **Escalation_Event**, **Approved_Step_Event**, **Tool_Log**, **Disclaimer**, **Session_Supplier**, **Stale_Session**, **Demo_Seed**, **Ladder_Runner**, **Ladder_Run**, **Approval_Queue**: as defined in `.kiro/specs/escalation-ladder/requirements.md`.
-- **Debtor_Page**, **Invoice_Panel**, **Today**, **Candle_Timeline**, **Timeline_Entry**, **Entry_Kind**, **Buyer_Id**, **Own_Buyer**, **Placeholder_Buttons**, **Active_Promise_Helper**, **Promise_Until_Helper**: as defined in `.kiro/specs/debtor-ui/requirements.md`.
+- **Debtor_Page**, **Invoice_Panel**, **Today**, **Candle_Timeline**, **Timeline_Entry**, **Entry_Kind**, **Buyer_Id**, **Own_Buyer**, **Placeholder_Buttons**, **Active_Promise_Helper**, **Promise_Until_Helper**, **Promise_Until_Date**: as defined in `.kiro/specs/debtor-ui/requirements.md`.
 - **Debtor_Invoice**: as defined in `.kiro/specs/debtor-ui/requirements.md`.
 - **WaMe_Link**, **Message_Channel**, **Send_Check**: as defined in `.kiro/specs/whatsapp-channel/requirements.md`.
 - **Demo_Override**, **Tombstone_State**, **Graveyard_Page**, **Days_Overdue**, **Bank_Rate**: as defined in `.kiro/specs/dashboard-ui/requirements.md`.
@@ -28,6 +30,10 @@ Non-goals: PSTN calls; a server sideband connection to the Realtime session; `@o
 - **Call_Page**: the page `/call/[token]` in `apps/web`, open without sign-in, where the buyer taps "Join call".
 - **Session_Endpoint**: the `apps/web` route that accepts a join for a Join_Token, atomically sets the Voice_Call `live` and returns the Ephemeral_Key.
 - **End_Report**: the Call_Client's request telling the server the call ended, carrying the `voiceCallId` and the Join_Token.
+- **Call_Page_URL**: `<origin>/call/<Join_Token>`, where `<origin>` is the origin (scheme, host and port) of the owner's start-call request.
+- **Demo_Supplier**: the Demo_Seed supplier, `DEMO_SUPPLIER` in `packages/db/src/seed.ts` (name "Laxmi Precision Components (Demo)", Udyam number `UDYAM-MH-00-0000000`), identified by its Udyam number.
+- **Demo_Call_Limit**: 20 Voice_Calls of the Demo_Supplier, counted over all its invoices, whose `started_at` falls on the Call_Day.
+- **Demo_Hours_Text**: the text "Demo account: call hours not enforced. Real accounts: 10:00–19:00 IST, Monday to Saturday."
 - **Call_Window**: 10:00 to 19:00 Asia/Kolkata time (10:00 inclusive, 19:00 exclusive), Monday to Saturday, read from the current instant (the real clock, not the Demo_Override).
 - **Call_Day**: the Asia/Kolkata calendar date of the current instant when a call is started.
 - **Call_Cap**: 5 minutes (300 seconds) from the Voice_Call `started_at`.
@@ -49,6 +55,8 @@ Non-goals: PSTN calls; a server sideband connection to the Realtime session; `@o
 - **Current_Promise**: a `promises` row of an invoice with `superseded_on` null.
 - **Visible_Promise**: a `promises` row whose `recorded_on` is on or before Today.
 - **Replaced_Promise**: a Visible_Promise whose `superseded_on` is on or before Today.
+- **Agent_Date**: a date written as `<Weekday>, D MMM YYYY` with the English weekday name (for example "Friday, 20 Nov 2026").
+- **Date_List**: the list of every Promise_Window date, in ascending order, each written as an Agent_Date, computed on the server with the `packages/engine` date functions.
 - **Persona_Instructions**: the instructions text in `packages/voice`, built from the buyer-facing section of `.kiro/steering/voice-persona.md` and Requirement 6.
 - **Transcript_Line**: one stored line of a Voice_Call: speaker (`buyer` or `agent`), text, Realtime item id and time, from the Realtime events `conversation.item.input_audio_transcription.completed` (buyer) and `response.output_audio_transcript.done` (agent).
 - **Call_Copy**: the text "AI call over the internet. Phone (PSTN) calls are on the roadmap."
@@ -61,19 +69,22 @@ Non-goals: PSTN calls; a server sideband connection to the Realtime session; `@o
 
 #### Acceptance Criteria
 
-1. WHILE an Invoice_Panel shows a Callable_Invoice and `OPENAI_API_KEY` and `PUBLIC_BASE_URL` are both set and not empty, THE Invoice_Panel SHALL show "Start call" as an enabled `<button>` in place of the disabled "Start call" Placeholder_Button, with the Call_Copy and the Disclaimer inside the same Invoice_Panel.
+1. WHILE an Invoice_Panel shows a Callable_Invoice and `OPENAI_API_KEY` is set and not empty, THE Invoice_Panel SHALL show "Start call" as an enabled `<button>` in place of the disabled "Start call" Placeholder_Button, with the Call_Copy and the Disclaimer inside the same Invoice_Panel.
 2. IF the Invoice_Panel's invoice is not a Callable_Invoice, THEN THE Invoice_Panel SHALL show "Start call" with the `disabled` attribute and the text "No call needed for this invoice", linked through `aria-describedby`.
-3. IF `OPENAI_API_KEY` or `PUBLIC_BASE_URL` is unset or empty, THEN THE Invoice_Panel SHALL show "Start call" with the `disabled` attribute and the text "Voice calls not configured", linked through `aria-describedby`, and THE Debtor_Page SHALL render without HTTP 500.
-4. WHEN the owner clicks "Start call" for a Callable_Invoice inside the Call_Window and the Own_Buyer has no Voice_Call whose `started_at` falls on the Call_Day, THE start-call server action SHALL create one Voice_Call with status `created`, `call_today` = Today, a new Join_Token expiring 10 minutes later, and the invoice and Own_Buyer ids, and SHALL set every earlier `created` Voice_Call of that Own_Buyer, for any invoice, to `expired`.
-5. IF the owner clicks "Start call" outside the Call_Window, THEN THE start-call server action SHALL create no Voice_Call and show "Calls are allowed 10:00–19:00 IST, Monday to Saturday" with `role="alert"`.
-6. IF the Own_Buyer already has a Voice_Call whose `started_at` falls on the Call_Day in Asia/Kolkata time, THEN THE start-call server action SHALL create no Voice_Call and show "This buyer was already called today" with `role="alert"`.
+3. IF `OPENAI_API_KEY` is unset or empty, THEN THE Invoice_Panel SHALL show "Start call" with the `disabled` attribute and the text "Voice calls not configured", linked through `aria-describedby`, and THE Debtor_Page SHALL render without HTTP 500.
+4. WHEN the owner clicks "Start call" for a Callable_Invoice and no refusal of criterion 13 applies, THE start-call server action SHALL create one Voice_Call with status `created`, `call_today` = Today, a new Join_Token expiring 10 minutes later, and the invoice and Own_Buyer ids, and SHALL set every earlier `created` Voice_Call of that Own_Buyer, for any invoice, to `expired`.
+5. IF the Session_Supplier is not the Demo_Supplier and the owner clicks "Start call" outside the Call_Window, THEN THE start-call server action SHALL create no Voice_Call and show "Calls are allowed 10:00–19:00 IST, Monday to Saturday" with `role="alert"`.
+6. IF the Session_Supplier is not the Demo_Supplier and the Own_Buyer already has a Voice_Call whose `started_at` falls on the Call_Day in Asia/Kolkata time, THEN THE start-call server action SHALL create no Voice_Call and show "This buyer was already called today" with `role="alert"`.
 7. THE start-call server action SHALL read only the invoice id and the optional Demo_Override `today` field from the request, take the supplier id only from `session.supplierId`, and resolve Today as the Debtor_Page does.
 8. IF the start-call server action is reached with no session `supplierId` or with a Stale_Session, THEN THE action SHALL create no Voice_Call, SHALL NOT respond with HTTP 500, and SHALL redirect to `/signin` or `/signin?error=SessionExpired` respectively.
-9. WHEN a Voice_Call is created, THE response to that click SHALL show in the Invoice_Panel the Call_Page URL (`<PUBLIC_BASE_URL>/call/<Join_Token>`), an "Open call here" link to that URL, and a "Send call link in WhatsApp" control that opens a WaMe_Link URL whose text holds the Call_Page URL, built through the existing Message_Channel WaMe_Link, with the note "Link works once, for 10 minutes". After a reload THE Invoice_Panel SHALL NOT show the Call_Page URL, because the Join_Token is stored only as a hash.
+9. WHEN a Voice_Call is created, THE response to that click SHALL show in the Invoice_Panel the Call_Page_URL, an "Open call here" link to that URL, and a "Send call link in WhatsApp" control that opens a WaMe_Link URL whose text holds the Call_Page_URL, built through the existing Message_Channel WaMe_Link, with the note "Link works once, for 10 minutes". After a reload THE Invoice_Panel SHALL NOT show the Call_Page_URL, because the Join_Token is stored only as a hash.
 10. THE start-call server action SHALL write one Tool_Log row with `tool` `start_voice_call`, the invoice id, the inputs and the result for every request that resolves to an invoice of the Session_Supplier, including refused requests, with no Join_Token value in the row.
 11. IF the invoice id is not a uuid, matches no invoice, or belongs to another supplier, THEN THE start-call server action SHALL respond as not found and create no Voice_Call.
-12. IF the invoice is not a Callable_Invoice on Today, or `OPENAI_API_KEY` or `PUBLIC_BASE_URL` is unset or empty, THEN THE start-call server action SHALL create no Voice_Call and show "No call needed for this invoice" or "Voice calls not configured" respectively, with `role="alert"`.
-13. THE start-call server action SHALL apply its refusals in this order and give only the first that applies: not found (criterion 11), not configured (criterion 12), not callable (criterion 12), outside the Call_Window (criterion 5), buyer already called on the Call_Day (criterion 6).
+12. IF the invoice is not a Callable_Invoice on Today, or `OPENAI_API_KEY` is unset or empty, THEN THE start-call server action SHALL create no Voice_Call and show "No call needed for this invoice" or "Voice calls not configured" respectively, with `role="alert"`.
+13. THE start-call server action SHALL apply its refusals in this order and give only the first that applies: not found (criterion 11), not configured (criterion 12), not callable (criterion 12), then, for a Session_Supplier other than the Demo_Supplier, outside the Call_Window (criterion 5) and buyer already called on the Call_Day (criterion 6), or, for the Demo_Supplier, the Demo_Call_Limit (criterion 14).
+14. IF the Session_Supplier is the Demo_Supplier and the Demo_Call_Limit is already reached on the Call_Day, THEN THE start-call server action SHALL create no Voice_Call and show "Demo call limit reached for today" with `role="alert"`.
+15. WHERE the Session_Supplier is the Demo_Supplier, THE start-call server action SHALL skip the Call_Window check (criterion 5) and the one-call-per-buyer check (criterion 6), and THE Invoice_Panel SHALL show the Demo_Hours_Text next to "Start call".
+16. WHILE the Session_Supplier is not the Demo_Supplier, THE Invoice_Panel SHALL omit the Demo_Hours_Text.
 
 ### Requirement 2: Buyer join page and single-use token
 
@@ -130,7 +141,7 @@ Non-goals: PSTN calls; a server sideband connection to the Realtime session; `@o
 6. WHEN the Tool_Endpoint receives a `call_id` it already answered for the same Voice_Call, THE Tool_Endpoint SHALL return the stored result, including a stored error result, and change no data.
 7. WHEN `get_invoice_facts` runs, THE Tool_Endpoint SHALL return `{ "ok": true }` with the Invoice_Facts computed by the Engine for the Voice_Call's invoice and `call_today`, with every amount formatted only by the Engine `formatINR`.
 8. IF no Bank_Rate is effective on `call_today`, THEN `get_invoice_facts` SHALL return `{ "ok": false, "error": "bank_rate_missing" }` with every Invoice_Facts field except interest and Total_Due, and `record_promise_to_pay` SHALL return `{ "ok": false, "error": "bank_rate_missing" }` and change no data.
-9. WHEN `record_promise_to_pay` runs with `amount_paise` greater than 0 and at most Total_Due and `date_iso` inside the Promise_Window, THE Tool_Endpoint SHALL, in one transaction, set `superseded_on` = `call_today` on the invoice's Current_Promise if one exists, insert one `promises` row with `promised_date` = `date_iso`, `amount_paise`, `recorded_on` = `call_today`, `source` = `voice`, `voice_call_id`, `spoken_text` and `is_partial` = (amount < Total_Due), and return `{ "ok": true }` with the amount as a `formatINR` string, the date as `<Weekday>, D MMM YYYY` (for example "Friday, 20 Nov 2026"), and `is_partial`. The invoice SHALL have exactly one Current_Promise afterwards, also when two such requests overlap.
+9. WHEN `record_promise_to_pay` runs with `amount_paise` greater than 0 and at most Total_Due and `date_iso` inside the Promise_Window, THE Tool_Endpoint SHALL, in one transaction, set `superseded_on` = `call_today` on the invoice's Current_Promise if one exists, insert one `promises` row with `promised_date` = `date_iso`, `amount_paise`, `recorded_on` = `call_today`, `source` = `voice`, `voice_call_id`, `spoken_text` and `is_partial` = (amount < Total_Due), and return `{ "ok": true }` with the amount as a `formatINR` string, the date as an Agent_Date equal to its Date_List entry, and `is_partial`. The invoice SHALL have exactly one Current_Promise afterwards, also when two such requests overlap.
 10. IF `amount_paise` is 0 or less, or above Total_Due, THEN `record_promise_to_pay` SHALL return `{ "ok": false, "error": "amount_out_of_range" }` with Total_Due as a `formatINR` string and change no data.
 11. IF `date_iso` is outside the Promise_Window or not a valid calendar date, THEN `record_promise_to_pay` SHALL return `{ "ok": false, "error": "date_out_of_range" }` with the first and last allowed dates and change no data.
 12. WHEN `end_call` runs with `outcome` one of `dispute`, `no_promise` or `consent_declined`, THE Tool_Endpoint SHALL store that outcome as the Voice_Call's requested outcome, replacing any earlier requested outcome, and return `{ "ok": true }`.
@@ -146,12 +157,14 @@ Non-goals: PSTN calls; a server sideband connection to the Realtime session; `@o
 
 1. THE Persona_Instructions SHALL tell the agent to open by saying it is an AI assistant calling for the supplier by name, and to say "yeh call record aur transcribe ho rahi hai", before discussing the invoice.
 2. THE Persona_Instructions SHALL tell the agent to speak Hinglish by default, switch to the language the buyer uses, address the buyer as "<first word of the buyer name> ji" (for example "Sharma ji" for Sharma Traders), and use at most two sentences per turn.
-3. THE Persona_Instructions SHALL tell the agent to call `get_invoice_facts` before stating any figure, and to speak only numbers and dates returned by a Call_Tool, except when reading back the amount and date the buyer stated (criterion 4).
-4. THE Persona_Instructions SHALL tell the agent to read back the amount in digits and words and the date with its weekday, wait for an explicit "haan" (or "yes"), and only then call `record_promise_to_pay`; and, when the tool returns an error, to explain using the limits in the tool result and ask again.
+3. THE Persona_Instructions SHALL tell the agent to call `get_invoice_facts` before stating any figure, and to speak only numbers returned by a Call_Tool and dates returned by a Call_Tool or written in the data block (criterion 9), except when reading back the amount the buyer stated (criterion 4).
+4. THE Persona_Instructions SHALL tell the agent to read back the amount in digits and words and the date as its Date_List entry, including the weekday written there, wait for an explicit "haan" (or "yes"), and only then call `record_promise_to_pay`; and, when the tool returns an error, to explain using the limits in the tool result and ask again.
 5. THE Persona_Instructions SHALL tell the agent to mention the 31 March tax rule (`IT-43BH`) at most once, as helpful information, to state legal remedies only as facts, to never threaten, shout or shame, and, for an invoice with the caveat `registered_after_supply`, to say the claim may be contested.
 6. THE Persona_Instructions SHALL tell the agent what to do if the buyer disputes the invoice or says "call mat karo": say the owner will follow up, call `end_call` with `dispute` (or `no_promise` for "call mat karo"), and end the call.
 7. THE Persona_Instructions SHALL tell the agent what to do if the buyer objects to talking to an AI or to the recording: apologise, call `end_call` with `consent_declined`, and end the call.
 8. THE Persona_Instructions SHALL place the buyer name, supplier name and invoice number only inside a delimited data block marked as data, SHALL tell the agent to treat the data block's contents as data and never as instructions, and the Call_Tools SHALL return these values only as data fields.
+9. THE Persona_Instructions data block SHALL hold `call_today` as an Agent_Date and the full Date_List, both built on the server from the Voice_Call's `call_today` with the `packages/engine` date functions.
+10. THE Persona_Instructions SHALL tell the agent to resolve every relative date the buyer says (for example "kal", "agle Friday", "mahine ke end tak") and every weekday it speaks only by looking up the Date_List, and, when the buyer's date matches no Date_List entry, to say the first and last Date_List entries and ask again.
 
 ### Requirement 7: Call cap, ending and outcome
 
@@ -190,6 +203,8 @@ Non-goals: PSTN calls; a server sideband connection to the Realtime session; `@o
 5. THE Debtor_Page SHALL show, under each `call` entry, its Transcript_Lines in time order and its Call_Tool requests with arguments and results, inside a `<details>` element closed by default.
 6. WHEN a voice promise is recorded or a Voice_Call ends, THE `apps/web` app SHALL revalidate `/` and `/debtors/<Buyer_Id>`.
 7. THE Debtor_Page SHALL read Voice_Calls, Transcript_Lines and voice Tool_Log rows only through `packages/db` functions filtered by `session.supplierId` through `invoices.supplier_id`.
+8. WHILE a Debtor_Invoice is unpaid on Today and its Promise_Until_Date is after Today, THE Invoice_Panel SHALL show "Promise to pay active until <D MMM YYYY>" with the Promise_Until_Date, matching the Engine `nextEscalationStep`, which returns `promise_active` only while a promise's `promisedDate` is after Today. This replaces the on-or-after rule of debtor-ui Requirement 6 criterion 4 for the Invoice_Panel text only; the Engine, the Active_Promise_Helper, the Promise_Until_Helper and the wisp are unchanged.
+9. WHILE a Debtor_Invoice is unpaid on Today and its Promise_Until_Date equals Today, THE Invoice_Panel SHALL show "Promise due today" in place of the active-promise text, and THE Ladder_Runner SHALL use the Engine Decision for that invoice unchanged.
 
 ### Requirement 10: Secrets and configuration
 
@@ -197,11 +212,10 @@ Non-goals: PSTN calls; a server sideband connection to the Realtime session; `@o
 
 #### Acceptance Criteria
 
-1. THE `apps/web` app SHALL read `OPENAI_API_KEY`, `VOICE_REALTIME_MODEL` and `PUBLIC_BASE_URL` only from server-side environment variables, and `apps/web/.env.example` SHALL list `VOICE_REALTIME_MODEL` with an empty value.
+1. THE `apps/web` app SHALL read `OPENAI_API_KEY` and `VOICE_REALTIME_MODEL` only from server-side environment variables, and `apps/web/.env.example` SHALL list `VOICE_REALTIME_MODEL` with an empty value.
 2. IF `OPENAI_API_KEY` is unset or empty, THEN THE Session_Endpoint SHALL respond with HTTP 503 and no Ephemeral_Key, leaving the Voice_Call status and `started_at` unchanged, and THE Call_Page SHALL show "The call could not start. Please try again later." with `role="alert"`.
 3. THE Call_Page, Session_Endpoint, Tool_Endpoint, transcript route and End_Report route SHALL be reachable without sign-in, and the `config.matcher` of `apps/web/proxy.ts` SHALL keep them outside the Auth.js proxy, while every other route keeps its current protection.
 4. THE Session_Endpoint, Tool_Endpoint, transcript route and End_Report route SHALL run on the Node.js runtime and include no stack trace, SQL text, `OPENAI_API_KEY` value or other secret in any response, except the Ephemeral_Key in a successful Session_Endpoint response.
-5. IF `PUBLIC_BASE_URL` is unset or empty, THEN THE Invoice_Panel SHALL show "Start call" disabled with "Voice calls not configured", and THE start-call server action SHALL create no Voice_Call.
 
 ### Requirement 11: Tests (mandatory)
 
@@ -211,7 +225,7 @@ Non-goals: PSTN calls; a server sideband connection to the Realtime session; `@o
 
 1. THE test suite SHALL make no network call to OpenAI, SHALL mock the `client_secrets` call at the HTTP client boundary, and SHALL fail any test that issues an unmocked HTTP request.
 2. THE test suite SHALL assert with exact `toEqual` on the whole result, on the Demo_Seed with `call_today` `2026-11-12`, the `get_invoice_facts` result for Sharma Traders `LPC/26-27/0412`, with paise values, dates, day counts, names and rule IDs written as literals in the test:
-   - `ok` true, buyer name "Sharma Traders", the Demo_Seed supplier name, invoice number `LPC/26-27/0412`, no caveat;
+   - `ok` true, buyer name "Sharma Traders", supplier name "Laxmi Precision Components (Demo)", invoice number `LPC/26-27/0412`, no caveat;
    - principal `formatINR(41200000)`;
    - due date `17 Oct 2026` with `MSMED-15`, 26 Days_Overdue;
    - interest `formatINR(512794)` with `MSMED-16`;
@@ -225,7 +239,7 @@ Non-goals: PSTN calls; a server sideband connection to the Realtime session; `@o
    - `2026-11-12` and `2026-12-12` are accepted;
    - two accepted promises in a row set `superseded_on` on the first and leave exactly one Current_Promise.
 4. THE test suite SHALL include a fast-check property, run with at least 100 cases, with `call_today` generated from `2024-04-01` to `2035-03-31` (the generator always including March dates, where `financialYearEnd` is closer than 30 days) and candidate dates generated from `call_today` − 60 days to `call_today` + 60 days, asserting that the Promise_Window check accepts a date if and only if it is on or after `call_today` and on or before the earlier of `call_today` + 30 days and `financialYearEnd(call_today)`.
-5. THE test suite SHALL assert that after a voice promise recorded on `2026-11-12` for `2026-11-20`, a Ladder_Run at `2026-11-12` records `promise_active` and creates no Draft, the Debtor_Page shows "Promise to pay active until 20 Nov 2026", and the Candle_Timeline holds "Promised <formatINR(41712794)> by 20 Nov 2026 (by voice)"; that a promise recorded on `2026-11-13` is not in the Engine_History at Today `2026-11-12`; and that a promise recorded on `2026-11-12` and superseded on `2026-11-14` is in the Engine_History at Today `2026-11-13` and not at Today `2026-11-14`.
+5. THE test suite SHALL assert that after a voice promise recorded on `2026-11-12` for `2026-11-20`, a Ladder_Run at `2026-11-12` records `promise_active` and creates no Draft, the Debtor_Page shows "Promise to pay active until 20 Nov 2026", and the Candle_Timeline holds "Promised <formatINR(41712794)> by 20 Nov 2026 (by voice)"; that a promise recorded on `2026-11-13` is not in the Engine_History at Today `2026-11-12`; and that a promise recorded on `2026-11-12` and superseded on `2026-11-14` is in the Engine_History at Today `2026-11-13` and not at Today `2026-11-14`; and that at Today `2026-11-20`, with the same voice promise for `2026-11-20`, the Invoice_Panel shows "Promise due today" and not "Promise to pay active until 20 Nov 2026", and a Ladder_Run at `2026-11-20` records no `promise_active` and records the Engine `nextEscalationStep` Decision for that history and date.
 6. THE test suite SHALL assert the Tool_Endpoint:
    - a repeated `call_id` returns the stored result and leaves one `promises` row;
    - a wrong Join_Token or a non-`live` Voice_Call gets HTTP 404 and no Tool_Log row;
@@ -233,14 +247,21 @@ Non-goals: PSTN calls; a server sideband connection to the Realtime session; `@o
    - a request at `started_at` + 300 seconds returns `call_time_up` and ends the call;
    - one Tool_Log row is written per request that passes Requirement 5 criterion 4.
 7. THE test suite SHALL assert the start and join paths, with the current instant injected:
-   - a start at 09:59 IST and at 19:00 IST on Thursday `2026-11-12`, and at 12:00 IST on Sunday `2026-11-15`, is refused with the Call_Window text;
-   - a start at 10:00 IST and at 18:59 IST on `2026-11-12` is accepted;
-   - a second call for the same buyer on the same Call_Day is refused;
+   - for a supplier other than the Demo_Supplier, a start at 09:59 IST and at 19:00 IST on Thursday `2026-11-12`, and at 12:00 IST on Sunday `2026-11-15`, is refused with the Call_Window text;
+   - for a supplier other than the Demo_Supplier, a start at 10:00 IST and at 18:59 IST on `2026-11-12` is accepted, a second call for the same buyer on the same Call_Day is refused with "This buyer was already called today", and the Invoice_Panel holds no Demo_Hours_Text;
+   - the Call_Page_URL shown after a start begins with the origin of the start-call request;
    - another supplier's invoice is not found;
    - a used, expired or unknown Join_Token shows the expired text with no supplier or buyer data;
    - two concurrent joins mint exactly one Ephemeral_Key;
    - a microphone denial leaves the Voice_Call `created`;
    - the Session_Endpoint response carries `Cache-Control: no-store`, the mocked request body holds the Session_Config with `expires_after` 60 seconds, voice `marin`, `semantic_vad` and the Transcribe_Model, and no response, Tool_Log row or HTML contains the `OPENAI_API_KEY` value.
-8. THE test suite SHALL assert: the outcome rules of Requirement 7 criterion 1 for each Call_Outcome; the `call` Timeline_Entry texts; that `models.ts` selects `gpt-realtime-2.1` for `VOICE_REALTIME_MODEL` equal to `gpt-realtime-2.1` exactly, and `gpt-realtime-2.1-mini` for an unset value and for `gpt-4o-realtime`; that the files in the scope of Requirement 3 criterion 8 (non-test TS and JS files, with test files and Markdown excluded) hold no Realtime_Model or Transcribe_Model ID outside `models.ts` and no Banned_Model_ID; that no `package.json` lists `@openai/agents`; and that the Persona_Instructions contain the AI-identity and recording-disclosure line, the "haan" read-back rule, the `end_call` rules and the data block of Requirement 6.
-9. WHERE a developer sets `OPENAI_API_KEY` locally, THE repository SHALL provide one manual live check, outside the test suite and CI, that runs a Hinglish call with Sharma Traders at `?today=2026-11-12` on one laptop and confirms the disclosure, a read-back, a recorded promise on the timeline and the transcript.
-10. THE tests, typecheck and lint of `packages/engine`, `packages/db`, `packages/agent`, `packages/voice` and `apps/web` SHALL pass with zero failures and zero errors, and every test task in this spec SHALL be required, with none marked optional.
+8. THE test suite SHALL assert the Demo_Supplier exemption of Requirement 1 criteria 14 and 15, with the current instant injected:
+   - a start at 20:00 IST on Thursday `2026-11-12` and at 12:00 IST on Sunday `2026-11-15` is accepted;
+   - a second call for the same buyer on the same Call_Day is accepted;
+   - with 20 Voice_Calls of the Demo_Supplier started on the Call_Day, the next start is refused with "Demo call limit reached for today" and creates no Voice_Call;
+   - the Invoice_Panel shows the Demo_Hours_Text.
+9. THE test suite SHALL assert that for `call_today` `2026-11-12` the Persona_Instructions data block holds `call_today` as "Thursday, 12 Nov 2026" and a Date_List of exactly 31 entries whose first entry is "Thursday, 12 Nov 2026", whose last entry is "Saturday, 12 Dec 2026", and which contains "Friday, 20 Nov 2026".
+10. THE test suite SHALL assert that, with the `apps/web/proxy.ts` matcher and handler of this spec, a signed-out request to `/` and to `/debtors/<id>` redirects to `/signin`, and a signed-out request to `/call/<token>`, the Session_Endpoint, the Tool_Endpoint, the transcript route and the End_Report route is not redirected.
+11. THE test suite SHALL assert: the outcome rules of Requirement 7 criterion 1 for each Call_Outcome; the `call` Timeline_Entry texts; that `models.ts` selects `gpt-realtime-2.1` for `VOICE_REALTIME_MODEL` equal to `gpt-realtime-2.1` exactly, and `gpt-realtime-2.1-mini` for an unset value and for `gpt-4o-realtime`; that the files in the scope of Requirement 3 criterion 8 (non-test TS and JS files, with test files and Markdown excluded) hold no Realtime_Model or Transcribe_Model ID outside `models.ts` and no Banned_Model_ID; that no `package.json` lists `@openai/agents`; and that the Persona_Instructions contain the AI-identity and recording-disclosure line, the "haan" read-back rule, the Date_List lookup rule, the `end_call` rules and the data block of Requirement 6.
+12. WHERE a developer sets `OPENAI_API_KEY` locally, THE repository SHALL provide one manual live check, outside the test suite and CI, that runs a Hinglish call with Sharma Traders at `?today=2026-11-12` on one laptop and confirms the disclosure, a read-back, a recorded promise on the timeline and the transcript.
+13. THE tests, typecheck and lint of `packages/engine`, `packages/db`, `packages/agent`, `packages/voice` and `apps/web` SHALL pass with zero failures and zero errors, and every test task in this spec SHALL be required, with none marked optional.
