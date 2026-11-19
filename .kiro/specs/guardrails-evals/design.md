@@ -51,7 +51,7 @@ packages/agent/
   test/draft-guard.property.test.ts             properties 1–3 (new)
   test/evals.test.ts                            fixtures in Vitest + demo-context check (new)
   test/repair.test.ts                           + tone-block repair case
-  test/citations.test.ts, prompt.test.ts, source-lint.test.ts   extended
+  test/citations.test.ts, prompt.test.ts, prompt-data.property.test.ts, source-lint.test.ts   extended: add `overdue` to existing draftPrompt inputs; never remove a test
 apps/web/test/start-call-refusal.property.test.ts                 + Call_Hours_Case table
 .kiro/hooks/guardrails-evals-on-save.json       new hook file
 ```
@@ -81,10 +81,10 @@ export function toneCheck(text: string, step: LadderStep): CitationResult | null
 Initial lists (lowercase, whole words; Req 1.6 minimums are 8 and 6):
 | List | English | Hinglish |
 |---|---|---|
-| THREAT_LIST | `legal action will be taken`, `we will take legal action`, `strict action`, `final warning`, `last warning`, `or else`, `you will regret`, `face the consequences`, `blacklist`, `police`, `we will sue` | `warna`, `dekh lena`, `anjaam`, `bhugatna padega`, `case kar denge`, `court mein ghaseet`, `sabak sikha`, `chhodenge nahi`, `aakhri chetavani` |
-| BEGGING_LIST | `i beg`, `begging you`, `please please`, `have mercy`, `we are desperate`, `humble request` | `haath jodkar`, `minnat`, `vinti hai`, `reham`, `bahut majboor`, `aapke pair` |
+| THREAT_LIST | `legal action will be taken`, `we will take legal action`, `strict action`, `final warning`, `last warning`, `you will regret`, `face the consequences`, `blacklist`, `police`, `we will sue` | `warna`, `dekh lenge`, `anjaam`, `bhugatna padega`, `case kar denge`, `court mein ghaseet`, `sabak sikha`, `chhodenge nahi`, `aakhri chetavani` |
+| BEGGING_LIST | `i beg`, `begging you`, `please please`, `have mercy`, `we are desperate`, `we are helpless` | `haath jodkar`, `minnat`, `daya karo`, `reham`, `bahut majboor`, `aapke pair` |
 
-A test asserts that no entry equals or contains, as a whole word, any of `please`, `interest`, `msme`, `odr`, `facilitation council`, `samadhaan` (Req 1.6).
+A test asserts that no entry equals or contains, as a whole word, any of `please`, `interest`, `msme`, `odr`, `facilitation council`, `samadhaan`, `kripya`, `request` (Req 1.6), and that the polite phrases `dekh lena`, `or else` and `vinti hai` match no entry.
 ### Tense_Check (`tense.ts`)
 ```ts
 export function tenseCheck(text: string, overdue: boolean): CitationResult | null;
@@ -114,7 +114,7 @@ export function guardDraft(out: ModelOutput, ctx: GuardContext): CitationResult 
 }
 ```
 ### draftStep changes
-- `const due = dueDate(record.invoice); const overdue = due.applicable && compareDates(today, due.dueDate) > 0;` (Engine functions; `dueDate` is already called for this invoice by `allowedRuleIds`, so no new throw path).
+- `const due = dueDate(record.invoice); const overdue = due.applicable && today > due.dueDate;` (CalendarDate strings compare in date order, as in `apps/web/lib/call/callable.ts`; no `compareDates`, which the Engine does not export, and no Engine change; `dueDate` is already called for this invoice by `allowedRuleIds`, so no new throw path).
 - Both `validateCitations(...)` calls become `guardDraft(output, { step, allowed, ruleIds: RULE_IDS, bankRateExists: bankRate !== null, overdue })`.
 - `promptBase` gains `overdue`. The repair note is `{ reason, offending }` as today, so the new reasons reach the model the same way.
 - Tool_Log rows are unchanged: `citation` holds the guard result (Req 3.6).
