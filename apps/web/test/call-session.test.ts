@@ -800,8 +800,9 @@ describe("the tool loop: output item, then response.create", () => {
   });
 });
 
-const STOPPED = { type: "output_audio_buffer.stopped" };
-const CREATED = { type: "response.created" };
+const CLOSING_ID = "resp_closing";
+const STOPPED = { type: "output_audio_buffer.stopped", response_id: CLOSING_ID };
+const CREATED = { type: "response.created", response: { id: CLOSING_ID } };
 
 describe("armed end: first output_audio_buffer.stopped after a response.created that follows the arm, or 10 seconds", () => {
   const OK_RESULT = { json: { ok: true } };
@@ -932,6 +933,37 @@ describe("armed end: first output_audio_buffer.stopped after a response.created 
     });
   });
 
+  it("ignores a stale stopped from an earlier response that arrives after the closing response was created", async () => {
+    const { h } = await liveCall({ tool: () => OK_RESULT });
+    deliver(h, { type: "response.created", response: { id: "resp_earlier" } });
+    deliver(h, functionCall("call_end", "end_call", '{"outcome":"dispute"}'));
+    await flush();
+    // The closing response is created, then the earlier response's audio finishes draining.
+    deliver(h, CREATED);
+    deliver(h, { type: "output_audio_buffer.stopped", response_id: "resp_earlier" });
+    expect(endReports(h)).toHaveLength(0);
+    expect(lastView(h).phase).toBe("live");
+    // A stopped without a response id does not match either.
+    deliver(h, { type: "output_audio_buffer.stopped" });
+    expect(endReports(h)).toHaveLength(0);
+    // A later response created after the closing one does not replace the closing id.
+    deliver(h, { type: "response.created", response: { id: "resp_later" } });
+    deliver(h, { type: "output_audio_buffer.stopped", response_id: "resp_later" });
+    expect(endReports(h)).toHaveLength(0);
+    deliver(h, STOPPED);
+    expect(endReports(h)).toHaveLength(1);
+    expect(lastView(h)).toEqual({ phase: "ended" });
+  });
+  it("still ends after 10 seconds when only a stale stopped arrives", async () => {
+    const { h } = await liveCall({ tool: () => OK_RESULT });
+    deliver(h, functionCall("call_end", "end_call", '{"outcome":"dispute"}'));
+    await flush();
+    deliver(h, CREATED);
+    deliver(h, { type: "output_audio_buffer.stopped", response_id: "resp_earlier" });
+    expect(endReports(h)).toHaveLength(0);
+    h.timeouts[0]!.callback();
+    expect(endReports(h)).toHaveLength(1);
+  });
   it("does not end on output_audio_buffer.stopped or arm a timer for other tools or for a failed end_call", async () => {
     const { h } = await liveCall({ tool: () => ({ json: { ok: false, error: "invalid_arguments" } }) });
     deliver(h, functionCall("call_x", "end_call", "{}"));

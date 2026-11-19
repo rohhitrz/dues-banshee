@@ -10,12 +10,15 @@ export type RealtimeAction =
   | { kind: "tool_call"; callId: string; name: string; arguments: string }
   /** A finished, non-empty transcript line to store. */
   | { kind: "transcript"; speaker: "buyer" | "agent"; itemId: string; text: string }
-  /** A response started. After the end is armed, the first one marks the closing response. */
-  | { kind: "response_created" }
+  /** A response started. After the end is armed, the first one is the closing response; `responseId` is its id. */
+  | { kind: "response_created"; responseId?: string }
   /** A response finished. Parsed for completeness; the armed end waits for the audio to drain instead. */
   | { kind: "response_done" }
-  /** WebRTC only: the output audio has fully drained (sent after `response.done`). Fires the armed end once a response started after the arm. */
-  | { kind: "output_audio_stopped" }
+  /**
+   * WebRTC only: the output audio of one response has fully drained (sent after `response.done`).
+   * `responseId` is that response's id; the armed end fires only when it is the closing response's id.
+   */
+  | { kind: "output_audio_stopped"; responseId?: string }
   /**
    * The Realtime session reported an error. The call goes on; only the error's `type` and `code` (when
    * they are strings) are carried, for one warning. The message is dropped: it can echo user content.
@@ -58,12 +61,16 @@ export function routeRealtimeEvent(event: unknown): RealtimeAction {
       return transcriptAction("buyer", e);
     case "response.output_audio_transcript.done":
       return transcriptAction("agent", e);
-    case "response.created":
-      return { kind: "response_created" };
+    case "response.created": {
+      const responseId = asRecord(e.response)?.id;
+      return { kind: "response_created", ...(typeof responseId === "string" && responseId !== "" ? { responseId } : {}) };
+    }
     case "response.done":
       return { kind: "response_done" };
-    case "output_audio_buffer.stopped":
-      return { kind: "output_audio_stopped" };
+    case "output_audio_buffer.stopped": {
+      const responseId = e.response_id;
+      return { kind: "output_audio_stopped", ...(typeof responseId === "string" && responseId !== "" ? { responseId } : {}) };
+    }
     case "error": {
       const detail = asRecord(e.error);
       const errorType = detail?.type;

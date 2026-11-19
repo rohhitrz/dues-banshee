@@ -19,7 +19,8 @@ export const TRANSCRIPT_URL = "/api/voice/transcript";
 export const DATA_CHANNEL_LABEL = "oai-events";
 /**
  * After a successful `end_call` or `record_promise_to_pay` output, the call ends on the first
- * `output_audio_buffer.stopped` that follows a `response.created` seen after the arm, or after this long.
+ * `output_audio_buffer.stopped` of the first `response.created` seen after the arm (matched by response id),
+ * or after this long.
  */
 export const END_CALL_FALLBACK_MS = 10_000;
 
@@ -195,6 +196,12 @@ export function startCallSession(deps: CallSessionDeps): CallSession {
    * call: an earlier response's audio draining must not cut off the closing line that has not started yet.
    */
   let closingResponseStarted = false;
+  /**
+   * The id of that first response. Only the `output_audio_buffer.stopped` with this `response_id` ends the
+   * call: a late `stopped` of an earlier response can arrive after the closing response was created. Stays
+   * `null` if that `response.created` carried no id; the 10 s fallback then ends the call.
+   */
+  let closingResponseId: string | null = null;
   let armedTimer: unknown = null;
 
   // --- Synchronous part of the tap: audio unlock and mic request, before any await. ---
@@ -289,13 +296,14 @@ export function startCallSession(deps: CallSessionDeps): CallSession {
 
   /**
    * A successful `end_call` or `record_promise_to_pay` output went out: end once the closing response's
-   * audio has drained (the first `output_audio_buffer.stopped` after a `response.created` that came after
-   * this arm; WebRTC only), or after 10 s.
+   * audio has drained (the `output_audio_buffer.stopped` whose `response_id` is the id of the first
+   * `response.created` after this arm; WebRTC only), or after 10 s.
    */
   const armEnd = (): void => {
     if (ended || endArmed) return;
     endArmed = true;
     closingResponseStarted = false;
+    closingResponseId = null;
     armedTimer = (deps.setTimeout ?? globalThis.setTimeout)(() => end(), END_CALL_FALLBACK_MS);
   };
 
@@ -371,10 +379,13 @@ export function startCallSession(deps: CallSessionDeps): CallSession {
         postTranscript(action);
         break;
       case "response_created":
-        if (endArmed) closingResponseStarted = true;
+        if (endArmed && !closingResponseStarted) {
+          closingResponseStarted = true;
+          closingResponseId = action.responseId ?? null;
+        }
         break;
       case "output_audio_stopped":
-        if (endArmed && closingResponseStarted) end();
+        if (endArmed && closingResponseId !== null && action.responseId === closingResponseId) end();
         break;
       case "response_done":
         break;

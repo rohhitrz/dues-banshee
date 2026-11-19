@@ -39,7 +39,17 @@ describe("routeRealtimeEvent", () => {
   it("maps response.created", () => {
     expect(routeRealtimeEvent({ type: "response.created", response: { id: "resp_1" } })).toEqual({
       kind: "response_created",
+      responseId: "resp_1",
     });
+    expect(routeRealtimeEvent({ type: "response.created" })).toEqual({ kind: "response_created" });
+    expect(routeRealtimeEvent({ type: "response.created", response: { id: 5 } })).toEqual({ kind: "response_created" });
+  });
+  it("maps output_audio_buffer.stopped with its response id", () => {
+    expect(routeRealtimeEvent({ type: "output_audio_buffer.stopped", response_id: "resp_1" })).toEqual({
+      kind: "output_audio_stopped",
+      responseId: "resp_1",
+    });
+    expect(routeRealtimeEvent({ type: "output_audio_buffer.stopped" })).toEqual({ kind: "output_audio_stopped" });
   });
   it("maps response.done", () => {
     expect(routeRealtimeEvent({ type: "response.done" })).toEqual({ kind: "response_done" });
