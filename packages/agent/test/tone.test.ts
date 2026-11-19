@@ -189,6 +189,9 @@ describe("tone lists", () => {
     );
   });
 
+  it("passes 'I beg to inform you', which is formal English and not a plea", () => {
+    expect(toneCheck(addressed("I beg to inform you that the invoice is unpaid."), "legal_notice")).toBeNull();
+  });
   it("passes a factual use of warna that is not a threat", () => {
     const lines = [
       "warna {{interest}} badhta rahega",

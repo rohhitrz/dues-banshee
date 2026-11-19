@@ -30,7 +30,9 @@ export const THREAT_LIST: readonly string[] = [
 
 export const BEGGING_LIST: readonly string[] = [
   // English
-  "i beg",
+  "i beg you",
+  "i beg of you",
+  "i am begging",
   "begging you",
   "please please",
   "have mercy",
