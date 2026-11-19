@@ -231,6 +231,23 @@ export function startCallSession(deps: CallSessionDeps): CallSession {
     armedTimer = null;
   };
 
+  /**
+   * End_Report. keepalive lets it survive a page that is closing. Failure is not the buyer's problem:
+   * the server ends a call that is never reported (stale rule). No-op until the join response gave us
+   * the call id.
+   */
+  const sendEndReport = (): void => {
+    if (voiceCallId === null) return;
+    deps
+      .fetch(END_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ voiceCallId, token }),
+        keepalive: true,
+      })
+      .catch(() => {});
+  };
+
   /** The one guarded end. Runs once, whatever triggers it. The client never sends an outcome. */
   const end = (finalPhase: "ended" | "start_error" = "ended"): void => {
     if (ended) return;
@@ -243,18 +260,7 @@ export function startCallSession(deps: CallSessionDeps): CallSession {
       // Already closed.
     }
     stopMic();
-    if (voiceCallId !== null) {
-      // End_Report. keepalive lets it survive a page that is closing. Failure is not the buyer's problem:
-      // the server ends a call that is never reported (stale rule).
-      deps
-        .fetch(END_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ voiceCallId, token }),
-          keepalive: true,
-        })
-        .catch(() => {});
-    }
+    sendEndReport();
     deps.onChange({ phase: finalPhase });
   };
 
@@ -428,11 +434,14 @@ export function startCallSession(deps: CallSessionDeps): CallSession {
       fail("start_error");
       return;
     }
+    // The join already marked the call live on the server. If end() ran while the request was in flight,
+    // it had no call id to report, so report here; otherwise the call would stay live until the stale rule.
+    voiceCallId = session.voiceCallId;
     if (ended) {
       stopMic();
+      sendEndReport();
       return;
     }
-    voiceCallId = session.voiceCallId;
 
     // 3. WebRTC. Any failure from here on is reported to the server (End_Report).
     try {

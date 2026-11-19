@@ -589,6 +589,41 @@ describe("ending the call", () => {
   });
 });
 
+describe("a hang-up while the join request is in flight", () => {
+  it("sends the End_Report with the call id from the join response, and connects nothing", async () => {
+    const ref: { session?: CallSession } = {};
+    const h = harness({
+      // The buyer hangs up while the server is still answering the join.
+      session: () => {
+        ref.session?.hangUp();
+        return { json: SESSION_OK };
+      },
+    });
+    const session = (ref.session = startCallSession(h.deps));
+    await session.settled;
+    // end() ran with no call id yet, so nothing was reported until the join response arrived.
+    expect(endReports(h)).toHaveLength(1);
+    expect(endReports(h)[0]!.keepalive).toBe(true);
+    expect(JSON.parse(endReports(h)[0]!.body!)).toEqual({ voiceCallId: CALL_ID, token: TOKEN });
+    expect(h.fetchCalls.map((c) => c.url)).toEqual([SESSION_URL, END_URL]);
+    expect(h.pcCreated()).toBe(0);
+    expect(h.views.map((v) => v.phase)).toEqual(["connecting", "ended"]);
+    expect(h.track.stop).toHaveBeenCalled();
+  });
+  it("still sends one End_Report when a second hang-up follows", async () => {
+    const ref: { session?: CallSession } = {};
+    const h = harness({
+      session: () => {
+        ref.session?.hangUp();
+        ref.session?.hangUp();
+        return { json: SESSION_OK };
+      },
+    });
+    const session = (ref.session = startCallSession(h.deps));
+    await session.settled;
+    expect(endReports(h)).toHaveLength(1);
+  });
+});
 describe("the join request fails", () => {
   it("shows the expired text for a 404 and sends no End_Report and no SDP", async () => {
     const { h } = await connect({ session: () => ({ status: 404, json: { error: "expired" } }) });
