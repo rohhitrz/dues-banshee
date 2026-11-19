@@ -1,5 +1,7 @@
 import { eq } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/pglite";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import * as schema from "../src/schema";
 import { promises, suppliers, voiceCalls, invoices } from "../src/schema";
 import { seed } from "../src/seed";
 import { cloneTestDb, createTestDb, type TestDb } from "../src/testing";
@@ -10,6 +12,7 @@ import {
   createVoiceCall,
   endStaleCalls,
   endVoiceCall,
+  endVoiceCallAfterLock,
   findCallByIdAndHash,
   findInvoiceForCall,
   findJoinableCall,
@@ -169,5 +172,71 @@ describe("voice db functions (PGlite sanity)", () => {
 
     // another supplier sees nothing
     expect(await listBuyerVoiceCalls(t.db, "00000000-0000-4000-8000-000000000000", buyerId, at(10))).toEqual([]);
+  });
+});
+
+describe("end path: lock first, then update", () => {
+  // PGlite runs on one connection, so this cannot run a true race between two requests. It checks the
+  // statement order instead: the `FOR UPDATE` select must run before the end `UPDATE`, as separate
+  // statements. Under Postgres READ COMMITTED that order makes the `EXISTS (promises)` outcome check
+  // take a fresh snapshot after the lock wait.
+  async function loggedWorld() {
+    const w = await world();
+    const statements: string[] = [];
+    const db = drizzle(w.t.pglite, { schema, logger: { logQuery: (query: string) => void statements.push(query) } });
+    const created = await createVoiceCall(w.t.db, {
+      supplierId: w.supplierId,
+      invoiceId: w.invoiceId,
+      callToday: "2026-11-12",
+      tokenHash: HASH_A,
+      now: NOW,
+    });
+    await claimJoin(w.t.db, HASH_A, at(0));
+    return { ...w, db, statements, id: created!.voiceCallId };
+  }
+  const kinds = (statements: string[]): string[] =>
+    statements.map((q) => (/for update/i.test(q) ? "lock" : /^\s*update/i.test(q) ? "update" : "other"));
+
+  it("endVoiceCallAfterLock locks the row, then updates it in a separate statement", async () => {
+    const { db, statements, id, buyerId } = await loggedWorld();
+    expect(await endVoiceCallAfterLock(db, id, at(40))).toEqual({ buyerId });
+    expect(kinds(statements).filter((k) => k !== "other")).toEqual(["lock", "update"]);
+    expect(statements.find((q) => /^\s*update/i.test(q))).not.toMatch(/for update/i);
+  });
+
+  it("endVoiceCallAfterLock gives outcome promise for a promise recorded before the end", async () => {
+    const { t, id, invoiceId, buyerId } = await loggedWorld();
+    await t.db.transaction(async (tx) => {
+      await recordVoicePromise(tx, { voiceCallId: id, invoiceId, callToday: "2026-11-12", promisedDate: "2026-11-20", amountPaise: 100, spokenText: "haan", isPartial: true, now: at(10) });
+    });
+    expect(await endVoiceCallAfterLock(t.db, id, at(40))).toEqual({ buyerId });
+    const [row] = await t.db.select().from(voiceCalls).where(eq(voiceCalls.id, id));
+    expect(row).toMatchObject({ status: "ended", outcome: "promise", endedAt: at(40) });
+  });
+
+  it("endVoiceCallAfterLock changes nothing and returns null for a call that is not live", async () => {
+    const { db, statements, id } = await loggedWorld();
+    await endVoiceCall(db, id, at(30));
+    statements.length = 0;
+    expect(await endVoiceCallAfterLock(db, id, at(99))).toBeNull();
+    expect(kinds(statements)).not.toContain("update");
+    const [row] = await db.select().from(voiceCalls).where(eq(voiceCalls.id, id));
+    expect(row?.endedAt).toEqual(at(30));
+  });
+
+  it("endStaleCalls locks the matching live rows, then updates them in a separate statement", async () => {
+    const { db, statements, id, buyerId } = await loggedWorld();
+    statements.length = 0;
+    expect(await endStaleCalls(db, at(360), { voiceCallId: id })).toEqual([buyerId]);
+    expect(kinds(statements).filter((k) => k !== "other")).toEqual(["lock", "update"]);
+    const [row] = await db.select().from(voiceCalls).where(eq(voiceCalls.id, id));
+    expect(row).toMatchObject({ status: "ended", endedAt: at(300) });
+  });
+
+  it("endStaleCalls runs no update when no live row is stale", async () => {
+    const { db, statements, id } = await loggedWorld();
+    statements.length = 0;
+    expect(await endStaleCalls(db, at(359), { voiceCallId: id })).toEqual([]);
+    expect(kinds(statements)).not.toContain("update");
   });
 });

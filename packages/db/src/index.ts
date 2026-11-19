@@ -67,6 +67,7 @@ export {
   lockLiveCall,
   findCallByIdAndHash,
   endVoiceCall,
+  endVoiceCallAfterLock,
   endStaleCalls,
   claimToolCall,
   storeToolResult,

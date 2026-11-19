@@ -53,6 +53,42 @@ describe("Call_Outcome on end", () => {
 });
 
 describe("handleEnd", () => {
+  it("gives outcome promise when a promise was recorded before the end", async () => {
+    const w = await world.call();
+    await w.tool("record_promise_to_pay", promiseArgs(41712794, "2026-11-20"), "c1", at(20));
+    await w.end(at(40));
+    expect(await w.row()).toMatchObject({ status: "ended", outcome: "promise", requestedOutcome: null });
+  });
+  // PGlite runs on one connection, so this cannot run a true race between an end and an in-flight tool
+  // request. It checks the statement order the race fix relies on: inside one transaction, the
+  // `FOR UPDATE` select runs before the end `UPDATE`, as separate statements.
+  it("locks the row before it runs the end UPDATE, in one transaction", async () => {
+    const w = await world.call();
+    const log: string[] = [];
+    const transaction = w.t.pglite.transaction.bind(w.t.pglite) as (cb: (tx: never) => Promise<unknown>) => Promise<unknown>;
+    w.t.pglite.transaction = ((cb: (tx: { query: (...a: unknown[]) => Promise<unknown> }) => Promise<unknown>) => {
+      log.push("begin");
+      return transaction((tx) =>
+        cb(
+          new Proxy(tx as unknown as { query: (...a: unknown[]) => Promise<unknown> }, {
+            get(target, prop, receiver) {
+              if (prop !== "query") return Reflect.get(target, prop, receiver) as unknown;
+              return (text: unknown, ...rest: unknown[]) => {
+                const t = String(text);
+                log.push(/for update/i.test(t) ? "lock" : /^\s*update/i.test(t) ? "update" : "other");
+                return target.query(text, ...rest);
+              };
+            },
+          }),
+        ),
+      );
+    }) as typeof w.t.pglite.transaction;
+    await w.end(at(40));
+    // The first transaction is the stale check (it locks no row here); the second is the end itself.
+    const steps = log.filter((k) => k !== "other");
+    expect(steps.slice(steps.lastIndexOf("begin"))).toEqual(["begin", "lock", "update"]);
+    expect(await w.row()).toMatchObject({ status: "ended", endedAt: at(40) });
+  });
   it("sets ended_at and whole-second duration", async () => {
     const w = await world.call();
     await w.end(new Date(NOW.getTime() + 42_900));

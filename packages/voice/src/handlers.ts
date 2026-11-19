@@ -4,6 +4,7 @@ import {
   claimToolCall,
   endStaleCalls,
   endVoiceCall,
+  endVoiceCallAfterLock,
   findCallByIdAndHash,
   getBankRate,
   getCallContext,
@@ -378,7 +379,8 @@ export async function handleEnd(deps: CallReportDeps, req: EndRequest): Promise<
       return { status: 404, body: { error: "not_found" }, ...(revalidateBuyerId === undefined ? {} : { revalidateBuyerId }) };
     }
     if (call.status === "live") {
-      const ended = await endVoiceCall(db, call.voiceCallId, now);
+      // Lock, then end: waits for a promise that a tool request is still recording.
+      const ended = await endVoiceCallAfterLock(db, call.voiceCallId, now);
       if (ended !== null) revalidateBuyerId = ended.buyerId;
     }
     return { status: 200, body: { ok: true }, ...(revalidateBuyerId === undefined ? {} : { revalidateBuyerId }) };

@@ -340,6 +340,31 @@ export async function endVoiceCall(
 }
 
 /**
+ * The End_Report path of `endVoiceCall`: one transaction that first locks the row
+ * (`SELECT … FOR UPDATE`) and then runs the end `UPDATE` as a separate statement. A tool request
+ * that is still recording a promise holds that lock (`lockLiveCall`), so the end waits for it, and
+ * the `EXISTS (promises)` outcome check in the `UPDATE` takes a fresh snapshot after the wait
+ * (Postgres READ COMMITTED: each statement sees what was committed when it started). A single
+ * `UPDATE` would evaluate the `EXISTS` against the snapshot taken before the wait.
+ */
+export async function endVoiceCallAfterLock(
+  db: Db,
+  voiceCallId: string,
+  endedAt: Date,
+): Promise<{ buyerId: string } | null> {
+  if (!isUuid(voiceCallId)) return null;
+  return db.transaction(async (tx) => {
+    const locked = await tx
+      .select({ id: voiceCalls.id })
+      .from(voiceCalls)
+      .where(and(eq(voiceCalls.id, voiceCallId), eq(voiceCalls.status, "live")))
+      .for("update");
+    if (locked.length === 0) return null; // not live any more, or ended while this request waited
+    return endVoiceCall(tx, voiceCallId, endedAt);
+  });
+}
+
+/**
  * Ends every `live` call that has had no End_Report 360 s after `started_at`, with
  * `ended_at` = `started_at` + 300 s, scoped either to one call or to one supplier's buyer (through
  * `invoices.supplier_id`). Run it before reading calls. Returns the ids of the buyers whose calls ended.
@@ -363,18 +388,31 @@ export async function endStaleCalls(
       ),
     );
   }
-  const rows = await db
-    .update(voiceCalls)
-    .set(endSet(sql`${VC_STARTED_AT} + make_interval(secs => ${CALL_CAP_SECONDS})`))
-    .where(
-      and(
-        scoped,
-        eq(voiceCalls.status, "live"),
-        sql`${instant(now)} >= ${VC_STARTED_AT} + make_interval(secs => ${STALE_AFTER_SECONDS})`,
-      ),
-    )
-    .returning({ buyerId: voiceCalls.buyerId });
-  return [...new Set(rows.map((r) => r.buyerId))];
+  const staleWhere = and(
+    scoped,
+    eq(voiceCalls.status, "live"),
+    sql`${instant(now)} >= ${VC_STARTED_AT} + make_interval(secs => ${STALE_AFTER_SECONDS})`,
+  );
+  // Lock the matching rows first, then end them in a separate statement, so the outcome check sees
+  // promises committed while this request waited for a tool request (see `endVoiceCallAfterLock`).
+  return db.transaction(async (tx) => {
+    const locked = await tx.select({ id: voiceCalls.id }).from(voiceCalls).where(staleWhere).for("update");
+    if (locked.length === 0) return [];
+    const rows = await tx
+      .update(voiceCalls)
+      .set(endSet(sql`${VC_STARTED_AT} + make_interval(secs => ${CALL_CAP_SECONDS})`))
+      .where(
+        and(
+          inArray(
+            voiceCalls.id,
+            locked.map((r) => r.id),
+          ),
+          eq(voiceCalls.status, "live"),
+        ),
+      )
+      .returning({ buyerId: voiceCalls.buyerId });
+    return [...new Set(rows.map((r) => r.buyerId))];
+  });
 }
 
 /**
