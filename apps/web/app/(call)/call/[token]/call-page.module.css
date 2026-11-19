@@ -1,0 +1,51 @@
+/* Moonlit-graveyard theme (ui-theme.md). The App_Shell supplies the sky and footer; this page centres a card.
+   Bone #ece7db and secondary #a9a497 pass 4.5:1 on the card (#14111f). */
+.page {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  color: #ece7db;
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  max-width: 420px;
+  min-width: 0;
+  padding: 40px 24px;
+  border: 1px solid #3a3648;
+  border-radius: 12px;
+  background: rgba(20, 17, 31, 0.85);
+  box-shadow: 0 0 48px rgba(124, 232, 192, 0.08);
+  text-align: center;
+}
+.title {
+  margin: 0;
+  font-family: var(--font-fraunces, Fraunces), Georgia, serif;
+  font-weight: 300;
+  font-size: clamp(1.75rem, 7vw, 2.5rem);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+  color: #ece7db;
+}
+.notice {
+  margin: 0;
+  line-height: 1.5;
+  color: #ece7db;
+}
+.expired {
+  margin: 0;
+  line-height: 1.5;
+  color: #ece7db;
+}
+.disclaimer {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: #a9a497;
+}

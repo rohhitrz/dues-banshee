@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
     "@dues-banshee/ledger",
     "@dues-banshee/db",
     "@dues-banshee/agent",
+    "@dues-banshee/voice",
   ],
   // Trace from the repo root so files in `packages/` are reachable, and ship the PDF fonts the agent reads
   // at run time (they are not imported, so the tracer cannot find them).
@@ -15,6 +16,15 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/approvals": [fonts],
     "/api/ladder/run": [fonts],
+  },
+  async headers() {
+    return [
+      {
+        // The call link carries the Join_Token: never send it on as a Referer.
+        source: "/call/:path*",
+        headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
+      },
+    ];
   },
 };
 export default nextConfig;
