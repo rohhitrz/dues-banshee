@@ -26,8 +26,18 @@ export type {
   RecordPromiseArgsT,
 } from "./tool-schemas";
 export { generateJoinToken, hashToken } from "./token";
-export { handleSession } from "./handlers";
+export { handleEnd, handleSession, handleTranscript, runCallTool } from "./handlers";
 export type {
+  CallReportBody,
+  CallReportDeps,
+  CallReportResponse,
+  EndRequest,
+  ToolDeps,
+  ToolErrorBody,
+  ToolRequest,
+  ToolResponse,
+  ToolResult,
+  TranscriptRequest,
   SessionDeps,
   SessionErrorBody,
   SessionResponse,
