@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Guardrail evals on prompt save",
+      "trigger": "PostFileSave",
+      "action": {
+        "type": "command",
+        "command": "pnpm --filter @dues-banshee/agent eval && pnpm --filter @dues-banshee/voice exec vitest --run persona"
+      },
+      "description": "Re-runs the offline draft evals and the voice persona tests when a prompt or the voice persona changes. No network or LLM calls.",
+      "matcher": "packages/agent/src/prompts/.*\\.ts$|packages/voice/src/persona\\.ts$",
+      "enabled": true
+    }
+  ]
+}
