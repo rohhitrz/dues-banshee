@@ -37,6 +37,7 @@ const mocks = vi.hoisted(() => ({
   getDebtorData: vi.fn(),
   listPendingDrafts: vi.fn(),
   listSendState: vi.fn(),
+  listBuyerVoiceCalls: vi.fn(),
   getDraftForSupplier: vi.fn(),
 }));
 
@@ -57,6 +58,7 @@ vi.mock("@dues-banshee/db", async (importOriginal) => ({
   getDebtorData: mocks.getDebtorData,
   listPendingDrafts: mocks.listPendingDrafts,
   listSendState: mocks.listSendState,
+  listBuyerVoiceCalls: mocks.listBuyerVoiceCalls,
   getDraftForSupplier: mocks.getDraftForSupplier,
 }));
 // The DraftCard's server actions import the agent; no model is ever called from these tests.
@@ -266,6 +268,7 @@ beforeEach(() => {
     buyerHasNumber: false,
     invoices: [SHARMA_INVOICE_ID, PAID_INVOICE_ID].map((invoiceId) => ({ invoiceId, sendableDrafts: [], lastSent: null })),
   });
+  mocks.listBuyerVoiceCalls.mockReset().mockResolvedValue([]);
   mocks.getDraftForSupplier.mockReset().mockResolvedValue(null);
   errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
   nowSpy = vi.spyOn(Date, "now").mockReturnValue(NOW);

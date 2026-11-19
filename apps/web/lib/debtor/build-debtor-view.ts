@@ -1,4 +1,4 @@
-import type { DebtorData, DraftWithContext, Supplier } from "@dues-banshee/db";
+import type { BuyerVoiceCall, DebtorData, DraftWithContext, Supplier } from "@dues-banshee/db";
 import { activePromiseUntil, type BankRate, type CalendarDate } from "@dues-banshee/engine";
 import { buildGraveyard, type TombstoneView } from "../graveyard/build-graveyard";
 import { overdueText } from "../graveyard/labels";
@@ -36,6 +36,8 @@ export interface BuildDebtorViewInput {
   data: DebtorData;
   bankRate: BankRate | null;
   drafts: readonly DraftWithContext[];
+  /** The buyer's joined Voice_Calls from `listBuyerVoiceCalls`. */
+  calls: readonly BuyerVoiceCall[];
   today: CalendarDate;
   override: CalendarDate | null;
 }
@@ -49,6 +51,7 @@ export function buildDebtorView({
   data,
   bankRate,
   drafts,
+  calls,
   today,
   override,
 }: BuildDebtorViewInput): DebtorView {
@@ -83,6 +86,7 @@ export function buildDebtorView({
       records: data.records,
       events: data.events,
       promises: data.promises,
+      calls,
       today,
     }),
     drafts: drafts.filter((d) => d.buyerId === data.buyer.id && panelInvoiceIds.has(d.invoice.id)),

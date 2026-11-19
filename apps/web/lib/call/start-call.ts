@@ -117,7 +117,7 @@ export async function startCallCore(
   if (deps.apiKeyConfigured) {
     const data = await getDebtorData(db, supplier.id, invoice.buyerId, today);
     if (data !== null) {
-      const view = buildDebtorView({ supplier, data, bankRate: null, drafts: [], today, override });
+      const view = buildDebtorView({ supplier, data, bankRate: null, drafts: [], calls: [], today, override });
       const panel = view.panels.find((p) => p.tombstone.id === invoice.invoiceId);
       callable = panel !== undefined && isCallableInvoice(panel.tombstone, today);
     }

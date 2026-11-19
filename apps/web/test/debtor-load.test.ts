@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   getDebtorData: vi.fn(),
   listPendingDrafts: vi.fn(),
   listSendState: vi.fn(),
+  listBuyerVoiceCalls: vi.fn(),
 }));
 
 vi.mock("@dues-banshee/db", async (importOriginal) => ({
@@ -25,6 +26,7 @@ vi.mock("@dues-banshee/db", async (importOriginal) => ({
   getDebtorData: mocks.getDebtorData,
   listPendingDrafts: mocks.listPendingDrafts,
   listSendState: mocks.listSendState,
+  listBuyerVoiceCalls: mocks.listBuyerVoiceCalls,
 }));
 
 import { loadDebtorData } from "@/lib/debtor/load";
@@ -73,6 +75,7 @@ beforeEach(() => {
   mocks.getDebtorData.mockReset().mockResolvedValue(DEBTOR_DATA);
   mocks.listPendingDrafts.mockReset().mockResolvedValue([]);
   mocks.listSendState.mockReset().mockResolvedValue({ buyerHasNumber: false, invoices: [] });
+  mocks.listBuyerVoiceCalls.mockReset().mockResolvedValue([]);
   errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
@@ -81,6 +84,12 @@ afterEach(() => {
 });
 
 describe("loadDebtorData", () => {
+  it("reads the buyer's voice calls for the session supplier at the request instant (Req 9.7)", async () => {
+    const result = await loadDebtorData(DB, SUPPLIER_ID, BUYER_ID, NOW_MS, undefined);
+    expect(result.kind).toBe("ok");
+    expect(mocks.listBuyerVoiceCalls).toHaveBeenCalledWith(DB, SUPPLIER_ID, BUYER_ID, new Date(NOW_MS));
+  });
+
   it.each([BUYER_ID, "not-a-uuid", "", "../../etc/passwd"])(
     "returns stale for id %j before any id check or buyer query",
     async (id) => {

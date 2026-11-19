@@ -2,6 +2,7 @@ import {
   DEMO_INVOICES,
   DEMO_SUPPLIER,
   toEngineInvoice,
+  type BuyerVoiceCall,
   type DebtorEventRow,
   type DebtorPromiseRow,
   type GraveyardInvoiceRecord,
@@ -12,7 +13,7 @@ import {
 import { formatINR, type BankRate } from "@dues-banshee/engine";
 import { describe, expect, it } from "vitest";
 import { buildDebtorView } from "@/lib/debtor/build-debtor-view";
-import { ACTION_TEXT, type TimelineEntry } from "@/lib/debtor/candle-timeline";
+import { ACTION_TEXT, CALL_OUTCOME_TEXT, formatDuration, type TimelineEntry } from "@/lib/debtor/candle-timeline";
 
 const TODAY = "2026-11-12";
 const BANK_RATE: BankRate = { annualBps: 575, asOf: "2026-10-07" };
@@ -30,12 +31,14 @@ function timelineFor(
   records: GraveyardInvoiceRecord[],
   events: DebtorEventRow[],
   promises: DebtorPromiseRow[],
+  calls: BuyerVoiceCall[] = [],
 ): TimelineEntry[] {
   return buildDebtorView({
     supplier: SUPPLIER,
     data: { buyer, records, events, promises },
     bankRate: BANK_RATE,
     drafts: [],
+    calls,
     today: TODAY,
     override: null,
   }).timeline;
@@ -105,7 +108,7 @@ describe("buildCandleTimeline: Sharma Traders at 2026-11-12 (Req 10.2)", () => {
       { id: "ev-drafted", invoiceId: "inv-sharma", step: "whatsapp_nudge", action: "drafted", occurredOn: "2026-11-10" },
     ];
     const promises: DebtorPromiseRow[] = [
-      { id: "pr-1", invoiceId: "inv-sharma", promisedDate: "2026-11-20", amountPaise: 41200000, recordedOn: "2026-11-11" },
+      { id: "pr-1", invoiceId: "inv-sharma", promisedDate: "2026-11-20", amountPaise: 41200000, recordedOn: "2026-11-11", source: "manual", isPartial: false, supersededOn: null },
     ];
     expect(timelineFor(SHARMA_BUYER, [sharmaRecord()], events, promises)).toEqual([
       {
@@ -215,9 +218,9 @@ const MEHRA_EVENTS = (): DebtorEventRow[] => [
 ];
 
 const MEHRA_PROMISES = (): DebtorPromiseRow[] => [
-  { id: "pr-1", invoiceId: "inv-a", promisedDate: "2026-11-20", amountPaise: 10000000, recordedOn: "2026-10-22" },
+  { id: "pr-1", invoiceId: "inv-a", promisedDate: "2026-11-20", amountPaise: 10000000, recordedOn: "2026-10-22", source: "manual", isPartial: false, supersededOn: null },
   // Recorded after Today: excluded.
-  { id: "pr-2", invoiceId: "inv-b", promisedDate: "2026-11-30", amountPaise: 2500000, recordedOn: "2026-11-14" },
+  { id: "pr-2", invoiceId: "inv-b", promisedDate: "2026-11-30", amountPaise: 2500000, recordedOn: "2026-11-14", source: "manual", isPartial: false, supersededOn: null },
 ];
 
 const EXPECTED_MEHRA: TimelineEntry[] = [
@@ -514,5 +517,125 @@ describe("ACTION_TEXT (Req 5.4, 5.5)", () => {
       expired: "expired",
       sent: "sent",
     });
+  });
+});
+
+const PROMISE_BASE: DebtorPromiseRow = {
+  id: "pr-v",
+  invoiceId: "inv-sharma",
+  promisedDate: "2026-11-20",
+  amountPaise: 41712794,
+  recordedOn: "2026-11-12",
+  source: "voice",
+  isPartial: false,
+  supersededOn: null,
+};
+
+describe("voice promise text (Req 9.3)", () => {
+  const textOf = (p: DebtorPromiseRow): string | undefined =>
+    timelineFor(SHARMA_BUYER, [sharmaRecord()], [], [p]).find((e) => e.kind === "promise")?.text;
+
+  it("adds (by voice) to a voice promise", () => {
+    expect(textOf(PROMISE_BASE)).toBe(`Promised ${formatINR(41712794, "full")} by 20 Nov 2026 (by voice)`);
+  });
+
+  it("adds (by voice, partial) to a partial voice promise", () => {
+    expect(textOf({ ...PROMISE_BASE, amountPaise: 20000000, isPartial: true })).toBe(
+      `Promised ${formatINR(20000000, "full")} by 20 Nov 2026 (by voice, partial)`,
+    );
+  });
+
+  it("appends (replaced) once superseded on or before Today, and not before", () => {
+    expect(textOf({ ...PROMISE_BASE, recordedOn: "2026-11-10", supersededOn: "2026-11-12" })).toBe(
+      `Promised ${formatINR(41712794, "full")} by 20 Nov 2026 (by voice) (replaced)`,
+    );
+    expect(textOf({ ...PROMISE_BASE, recordedOn: "2026-11-10", supersededOn: "2026-11-13" })).toBe(
+      `Promised ${formatINR(41712794, "full")} by 20 Nov 2026 (by voice)`,
+    );
+  });
+
+  it("leaves a manual promise text unchanged, and adds (replaced) when it was replaced", () => {
+    const manual = { ...PROMISE_BASE, source: "manual" as const };
+    expect(textOf(manual)).toBe(`Promised ${formatINR(41712794, "full")} by 20 Nov 2026`);
+    expect(textOf({ ...manual, supersededOn: "2026-11-12" })).toBe(
+      `Promised ${formatINR(41712794, "full")} by 20 Nov 2026 (replaced)`,
+    );
+  });
+});
+
+function call(over: Partial<BuyerVoiceCall> = {}): BuyerVoiceCall {
+  return {
+    id: "call-1",
+    invoiceId: "inv-sharma",
+    callToday: "2026-11-12",
+    status: "ended",
+    startedAt: new Date("2026-11-12T06:00:00Z"),
+    endedAt: new Date("2026-11-12T06:01:07Z"),
+    durationSeconds: 67,
+    outcome: "promise",
+    transcript: [{ id: "tl-1", speaker: "buyer", text: "<b>haan</b>", receivedAt: new Date("2026-11-12T06:00:30Z") }],
+    toolCalls: [
+      {
+        id: "tc-1",
+        callId: "call_a",
+        tool: "get_invoice_facts",
+        arguments: "{}",
+        result: { ok: true },
+        createdAt: new Date("2026-11-12T06:00:10Z"),
+      },
+    ],
+    ...over,
+  };
+}
+
+describe("call entries (Req 9.4)", () => {
+  const callsOf = (calls: BuyerVoiceCall[], promises: DebtorPromiseRow[] = []): TimelineEntry[] =>
+    timelineFor(SHARMA_BUYER, [sharmaRecord()], [], promises, calls);
+
+  it("shows an ended call as 'Voice call: <outcome>, m:ss' with its details", () => {
+    expect(callsOf([call()]).filter((e) => e.kind === "call")).toEqual([
+      {
+        kind: "call",
+        date: "2026-11-12",
+        dateText: "12 Nov 2026",
+        text: "Voice call: promise to pay, 1:07",
+        invoiceNumber: "LPC/26-27/0412",
+        rowId: "call-1",
+        lit: true,
+        tone: "spectral",
+        call: {
+          transcript: [{ id: "tl-1", speaker: "buyer", text: "<b>haan</b>" }],
+          toolCalls: [{ id: "tc-1", tool: "get_invoice_facts", arguments: "{}", result: '{"ok":true}' }],
+        },
+      },
+    ]);
+  });
+
+  it("uses the literal outcome texts", () => {
+    expect(CALL_OUTCOME_TEXT).toEqual({
+      promise: "promise to pay",
+      dispute: "disputed",
+      no_promise: "no promise",
+      incomplete: "incomplete",
+      consent_declined: "declined the AI call",
+    });
+  });
+
+  it("formats durations as m:ss", () => {
+    expect([0, 7, 60, 67, 300].map(formatDuration)).toEqual(["0:00", "0:07", "1:00", "1:07", "5:00"]);
+  });
+
+  it("excludes calls dated after Today, calls that have not ended, and calls of other invoices", () => {
+    const entries = callsOf([
+      call({ id: "future", callToday: "2026-11-13" }),
+      call({ id: "live", status: "live", outcome: null, durationSeconds: null, endedAt: null }),
+      call({ id: "foreign", invoiceId: "inv-other" }),
+    ]);
+    expect(entries.filter((e) => e.kind === "call")).toEqual([]);
+  });
+
+  it("puts a call before a promise on the same date", () => {
+    const entries = callsOf([call()], [PROMISE_BASE]);
+    expect(entries.filter((e) => e.date === "2026-11-12").map((e) => e.kind)).toEqual(["call", "promise"]);
   });
 });

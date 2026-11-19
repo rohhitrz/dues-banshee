@@ -166,7 +166,7 @@ describe("buildDebtorView panels", () => {
         const buyerRecords = records.filter((r) => r.buyerId === buyer.id);
         const data: DebtorData = { buyer, records: buyerRecords, events: [], promises: [] };
 
-        const view = buildDebtorView({ supplier: SUPPLIER, data, bankRate, drafts: [], today, override: null });
+        const view = buildDebtorView({ supplier: SUPPLIER, data, bankRate, drafts: [], calls: [], today, override: null });
 
         const expected = buildGraveyard(SUPPLIER, records, bankRate, today).tombstones.filter(
           (t) => t.buyerId === buyer.id,
@@ -238,7 +238,7 @@ describe("buildDebtorView drafts", () => {
           const data: DebtorData = { buyer, records: buyerRecords, events: [], promises: [] };
           const before = drafts.map((d) => d.draft.id);
 
-          const view = buildDebtorView({ supplier: SUPPLIER, data, bankRate, drafts, today, override: null });
+          const view = buildDebtorView({ supplier: SUPPLIER, data, bankRate, drafts, calls: [], today, override: null });
 
           const panelIds = new Set(view.panels.map((p) => p.tombstone.id));
           const expected = drafts.filter((d) => d.buyerId === buyer.id && panelIds.has(d.invoice.id));

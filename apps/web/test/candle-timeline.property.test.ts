@@ -172,10 +172,13 @@ const arbTimelineScenario: fc.Arbitrary<TimelineScenario> = fc
       promisedDate: dayToDate(todayDay + p.promisedOffset),
       amountPaise: p.amountPaise,
       recordedOn: dayToDate(todayDay + p.recordedOffset),
+      source: "manual",
+      isPartial: false,
+      supersededOn: null,
     }));
     const bankRate: BankRate = { annualBps: 575, asOf: dayToDate(todayDay - 30) };
     const data: DebtorData = { buyer: BUYER, records, events: eventRows, promises: promiseRows };
-    const panels = buildDebtorView({ supplier: SUPPLIER, data, bankRate, drafts: [], today, override: null }).panels;
+    const panels = buildDebtorView({ supplier: SUPPLIER, data, bankRate, drafts: [], calls: [], today, override: null }).panels;
     return { today, records, events: eventRows, promises: promiseRows, panels };
   });
 
@@ -219,7 +222,7 @@ describe("buildCandleTimeline properties", () => {
           }
         }
 
-        const timeline = buildCandleTimeline({ panels, records, events, promises, today });
+        const timeline = buildCandleTimeline({ panels, records, events, promises, calls: [], today });
         const actual = timeline.map((t) => entryKey(t.kind, t.rowId, t.date));
 
         // Same multiset: nothing missing, nothing extra, no duplicates.
@@ -233,7 +236,7 @@ describe("buildCandleTimeline properties", () => {
   // Feature: debtor-ui, Property 6: Timeline order is total and input-order independent
   // **Validates: Requirements 5.3**
   it("Property 6: Timeline order is total and input-order independent", () => {
-    const rank: Record<EntryKind, number> = { invoice: 0, due: 1, ladder: 2, promise: 3, payment: 4 };
+    const rank: Record<EntryKind, number> = { invoice: 0, due: 1, ladder: 2, call: 3, promise: 4, payment: 5 };
     /** A full-length shuffle of `items`. */
     const permutation = <T>(items: readonly T[]): fc.Arbitrary<T[]> =>
       fc.shuffledSubarray([...items], { minLength: items.length, maxLength: items.length });
@@ -256,9 +259,10 @@ describe("buildCandleTimeline properties", () => {
           records: scenario.records,
           events: scenario.events,
           promises: scenario.promises,
+          calls: [],
           today,
         });
-        const shuffled = buildCandleTimeline({ panels, records, events, promises, today });
+        const shuffled = buildCandleTimeline({ panels, records, events, promises, calls: [], today });
 
         // Identical output whatever the input order.
         expect(shuffled).toEqual(base);
@@ -303,14 +307,14 @@ describe("buildCandleTimeline properties", () => {
           events: scenario.events,
           promises: scenario.promises,
         };
-        const panels = buildDebtorView({ supplier: SUPPLIER, data, bankRate, drafts: [], today, override: null }).panels;
+        const panels = buildDebtorView({ supplier: SUPPLIER, data, bankRate, drafts: [], calls: [], today, override: null }).panels;
         return { ...scenario, today, panels };
       });
 
     fc.assert(
       fc.property(fc.oneof(arbTimelineScenario, arbRetargeted), ({ today, records, events, promises, panels }) => {
         const resurrectedIds = new Set(panels.filter((p) => p.tombstone.state === "resurrected").map((p) => p.tombstone.id));
-        const timeline = buildCandleTimeline({ panels, records, events, promises, today });
+        const timeline = buildCandleTimeline({ panels, records, events, promises, calls: [], today });
 
         for (const entry of timeline) {
           // Lit exactly when the entry's date has been reached.

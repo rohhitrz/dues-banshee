@@ -1,14 +1,22 @@
 import type {
+  BuyerVoiceCall,
   DebtorEventRow,
   DebtorPromiseRow,
   EscalationAction,
   GraveyardInvoiceRecord,
+  VoiceCallOutcome as CallOutcome,
 } from "@dues-banshee/db";
 import { formatDisplayDate, formatINR, type CalendarDate } from "@dues-banshee/engine";
 import { STEP_TEXT } from "../graveyard/labels";
 import type { InvoicePanelView } from "./build-debtor-view";
 
-export type EntryKind = "invoice" | "due" | "ladder" | "promise" | "payment";
+export type EntryKind = "invoice" | "due" | "ladder" | "call" | "promise" | "payment";
+
+/** What a `call` entry shows inside its closed `<details>`. Plain text only: React escapes it on render. */
+export interface CallDetails {
+  transcript: { id: string; speaker: "buyer" | "agent"; text: string }[];
+  toolCalls: { id: string; tool: string; arguments: string; result: string }[];
+}
 
 export interface TimelineEntry {
   kind: EntryKind;
@@ -19,6 +27,8 @@ export interface TimelineEntry {
   rowId: string;
   lit: boolean;
   tone: "bone" | "spectral" | "ember";
+  /** Set on `call` entries only. */
+  call?: CallDetails;
 }
 
 export interface CandleTimelineInput {
@@ -26,6 +36,7 @@ export interface CandleTimelineInput {
   records: readonly GraveyardInvoiceRecord[];
   events: readonly DebtorEventRow[];
   promises: readonly DebtorPromiseRow[];
+  calls: readonly BuyerVoiceCall[];
   today: CalendarDate;
 }
 
@@ -38,7 +49,33 @@ export const ACTION_TEXT = {
   sent: "sent",
 } as const satisfies Record<EscalationAction, string>;
 
-const KIND_RANK: Record<EntryKind, number> = { invoice: 0, due: 1, ladder: 2, promise: 3, payment: 4 };
+export const CALL_OUTCOME_TEXT = {
+  promise: "promise to pay",
+  dispute: "disputed",
+  no_promise: "no promise",
+  incomplete: "incomplete",
+  consent_declined: "declined the AI call",
+} as const satisfies Record<CallOutcome, string>;
+
+const KIND_RANK: Record<EntryKind, number> = { invoice: 0, due: 1, ladder: 2, call: 3, promise: 4, payment: 5 };
+
+/**
+ * Whole seconds as `m:ss` ("0:07", "5:00"). A call lasts at most 300 s (the database caps it), so the
+ * clamp below is never reached in practice. Formatting only: it takes `mm:ss` from an ISO time string.
+ */
+export function formatDuration(totalSeconds: number): string {
+  const s = Math.min(3599, Math.max(0, Math.trunc(totalSeconds)));
+  const mmss = new Date(s * 1000).toISOString().slice(14, 19);
+  return mmss.startsWith("0") ? mmss.slice(1) : mmss;
+}
+
+/** The suffixes of a promise entry (Req 9 C3): voice, voice + partial, and replaced on or before Today. */
+function promiseText(p: DebtorPromiseRow, today: CalendarDate): string {
+  let text = `Promised ${formatINR(p.amountPaise, "full")} by ${formatDisplayDate(p.promisedDate)}`;
+  if (p.source === "voice") text += p.isPartial ? " (by voice, partial)" : " (by voice)";
+  if (p.supersededOn !== null && p.supersededOn <= today) text += " (replaced)";
+  return text;
+}
 
 /** Code-unit comparison, never locale-aware. */
 function cmp(a: string | number, b: string | number): number {
@@ -59,6 +96,7 @@ export function buildCandleTimeline({
   records,
   events,
   promises,
+  calls,
   today,
 }: CandleTimelineInput): TimelineEntry[] {
   const panelByInvoice = new Map(panels.map((p) => [p.tombstone.id, p]));
@@ -71,6 +109,7 @@ export function buildCandleTimeline({
     invoiceNumber: string,
     rowId: string,
     tone: TimelineEntry["tone"],
+    call?: CallDetails,
   ): TimelineEntry => ({
     kind,
     date,
@@ -80,6 +119,7 @@ export function buildCandleTimeline({
     rowId,
     lit: date <= today,
     tone,
+    ...(call === undefined ? {} : { call }),
   });
 
   const out: TimelineEntry[] = [];
@@ -126,10 +166,35 @@ export function buildCandleTimeline({
       entry(
         "promise",
         p.recordedOn,
-        `Promised ${formatINR(p.amountPaise, "full")} by ${formatDisplayDate(p.promisedDate)}`,
+        promiseText(p, today),
         panel.tombstone.invoiceNumber,
         p.id,
         "spectral",
+      ),
+    );
+  }
+
+  for (const c of calls) {
+    const panel = panelByInvoice.get(c.invoiceId);
+    if (panel === undefined || c.status !== "ended" || c.outcome === null || c.durationSeconds === null) continue;
+    if (c.callToday > today) continue;
+    out.push(
+      entry(
+        "call",
+        c.callToday,
+        `Voice call: ${CALL_OUTCOME_TEXT[c.outcome]}, ${formatDuration(c.durationSeconds)}`,
+        panel.tombstone.invoiceNumber,
+        c.id,
+        c.outcome === "promise" ? "spectral" : "bone",
+        {
+          transcript: c.transcript.map((l) => ({ id: l.id, speaker: l.speaker, text: l.text })),
+          toolCalls: c.toolCalls.map((t) => ({
+            id: t.id,
+            tool: t.tool,
+            arguments: t.arguments,
+            result: JSON.stringify(t.result) ?? "",
+          })),
+        },
       ),
     );
   }

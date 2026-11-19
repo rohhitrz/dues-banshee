@@ -74,7 +74,7 @@ function input(
     events: [],
     promises: [],
   };
-  return { supplier: SUPPLIER, data, bankRate: BANK_RATE, drafts: [], today: TODAY, override: null, ...overrides };
+  return { supplier: SUPPLIER, data, bankRate: BANK_RATE, drafts: [], calls: [], today: TODAY, override: null, ...overrides };
 }
 
 // A single-record view has one distinct principal, so heightsByRank gives rank 0 -> 130 px.

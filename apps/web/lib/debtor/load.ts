@@ -5,6 +5,7 @@ import {
   getBankRate,
   getDebtorData,
   getSupplier,
+  listBuyerVoiceCalls,
   listPendingDrafts,
   listSendState,
   type Db,
@@ -39,7 +40,7 @@ export type DebtorLoadResult =
 /**
  * Loads one buyer's Debtor_View. Never throws and never calls `redirect()` or `notFound()`.
  * Order: supplier (stale before any id check) → Today → uuid check (no buyer query for a non-uuid) →
- * Bank_Rate (`BankRateNotFoundError` → null) → buyer data (`null` → not_found) → pending Drafts → send state
+ * Bank_Rate (`BankRateNotFoundError` → null) → buyer data (`null` → not_found) → pending Drafts → send state → voice calls
  * → view. Only the `twilioReady` and `OPENAI_API_KEY`-is-set booleans are taken from the env; no secret reaches the result.
  */
 export async function loadDebtorData(
@@ -73,7 +74,9 @@ export async function loadDebtorData(
     const drafts = await listPendingDrafts(db, supplierId);
     const sendState = await listSendState(db, supplierId, buyerIdRaw);
     const twilioReady = readChannelEnv(env).twilio !== null;
-    const view = buildDebtorView({ supplier, data, bankRate, drafts, today, override });
+    // Ends stale calls first, then reads this buyer's calls scoped through `invoices.supplier_id`.
+    const voiceCalls = await listBuyerVoiceCalls(db, supplierId, buyerIdRaw, new Date(nowMs));
+    const view = buildDebtorView({ supplier, data, bankRate, drafts, calls: voiceCalls, today, override });
     const stateByInvoice = new Map(sendState.invoices.map((s) => [s.invoiceId, s]));
     const send: Record<string, SendControlsData> = {};
     for (const panel of view.panels) {

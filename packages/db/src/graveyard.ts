@@ -4,7 +4,7 @@ import type { Db } from "./client";
 import { toEngineInvoice } from "./invoices";
 import type { EscalationAction } from "./ladder";
 import { countedPromise } from "./promise-filter";
-import { buyers, escalationEvents, invoices, promises, suppliers } from "./schema";
+import { buyers, escalationEvents, invoices, promises, suppliers, type PromiseRow } from "./schema";
 
 /**
  * One stored invoice as the dashboard needs it: the Engine `Invoice` plus the display fields the
@@ -40,6 +40,11 @@ export interface DebtorPromiseRow {
   promisedDate: CalendarDate;
   amountPaise: Paise;
   recordedOn: CalendarDate;
+  /** `manual` for an owner-entered promise, `voice` for one the call agent recorded. */
+  source: PromiseRow["source"];
+  isPartial: boolean;
+  /** The day a newer promise replaced this one; null for the Current_Promise. */
+  supersededOn: CalendarDate | null;
 }
 
 /** Everything the Debtor_Page reads for one of the supplier's buyers. */
@@ -49,7 +54,7 @@ export interface DebtorData {
   records: GraveyardInvoiceRecord[];
   /** Every action, not only `approved`. Ordered by `occurred_on`, then row id. */
   events: DebtorEventRow[];
-  /** Ordered by `recorded_on`, then row id. */
+  /** Every row, replaced ones included. Ordered by `recorded_on`, then row id. */
   promises: DebtorPromiseRow[];
 }
 
@@ -113,6 +118,9 @@ async function readRecords(
       promisedDate: promises.promisedDate,
       amountPaise: promises.amountPaise,
       recordedOn: promises.recordedOn,
+      source: promises.source,
+      isPartial: promises.isPartial,
+      supersededOn: promises.supersededOn,
       counted: countedPromise(today).as("counted"),
     })
     .from(promises)
@@ -159,6 +167,9 @@ async function readRecords(
       promisedDate: p.promisedDate,
       amountPaise: p.amountPaise,
       recordedOn: p.recordedOn,
+      source: p.source,
+      isPartial: p.isPartial,
+      supersededOn: p.supersededOn,
     })),
   };
 }

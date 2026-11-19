@@ -206,6 +206,9 @@ describe("getDebtorData", () => {
           promisedDate: "2026-11-20",
           amountPaise: 20_000_000,
           recordedOn: "2026-10-28",
+          source: "manual",
+          isPartial: false,
+          supersededOn: null,
         },
       ],
     });
@@ -315,6 +318,9 @@ describe("getDebtorData", () => {
           promisedDate: "2026-11-30",
           amountPaise: 7_700_000,
           recordedOn: "2026-10-02",
+          source: "manual",
+          isPartial: false,
+          supersededOn: null,
         },
       ],
     });

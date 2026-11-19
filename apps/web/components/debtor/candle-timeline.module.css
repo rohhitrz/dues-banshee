@@ -88,6 +88,56 @@
   font-size: 0.75rem;
 }
 
+/* Call details: closed by default. The summary is a 44px target. */
+.details {
+  margin-top: 4px;
+  color: #ece7db;
+}
+.summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  cursor: pointer;
+  color: #7ce8c0;
+}
+.detailsHeading {
+  margin: 8px 0 4px;
+  color: #a9a497;
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+.detailsEmpty {
+  margin: 0;
+  color: #a9a497;
+  font-size: 0.85rem;
+}
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.line {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+.speaker {
+  color: #a9a497;
+  font-family: var(--font-figures, "JetBrains Mono"), ui-monospace, monospace;
+  font-size: 0.75rem;
+}
+.code {
+  color: #ece7db;
+  font-family: var(--font-figures, "JetBrains Mono"), ui-monospace, monospace;
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 @media (prefers-reduced-motion: no-preference) {
   @keyframes flicker {
     0%,
