@@ -41,15 +41,24 @@ Sharma Traders tombstone → escalation draft approved by the owner → WhatsApp
 - **Twilio inbound webhook:** signature-verified, log only.
 - **Roadmap (auto-send):** after Meta business verification succeeds, add an automatic sender (Meta Cloud API or a Twilio/BSP-registered sender) behind the same interface. Not in the hackathon scope.
 
-### 5. buyer-voice-call — risky tier, Supervised, 2 reviews
-- **Browser WebRTC** with OpenAI `gpt-realtime-2.1-mini`, behind the `VoiceProvider` interface. Sarvam is the fallback only.
-- **Persona:** Hinglish, from `voice-persona.md`.
-- **Tools mid-call:** `get_invoice_facts`, `record_promise_to_pay {amount, date}`.
-- **Call log and transcript.** Calls only between 10am and 7pm. The owner starts each call. Switch on the "Start call" placeholder on the debtor page.
-- **Carry-forward:** filter promise history by `recorded_on` in the db once promises are recorded for real.
-- **Non-goals:** real phone (PSTN) calls; label them as roadmap.
+### 5. buyer-voice-call — risky tier, Supervised, 2 reviews (SHRUNK 19 Nov: happy path, target ≤ ~250 credits)
+- **Why:** differentiates from Vasuli (WhatsApp/email/SMS only, no voice); the Innovation + Presentation demo moment.
+- **Flow:** owner clicks "Start call" on the debtor page (10:00–19:00 IST, Mon–Sat, max 1 call per buyer per day) → server creates a `voice_calls` row bound to the invoice + single-use token (10 min) → owner sends the link with the existing wa.me button, or opens it on the same laptop → `/call/[token]`: buyer taps "Join call".
+- **Connection:** server mints an ephemeral key (`POST /v1/realtime/client_secrets`, `expires_after` 60 s, `Cache-Control: no-store`) holding all session config: instructions from `voice-persona.md`, tools, voice `marin`, input transcription, `semantic_vad`. Browser: hand-rolled RTCPeerConnection + mic + `oai-events` data channel, SDP to `/v1/realtime/calls`. No `@openai/agents`. The standard key never reaches the browser. Behind `VoiceProvider` (Sarvam / GPT-Live = future providers).
+- **Models:** `gpt-realtime-2.1-mini` default, `gpt-realtime-2.1` switch for the demo; IDs only in `models.ts` (env override). Transcription `gpt-live-transcribe` (manual Hinglish smoke test day 1 vs `gpt-realtime-whisper`); never `gpt-4o-transcribe` / `whisper-1` (deprecated).
+- **Tools run on the server only:** browser forwards each function call with `voiceCallId`; server takes the invoice from the `voice_calls` row (never from the client), validates with zod, idempotent on `call_id`, returns JSON; browser sends `function_call_output` then `response.create`.
+  - `get_invoice_facts` → engine output (principal, interest to today, days late, total due) as `formatINR` strings + rule IDs.
+  - `record_promise_to_pay {amount_paise, date_iso, spoken_text}` → amount > 0 and ≤ engine total due (principal + s.16 interest); date from today IST to min(today+30, 31 March of the FY); partial allowed and flagged; one active promise per invoice (new replaces old, history kept); `source=voice`. Invalid → error JSON, agent explains and re-asks. Promise shows on the timeline and pauses the ladder via existing engine promise logic.
+- **Persona rules:** opens with AI identity + supplier name + "yeh call record aur transcribe ho rahi hai"; Hinglish, mirrors the buyer; every spoken number comes from tool output; reads amount (digits + words) and weekday + date back and waits for an explicit "haan" before `record_promise_to_pay`; no threats, legal remedies as facts only; dispute or "call mat karo" → owner will follow up, end call, outcome logged.
+- **Call log:** `voice_calls` (status, started/ended, duration, outcome: promise | dispute | no_promise | incomplete | consent_declined) + transcript lines (`conversation.item.input_audio_transcription.completed`, `response.output_audio_transcript.done`) + tool calls, shown on the debtor timeline. No raw audio stored.
+- **Limits:** 5-minute cap (client countdown hangs up; server refuses tool calls after 5 min and marks the call ended). Mic/network/model failure → `incomplete`, no promise.
+- **Browser:** getUserMedia + audio.play inside the tap handler, `playsinline`, echoCancellation/noiseSuppression/autoGainControl on.
+- **UI copy:** "AI call over the internet. Phone (PSTN) calls are on the roadmap." + standard disclaimer.
+- **Carry-forward:** filter promise history by `recorded_on`.
+- **Kill rule:** reliable on the live site by 24 Nov, else demo on one laptop only; still flaky on 26 Nov → leave it out of the video.
+- **Non-goals:** PSTN, server sideband connection, owner review of promises, DNC list, dispute tool, raw audio storage, GPT-Live.
+- **Persona:** `.kiro/steering/voice-persona.md`, buyer-facing section only (owner-facing commands are cut). Its "consent flag" = the buyer hearing the AI + recording disclosure and not objecting; an objection ends the call (outcome `consent_declined`).
 
-- **Tests:** mock OpenAI Realtime in CI (no live calls); exact `toEqual` on promise amount and date (from engine output, never the model); call-hours check tests; one optional manual live call.
 
 ### 6. guardrails-evals — risky-lite tier, Supervised, 1 review
 - Rule-ID citation check, tone check, call-hours check, about 15 labelled eval fixtures.
@@ -67,4 +76,4 @@ Sharma Traders tombstone → escalation draft approved by the owner → WhatsApp
 ## Cut
 - `owner-voice-commands` (decided 13 Nov).
 - **If late, shrink in this order:** landing Full → Lite, then guardrails down to the citation check only, then debtor-ui actions to the demo path only.
-- **Never cut:** dashboard-ui, escalation-ladder, one voice call, crew-app (thin).
+- **Never cut:** dashboard-ui, escalation-ladder, one voice call (on one laptop if the phone link is flaky), crew-app (thin)
