@@ -26,16 +26,27 @@ export const PLACEHOLDER_RULE: Partial<Record<Placeholder, RuleId>> = {
   deduction_at_risk: "IT-43BH",
 };
 
-export type BlockReason =
-  | "empty_body"
-  | "missing_citation"
-  | "invalid_rule_id"
-  | "rule_not_applicable"
-  | "unknown_placeholder"
-  | "uncited_placeholder"
-  | "bank_rate_missing"
-  | "literal_figure"
-  | "acceptance_rule_missing";
+/**
+ * Every reason a draft can be blocked. The first nine come from `validateCitations`;
+ * the last four come from the tone and tense checks, which run after it.
+ */
+export const BLOCK_REASONS = [
+  "empty_body",
+  "missing_citation",
+  "invalid_rule_id",
+  "rule_not_applicable",
+  "unknown_placeholder",
+  "uncited_placeholder",
+  "bank_rate_missing",
+  "literal_figure",
+  "acceptance_rule_missing",
+  "missing_address",
+  "threat_phrase",
+  "begging_phrase",
+  "overdue_tense",
+] as const;
+
+export type BlockReason = (typeof BLOCK_REASONS)[number];
 
 export type CitationResult =
   | { ok: true; ruleIds: RuleId[] }

@@ -1,7 +1,7 @@
 import { RULE_IDS } from "@dues-banshee/engine";
 import type { RuleId } from "@dues-banshee/engine";
 import { describe, expect, it } from "vitest";
-import { validateCitations } from "../src/core/citations";
+import { BLOCK_REASONS, validateCitations } from "../src/core/citations";
 import type { CitationResult } from "../src/core/citations";
 
 const ALLOWED: readonly RuleId[] = ["MSMED-15", "MSMED-16", "IT-43BH", "MSMED-2B"];
@@ -28,6 +28,28 @@ const blocked = (reason: string, offending: string | null) => ({
   ok: false,
   reason,
   offending,
+});
+
+describe("BLOCK_REASONS", () => {
+  it("keeps the original nine reasons first, in order, then the four tone and tense reasons", () => {
+    expect(BLOCK_REASONS.slice(0, 9)).toEqual([
+      "empty_body",
+      "missing_citation",
+      "invalid_rule_id",
+      "rule_not_applicable",
+      "unknown_placeholder",
+      "uncited_placeholder",
+      "bank_rate_missing",
+      "literal_figure",
+      "acceptance_rule_missing",
+    ]);
+    expect(BLOCK_REASONS.slice(9)).toEqual([
+      "missing_address",
+      "threat_phrase",
+      "begging_phrase",
+      "overdue_tense",
+    ]);
+  });
 });
 
 describe("validateCitations: accepted output", () => {
