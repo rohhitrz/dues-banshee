@@ -37,7 +37,7 @@ This applies `0005_buyer_voice_call` to Neon. Without it the start-call action a
 - **Disclosure first.** The agent opens by saying it is an AI assistant calling for the supplier, and says "yeh call record aur transcribe ho rahi hai", before talking about the invoice.
 - **Facts match the page.** The figures the agent speaks, in words, match the invoice panel: principal ₹4,12,000, due 17 Oct 2026, 26 days late, interest ₹5,127.94 (512794 paise), total ₹4,17,127.94 (41712794 paise), tax-bomb date 31 Mar 2027 with 139 days left.
 - **Read-back.** The agent reads the amount in rupees, in words (never digits, the rupee symbol or "dollars"), and the date with its weekday exactly as the Date_List writes it ("Friday, 20 November 2026").
-- **Explicit "haan".** The agent calls `record_promise_to_pay` only after you say "haan". If it records before that, mark this item as failed.
+- **Clear yes.** The agent calls `record_promise_to_pay` only after you say a clear yes ("haan", "ji", "ok", "theek hai"). A vague answer such as "shayad" must get one more question, not a recording. If it records before a clear yes, mark this item as failed.
 - **Promise on the Candle_Timeline.** After the reload, the timeline shows "Promised ₹4,17,127.94 by 20 Nov 2026" (or the amount you gave), and the invoice panel shows "Promise to pay active until 20 Nov 2026". The "(by voice)" suffix and the call entry are task 7 and are not expected yet.
 - **Next Ladder_Run pauses.** With the dev server still running, in the shell where you sourced `.env.local`:
 
@@ -73,7 +73,7 @@ Fill this in after the run.
 | Disclosure line first | | |
 | `get_invoice_facts` figures match the page | | |
 | Read-back of amount (digits + words) and weekday + date | | |
-| Explicit "haan" before `record_promise_to_pay` | | |
+| Clear yes before `record_promise_to_pay` | | |
 | Promise on the Candle_Timeline after reload | | |
 | Next Ladder_Run pauses (`promise_active`) | | |
 | Transcript_Lines stored | | |

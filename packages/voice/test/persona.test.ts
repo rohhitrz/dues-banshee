@@ -107,10 +107,28 @@ describe("PERSONA_RULES contents", () => {
     expect(PERSONA_RULES).toContain("Never narrate what you are about to do");
   });
 
-  it("requires an explicit haan before record_promise_to_pay, after a read-back", () => {
+  it("requires a clear yes before record_promise_to_pay, after a read-back", () => {
     expect(PERSONA_RULES).toContain("read them back: the amount in rupees, in words");
-    expect(PERSONA_RULES).toContain('explicit "haan"');
+    expect(PERSONA_RULES).toContain("accept any clear yes as the confirmation");
     expect(PERSONA_RULES).toContain("Only then call record_promise_to_pay");
+  });
+
+  it("accepts the listed confirmation words and the Hindi or English equivalent (rule 5)", () => {
+    expect(PERSONA_RULES).toContain(
+      'After the read-back, accept any clear yes as the confirmation: "haan", "haan ji", "ji", "yes", "yeah", "okay", "ok", "theek hai", "done", or the Hindi or English equivalent.',
+    );
+  });
+
+  it("treats a vague or partial answer as not a yes and asks once more (rule 5)", () => {
+    expect(PERSONA_RULES).toContain(
+      'A vague or partial answer ("dekhte hain", "shayad", "try karunga") is not a yes. Ask once more for a clear yes or a correction, and do not call record_promise_to_pay yet.',
+    );
+  });
+
+  it("speaks Hinglish by default and switches only for a buyer who speaks only Hindi or only English (rule 5)", () => {
+    expect(PERSONA_RULES).toContain(
+      "Speak Hinglish by default. If the buyer speaks only Hindi or only English, switch to that language.",
+    );
   });
 
   it("resolves dates only through the date_list", () => {

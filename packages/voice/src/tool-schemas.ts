@@ -45,7 +45,7 @@ export const CALL_TOOLS: readonly { name: CallToolName; description: string; par
   {
     name: "record_promise_to_pay",
     description:
-      "Record the buyer's promise to pay. Call only after you have read the amount back in rupees, in words (amount_words style), and the date exactly as its date_list entry is written, and then waited for an explicit \"haan\". amount_paise is the amount in paise. date_iso is the date as YYYY-MM-DD, taken from the date list. spoken_text is what the buyer said.",
+      "Record the buyer's promise to pay. Call only after you have read the amount back in rupees, in words (amount_words style), and the date exactly as its date_list entry is written, and then heard a clear yes from the buyer (haan, ji, yes, ok, theek hai or the like, not a vague answer such as shayad). amount_paise is the amount in paise. date_iso is the date as YYYY-MM-DD, taken from the date list. spoken_text is what the buyer said.",
     parameters: parametersOf(RecordPromiseArgs),
   },
   {
