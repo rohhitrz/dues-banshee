@@ -13,12 +13,19 @@ import type { BankRate, CalendarDate } from "@dues-banshee/engine";
 import { resolveSupplierToday } from "../approvals/supplier-today";
 import { buildDebtorView, type DebtorView } from "./build-debtor-view";
 import { buildSendControls, type SendControlsData } from "./build-send-controls";
+import { buildStartCallControls, type StartCallControlsData } from "./build-start-call-controls";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export type DebtorLoadResult =
   /** `send` holds the send controls data of each invoice, keyed by invoice id. Booleans and text only. */
-  | { kind: "ok"; view: DebtorView; send: Record<string, SendControlsData> }
+  | {
+      kind: "ok";
+      view: DebtorView;
+      send: Record<string, SendControlsData>;
+      /** The "Start call" data of each invoice, keyed by invoice id. Booleans and ids only. */
+      calls: Record<string, StartCallControlsData>;
+    }
   /** The session's supplier no longer exists. The page redirects, outside any `try`. */
   | { kind: "stale" }
   /** Non-uuid id, unknown buyer, or another supplier's buyer. All look the same to the caller. */
@@ -33,7 +40,7 @@ export type DebtorLoadResult =
  * Loads one buyer's Debtor_View. Never throws and never calls `redirect()` or `notFound()`.
  * Order: supplier (stale before any id check) → Today → uuid check (no buyer query for a non-uuid) →
  * Bank_Rate (`BankRateNotFoundError` → null) → buyer data (`null` → not_found) → pending Drafts → send state
- * → view. Only the `twilioReady` boolean is taken from the Channel_Env; no secret reaches the result.
+ * → view. Only the `twilioReady` and `OPENAI_API_KEY`-is-set booleans are taken from the env; no secret reaches the result.
  */
 export async function loadDebtorData(
   db: Db,
@@ -80,7 +87,17 @@ export async function loadDebtorData(
         override,
       });
     }
-    return { kind: "ok", view, send };
+    const calls: Record<string, StartCallControlsData> = {};
+    for (const panel of view.panels) {
+      calls[panel.tombstone.id] = buildStartCallControls({
+        tombstone: panel.tombstone,
+        supplier,
+        today,
+        override,
+        env,
+      });
+    }
+    return { kind: "ok", view, send, calls };
   } catch (err) {
     if (err instanceof SupplierNotFoundError) return { kind: "stale" };
     console.error("loadDebtorData failed", err);

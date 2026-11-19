@@ -272,6 +272,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.unstubAllEnvs();
   errorSpy.mockRestore();
   nowSpy.mockRestore();
 });
@@ -490,9 +491,10 @@ describe("DebtorPage Today and the demo override (Req 2.2, 2.3)", () => {
 
     expect(visibleText(html)).toContain("Demo date: 10 Mar 2027");
     expect(mocks.getBankRate).toHaveBeenCalledWith(DB, "2027-03-10");
-    // One hidden `today` input in each of the Draft's four forms (save, approve, redraft, reject).
-    expect(count(html, 'name="today" value="2027-03-10"')).toBe(4);
-    expect(count(html, 'name="today"')).toBe(4);
+    // One hidden `today` input in each of the Draft's four forms (save, approve, redraft, reject) and one
+    // in the "Start call" form of the invoice panel.
+    expect(count(html, 'name="today" value="2027-03-10"')).toBe(5);
+    expect(count(html, 'name="today"')).toBe(5);
   });
 
   it("shows no chip and no today field without a valid override", async () => {
@@ -596,7 +598,8 @@ describe("DebtorPage Invoice_Panels and placeholders (Req 8.1, 8.2, 4.4)", () =>
     expect(panel).toContain("Next: WhatsApp nudge");
   });
 
-  it("renders 'Send pay link' disabled with its reason and 'Start call' disabled with 'Arrives with voice call'", async () => {
+  it("renders 'Send pay link' disabled with its reason and 'Start call' disabled with 'Voice calls not configured'", async () => {
+    vi.stubEnv("OPENAI_API_KEY", "");
     const panel = panelHtml(await render(), SHARMA_INVOICE_ID);
     const pay = /<button [^>]*>Send pay link<\/button>/.exec(panel)?.[0];
     const call = /<button [^>]*>Start call<\/button>/.exec(panel)?.[0];
@@ -605,19 +608,32 @@ describe("DebtorPage Invoice_Panels and placeholders (Req 8.1, 8.2, 4.4)", () =>
     for (const button of [pay!, call!]) {
       expect(button).toMatch(/\sdisabled(=""|\s|>)/);
     }
-    expect(call).toContain('type="button"');
     const payTarget = /aria-describedby="([^"]+)"/.exec(pay!)?.[1];
     const callTarget = /aria-describedby="([^"]+)"/.exec(call!)?.[1];
     expect(payTarget).toBe(`send-note-${SHARMA_INVOICE_ID}`);
     expect(callTarget).toBe(`start-call-note-${SHARMA_INVOICE_ID}`);
     expect(panel).toMatch(new RegExp(`<span [^>]*id="${payTarget}"[^>]*>Approve a WhatsApp draft first</span>`));
-    expect(panel).toMatch(new RegExp(`<span [^>]*id="${callTarget}"[^>]*>Arrives with voice call</span>`));
+    expect(panel).toMatch(new RegExp(`<span [^>]*id="${callTarget}"[^>]*>Voice calls not configured</span>`));
     expect(panel).not.toContain("Arrives with WhatsApp");
     // No Sendable_Draft: no "Open in WhatsApp" and no preview.
     expect(panel).not.toContain("Open in WhatsApp");
     expect(panel).not.toContain("<pre");
   });
+
+  it("enables 'Start call' for an overdue invoice when the voice key is set", async () => {
+    vi.stubEnv("OPENAI_API_KEY", "sk-test-not-a-real-key");
+    const html = await render();
+    const panel = panelHtml(html, SHARMA_INVOICE_ID);
+    const call = /<button [^>]*>Start call<\/button>/.exec(panel)?.[0];
+
+    expect(call).toBeDefined();
+    expect(call).not.toMatch(/\sdisabled(=""|\s|>)/);
+    expect(panel).toContain("AI call over the internet. Phone (PSTN) calls are on the roadmap.");
+    // The key never reaches the markup.
+    expect(html).not.toContain("sk-test-not-a-real-key");
+  });
   it("shows the placeholders on the unpaid panel only, not on a resurrected one", async () => {
+    vi.stubEnv("OPENAI_API_KEY", "");
     mocks.getDebtorData.mockResolvedValue(debtorData([sharmaRecord(), paidRecord()]));
 
     const html = await render();
@@ -758,8 +774,8 @@ describe("DebtorPage Drafts (Req 7.1, 7.5)", () => {
     expect(html).not.toContain(OTHER_DRAFT_ID);
     expect(html).not.toContain("Gupta Engineering Works");
     // Four forms per card: save edit, approve, redraft, reject.
-    // 4 forms per Draft, plus the one "Send pay link" form of the Sharma invoice panel.
-    expect(count(html, "<form")).toBe(9);
+    // 4 forms per Draft, plus the "Send pay link" and "Start call" forms of the Sharma invoice panel.
+    expect(count(html, "<form")).toBe(10);
     expect(count(html, 'name="returnTo"')).toBe(8);
     expect(count(html, `name="returnTo" value="/debtors/${BUYER_ID}"`)).toBe(8);
     expect(visibleText(html)).not.toContain("No drafts waiting for this buyer");

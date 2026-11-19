@@ -3,8 +3,9 @@ import type { InvoicePanelView } from "@/lib/debtor/build-debtor-view";
 import { bankRateMissingText } from "@/components/graveyard/bank-rate-message";
 import { CAVEAT_TEXT } from "@/components/graveyard/tombstone";
 import type { SendControlsData } from "@/lib/debtor/build-send-controls";
-import { PlaceholderActions } from "./placeholder-actions";
+import type { StartCallControlsData } from "@/lib/debtor/build-start-call-controls";
 import { SendControls } from "./send-controls";
+import { StartCallControls } from "./start-call-controls";
 import styles from "./invoice-panel.module.css";
 
 export interface InvoicePanelProps {
@@ -13,13 +14,15 @@ export interface InvoicePanelProps {
   today: CalendarDate;
   /** The send controls data of this invoice; null renders no send controls. */
   send: SendControlsData | null;
+  /** The "Start call" data of this invoice; null renders no call control. */
+  call: StartCallControlsData | null;
 }
 
 /**
  * One invoice of the buyer. Every figure comes from the Tombstone_View the Graveyard_Builder produced; this
  * component only lays it out. No money maths: amounts arrive as already-formatted strings.
  */
-export function InvoicePanel({ panel, today, send }: InvoicePanelProps) {
+export function InvoicePanel({ panel, today, send, call }: InvoicePanelProps) {
   const view = panel.tombstone;
 
   return (
@@ -44,7 +47,7 @@ export function InvoicePanel({ panel, today, send }: InvoicePanelProps) {
       <p className={styles.next}>{view.nextLabel}</p>
       {panel.showPlaceholders && send !== null ? <SendControls data={send} /> : null}
       {!panel.showPlaceholders && send?.sentText ? <p className={styles.line}>{send.sentText}</p> : null}
-      {panel.showPlaceholders ? <PlaceholderActions invoiceId={view.id} /> : null}
+      {panel.showPlaceholders && call !== null ? <StartCallControls data={call} /> : null}
     </section>
   );
 }

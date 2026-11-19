@@ -93,6 +93,7 @@ export default async function DebtorPage({
               panel={panel}
               today={view.today}
               send={result.send[panel.tombstone.id] ?? null}
+              call={result.calls[panel.tombstone.id] ?? null}
             />
           ))}
         </div>

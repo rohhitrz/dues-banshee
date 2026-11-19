@@ -1,6 +1,7 @@
 import { DEMO_SUPPLIER } from "@dues-banshee/db";
 import type { CalendarDate } from "@dues-banshee/engine";
 import type { TombstoneState } from "../graveyard/labels";
+import { NOT_CALLABLE_TEXT, NOT_CONFIGURED_TEXT } from "./call-copy";
 
 /** Demo_Call_Limit: Voice_Calls of the Demo_Supplier that may start on one Call_Day. */
 export const DEMO_CALL_LIMIT = 20;
@@ -33,8 +34,8 @@ export type StartCallRefusalKind =
 
 export const REFUSAL_TEXT: Record<StartCallRefusalKind, string> = {
   not_found: "Invoice not found",
-  not_configured: "Voice calls not configured",
-  not_callable: "No call needed for this invoice",
+  not_configured: NOT_CONFIGURED_TEXT,
+  not_callable: NOT_CALLABLE_TEXT,
   outside_window: "Calls are allowed 10:00–19:00 IST, Monday to Saturday",
   already_called: "This buyer was already called today",
   demo_limit: "Demo call limit reached for today",

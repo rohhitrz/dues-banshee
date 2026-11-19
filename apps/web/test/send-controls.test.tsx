@@ -14,9 +14,11 @@ vi.mock("@/app/(debtor)/debtors/[id]/send-actions", () => ({
   sendPayLink: mocks.sendPayLink,
   openInWhatsApp: mocks.openInWhatsApp,
 }));
+// The real start-call action is server-only. This file only renders the control's disabled state.
+vi.mock("@/app/(debtor)/debtors/[id]/call-actions", () => ({ startCall: vi.fn() }));
 
-import { PlaceholderActions } from "@/components/debtor/placeholder-actions";
 import { SendControls } from "@/components/debtor/send-controls";
+import { StartCallControls } from "@/components/debtor/start-call-controls";
 import { buildSendControls } from "@/lib/debtor/build-send-controls";
 
 const INVOICE_ID = "22222222-2222-4222-8222-222222222222";
@@ -393,18 +395,19 @@ describe("Sent line (Req 4.7)", () => {
   });
 });
 
-describe("Start call placeholder (Req 4.9)", () => {
-  it("stays disabled with 'Arrives with voice call'", async () => {
+describe("Start call control replaces the placeholder (buyer-voice-call Req 1.1-1.3)", () => {
+  it("is disabled with 'Voice calls not configured' when the voice key is not set", async () => {
     await act(async () => {
-      root.render(<PlaceholderActions invoiceId={INVOICE_ID} />);
+      root.render(
+        <StartCallControls
+          data={{ invoiceId: INVOICE_ID, callable: true, configured: false, isDemo: false, override: null }}
+        />,
+      );
     });
 
     const call = mustButton("Start call");
     expect(call.disabled).toBe(true);
-    expect(call.getAttribute("type")).toBe("button");
     expect(call.getAttribute("aria-describedby")).toBe(`start-call-note-${INVOICE_ID}`);
-    expect(reasonOf(call)).toBe("Arrives with voice call");
-    expect(container.querySelectorAll("button")).toHaveLength(1);
-    expect(container.querySelector("form")).toBeNull();
+    expect(reasonOf(call)).toBe("Voice calls not configured");
   });
 });
