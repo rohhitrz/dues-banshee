@@ -17,7 +17,7 @@ export const END_URL = "/api/voice/end";
 export const TOOL_URL = "/api/voice/tool";
 export const TRANSCRIPT_URL = "/api/voice/transcript";
 export const DATA_CHANNEL_LABEL = "oai-events";
-/** After a successful `end_call` output, the call ends on the next `response.done` or after this long. */
+/** After a successful `end_call` output, the call ends on the next `output_audio_buffer.stopped` or after this long. */
 export const END_CALL_FALLBACK_MS = 10_000;
 
 export const MIC_ERROR_TEXT = "Microphone access is needed for the call";
@@ -185,7 +185,7 @@ export function startCallSession(deps: CallSessionDeps): CallSession {
   let pc: PeerConnectionLike | null = null;
   let channel: DataChannelLike | null = null;
   let timer: unknown = null;
-  /** Set once a successful `end_call` output went out: the next `response.done` ends the call. */
+  /** Set once a successful `end_call` output went out: the next `output_audio_buffer.stopped` ends the call. */
   let endArmed = false;
   let armedTimer: unknown = null;
 
@@ -273,7 +273,7 @@ export function startCallSession(deps: CallSessionDeps): CallSession {
       body: JSON.stringify(body),
     });
 
-  /** A successful `end_call` output went out: end on the next `response.done`, or after 10 s. */
+  /** A successful `end_call` output went out: end once the output audio has drained (`output_audio_buffer.stopped`, WebRTC only), or after 10 s. */
   const armEnd = (): void => {
     if (ended || endArmed) return;
     endArmed = true;
@@ -349,8 +349,10 @@ export function startCallSession(deps: CallSessionDeps): CallSession {
       case "transcript":
         postTranscript(action);
         break;
-      case "response_done":
+      case "output_audio_stopped":
         if (endArmed) end();
+        break;
+      case "response_done":
         break;
       case "error":
         end();

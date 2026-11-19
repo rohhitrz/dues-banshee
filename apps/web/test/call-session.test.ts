@@ -754,11 +754,11 @@ describe("the tool loop: output item, then response.create", () => {
   });
 });
 
-describe("end_call: ends on the next response.done or after 10 seconds", () => {
+describe("end_call: ends on the next output_audio_buffer.stopped or after 10 seconds", () => {
   const OK_RESULT = { json: { ok: true } };
   const endCall = (callId = "call_end") => functionCall(callId, "end_call", '{"outcome":"dispute"}');
 
-  it("does not end the call when the output is sent, only on the next response.done", async () => {
+  it("does not end the call when the output is sent, only on the next output_audio_buffer.stopped", async () => {
     const { h } = await liveCall({ tool: () => OK_RESULT });
     deliver(h, endCall());
     await flush();
@@ -770,7 +770,7 @@ describe("end_call: ends on the next response.done or after 10 seconds", () => {
     expect(endReports(h)).toHaveLength(0);
     expect(lastView(h).phase).toBe("live");
 
-    deliver(h, { type: "response.done" });
+    deliver(h, { type: "output_audio_buffer.stopped" });
     expect(endReports(h)).toHaveLength(1);
     expect(JSON.parse(endReports(h)[0]!.body!)).toEqual({ voiceCallId: CALL_ID, token: TOKEN });
     expect(h.pc.closed).toBe(1);
@@ -778,7 +778,7 @@ describe("end_call: ends on the next response.done or after 10 seconds", () => {
     expect(lastView(h)).toEqual({ phase: "ended" });
   });
 
-  it("arms one 10-second timer when the output is sent, and clears it when response.done ends the call", async () => {
+  it("arms one 10-second timer when the output is sent, and clears it when output_audio_buffer.stopped ends the call", async () => {
     const { h } = await liveCall({ tool: () => OK_RESULT });
     expect(END_CALL_FALLBACK_MS).toBe(10_000);
     expect(h.timeouts).toEqual([]);
@@ -786,11 +786,11 @@ describe("end_call: ends on the next response.done or after 10 seconds", () => {
     await flush();
     expect(h.timeouts).toEqual([{ callback: expect.any(Function), ms: 10_000, cleared: false }]);
 
-    deliver(h, { type: "response.done" });
+    deliver(h, { type: "output_audio_buffer.stopped" });
     expect(h.timeouts[0]!.cleared).toBe(true);
   });
 
-  it("ends after 10 seconds when no response.done arrives", async () => {
+  it("ends after 10 seconds when no output_audio_buffer.stopped arrives", async () => {
     const { h } = await liveCall({ tool: () => OK_RESULT });
     deliver(h, endCall());
     await flush();
@@ -801,42 +801,66 @@ describe("end_call: ends on the next response.done or after 10 seconds", () => {
     expect(lastView(h)).toEqual({ phase: "ended" });
     expect(h.pc.closed).toBe(1);
 
-    // A response.done after the timer end sends no second End_Report.
-    deliver(h, { type: "response.done" });
+    // An output_audio_buffer.stopped after the timer end sends no second End_Report.
+    deliver(h, { type: "output_audio_buffer.stopped" });
     expect(endReports(h)).toHaveLength(1);
   });
 
-  it("ignores a response.done that arrives before the end_call output is sent", async () => {
+  it("ignores an output_audio_buffer.stopped that arrives before the end_call output is sent", async () => {
     const { h } = await liveCall({ tool: () => OK_RESULT });
     deliver(h, endCall());
     // The response that held the function call finishes before the tool round trip is back.
-    deliver(h, { type: "response.done" });
+    deliver(h, { type: "output_audio_buffer.stopped" });
     expect(endReports(h)).toHaveLength(0);
     await flush();
     expect(endReports(h)).toHaveLength(0);
-    deliver(h, { type: "response.done" });
+    deliver(h, { type: "output_audio_buffer.stopped" });
     expect(endReports(h)).toHaveLength(1);
   });
 
-  it("does not end on response.done or arm a timer for other tools or for a failed end_call", async () => {
+  it("does not end on output_audio_buffer.stopped or arm a timer for other tools or for a failed end_call", async () => {
     const { h } = await liveCall({ tool: () => ({ json: { ok: false, error: "invalid_arguments" } }) });
     deliver(h, functionCall("call_x", "end_call", "{}"));
     deliver(h, functionCall("call_y", "get_invoice_facts"));
     await flush();
-    deliver(h, { type: "response.done" });
+    deliver(h, { type: "output_audio_buffer.stopped" });
     expect(h.timeouts).toEqual([]);
     expect(endReports(h)).toHaveLength(0);
     expect(lastView(h).phase).toBe("live");
   });
 
-  it("sends one End_Report when response.done, the timer and a hang-up all fire", async () => {
+  it("sends one End_Report when output_audio_buffer.stopped, the timer and a hang-up all fire", async () => {
     const { h, session } = await liveCall({ tool: () => OK_RESULT });
     deliver(h, endCall());
     await flush();
-    deliver(h, { type: "response.done" });
+    deliver(h, { type: "output_audio_buffer.stopped" });
     h.timeouts[0]!.callback();
     session.hangUp();
     expect(endReports(h)).toHaveLength(1);
+  });
+  it("does not end the call on response.done alone, even after the end_call output is sent", async () => {
+    const { h } = await liveCall({ tool: () => OK_RESULT });
+    deliver(h, endCall());
+    await flush();
+    deliver(h, { type: "response.done" });
+    deliver(h, { type: "response.done" });
+    expect(endReports(h)).toHaveLength(0);
+    expect(h.pc.closed).toBe(0);
+    expect(lastView(h).phase).toBe("live");
+    deliver(h, { type: "output_audio_buffer.stopped" });
+    expect(endReports(h)).toHaveLength(1);
+    expect(lastView(h)).toEqual({ phase: "ended" });
+  });
+  it("still ends after 10 seconds when only response.done arrives", async () => {
+    const { h } = await liveCall({ tool: () => OK_RESULT });
+    deliver(h, endCall());
+    await flush();
+    deliver(h, { type: "response.done" });
+    expect(endReports(h)).toHaveLength(0);
+    expect(h.timeouts).toEqual([{ callback: expect.any(Function), ms: END_CALL_FALLBACK_MS, cleared: false }]);
+    h.timeouts[0]!.callback();
+    expect(endReports(h)).toHaveLength(1);
+    expect(lastView(h)).toEqual({ phase: "ended" });
   });
 });
 

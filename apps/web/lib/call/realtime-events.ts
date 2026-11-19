@@ -10,8 +10,10 @@ export type RealtimeAction =
   | { kind: "tool_call"; callId: string; name: string; arguments: string }
   /** A finished, non-empty transcript line to store. */
   | { kind: "transcript"; speaker: "buyer" | "agent"; itemId: string; text: string }
-  /** A response finished: fires the end armed by a successful `end_call`. */
+  /** A response finished. Parsed for completeness; the armed end waits for the audio to drain instead. */
   | { kind: "response_done" }
+  /** WebRTC only: the output audio has fully drained (sent after `response.done`). Fires the armed end. */
+  | { kind: "output_audio_stopped" }
   /** The Realtime session reported an error: end the call. */
   | { kind: "error" }
   | { kind: "ignore" };
@@ -53,6 +55,8 @@ export function routeRealtimeEvent(event: unknown): RealtimeAction {
       return transcriptAction("agent", e);
     case "response.done":
       return { kind: "response_done" };
+    case "output_audio_buffer.stopped":
+      return { kind: "output_audio_stopped" };
     case "error":
       return { kind: "error" };
     default:
