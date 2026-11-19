@@ -1,10 +1,11 @@
-import { dueDate, formatDisplayDate, statutoryInterest, taxBomb } from "@dues-banshee/engine";
+import { dueDate, statutoryInterest, taxBomb } from "@dues-banshee/engine";
 import type { BankRate, CalendarDate, Caveat, Invoice, Paise, RuleId } from "@dues-banshee/engine";
+import { spokenDate } from "./dates";
 import { paiseToWords } from "./rupee-words";
 
 /**
  * What `get_invoice_facts` returns to the agent. Every amount is spoken-word text (`paiseToWords`) and
- * every date a `formatDisplayDate` string; the figures come only from Engine results. No amount is a
+ * every date a `spokenDate` string (full month name, no weekday); the figures come only from Engine results. No amount is a
  * digit string, so the model has nothing to read out as digits or with the rupee symbol. The one number
  * is `total_due_paise`, an integer the agent passes on to `record_promise_to_pay` limits, never speaks.
  */
@@ -64,10 +65,10 @@ export function buildInvoiceFacts(i: {
     supplier_name: i.supplierName,
     invoice_number: i.invoiceNumber,
     principal_words: paiseToWords(invoice.amountPaise),
-    due_date: formatDisplayDate(due.dueDate),
+    due_date: spokenDate(due.dueDate),
     due_rule_ids: due.ruleIds,
     days_overdue: accrual.accrualDays,
-    tax_bomb_date: formatDisplayDate(bomb.taxBombDate),
+    tax_bomb_date: spokenDate(bomb.taxBombDate),
     tax_bomb_days_left: bomb.daysLeft,
     tax_bomb_rule_ids: bomb.ruleIds,
     ...(caveat === undefined ? {} : { caveat }),

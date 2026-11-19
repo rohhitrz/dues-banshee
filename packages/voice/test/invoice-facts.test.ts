@@ -1,6 +1,7 @@
 // Validates: Requirements 5.7, 5.8, 11.2, 11.11
 import type { BankRate, Invoice } from "@dues-banshee/engine";
 import { describe, expect, it } from "vitest";
+import { spokenDate } from "../src/dates";
 import { buildInvoiceFacts, checkPromiseAmount } from "../src/invoice-facts";
 
 // Demo_Seed: Sharma Traders, invoice LPC/26-27/0412, accepted 2026-09-02, 45-day term, Demo_Supplier is
@@ -37,14 +38,14 @@ describe("buildInvoiceFacts for Sharma Traders at 2026-11-12", () => {
         supplier_name: "Laxmi Precision Components (Demo)",
         invoice_number: "LPC/26-27/0412",
         principal_words: "four lakh twelve thousand rupees",
-        due_date: "17 Oct 2026",
+        due_date: "17 October 2026",
         due_rule_ids: ["MSMED-15"],
         days_overdue: 26,
         interest_words: "five thousand one hundred twenty-seven rupees and ninety-four paise",
         interest_rule_ids: ["MSMED-16"],
         total_due_words: "four lakh seventeen thousand one hundred twenty-seven rupees and ninety-four paise",
         total_due_paise: 41_712_794,
-        tax_bomb_date: "31 Mar 2027",
+        tax_bomb_date: "31 March 2027",
         tax_bomb_days_left: 139,
         tax_bomb_rule_ids: ["IT-43BH"],
       },
@@ -61,10 +62,10 @@ describe("buildInvoiceFacts for Sharma Traders at 2026-11-12", () => {
         supplier_name: "Laxmi Precision Components (Demo)",
         invoice_number: "LPC/26-27/0412",
         principal_words: "four lakh twelve thousand rupees",
-        due_date: "17 Oct 2026",
+        due_date: "17 October 2026",
         due_rule_ids: ["MSMED-15"],
         days_overdue: 26,
-        tax_bomb_date: "31 Mar 2027",
+        tax_bomb_date: "31 March 2027",
         tax_bomb_days_left: 139,
         tax_bomb_rule_ids: ["IT-43BH"],
       },
@@ -102,5 +103,14 @@ describe("checkPromiseAmount against the Sharma total due 41712794", () => {
     for (const bad of [0, -1, 41_712_795, 1.5, Number.NaN]) {
       expect(checkPromiseAmount(bad, TOTAL)).toEqual({ ok: false });
     }
+  });
+});
+
+describe("spokenDate", () => {
+  it("writes the day without padding, the full month name and the year", () => {
+    expect(spokenDate("2026-10-17")).toBe("17 October 2026");
+    expect(spokenDate("2027-03-31")).toBe("31 March 2027");
+    expect(spokenDate("2026-03-05")).toBe("5 March 2026");
+    expect(spokenDate("2026-09-01")).toBe("1 September 2026");
   });
 });

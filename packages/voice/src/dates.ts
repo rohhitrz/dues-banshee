@@ -56,11 +56,16 @@ export function inPromiseWindow(date: string, callToday: CalendarDate): boolean 
   return date >= first && date <= last;
 }
 
-/** "2026-11-12" -> "Thursday, 12 November 2026": English weekday, then D, the full month name and YYYY. */
-export function agentDate(d: CalendarDate): string {
+/** "2026-11-12" -> "12 November 2026": D, the full month name and YYYY. */
+export function spokenDate(d: CalendarDate): string {
   const day = Number(d.slice(8, 10));
   const month = MONTH_NAMES[Number(d.slice(5, 7)) - 1];
-  return `${WEEKDAY_NAMES[isoWeekday(d) - 1]}, ${day} ${month} ${d.slice(0, 4)}`;
+  return `${day} ${month} ${d.slice(0, 4)}`;
+}
+
+/** "2026-11-12" -> "Thursday, 12 November 2026": English weekday, then `spokenDate`. */
+export function agentDate(d: CalendarDate): string {
+  return `${WEEKDAY_NAMES[isoWeekday(d) - 1]}, ${spokenDate(d)}`;
 }
 
 /** `agentDate` for every date in `promiseWindow(callToday)`, ascending. */

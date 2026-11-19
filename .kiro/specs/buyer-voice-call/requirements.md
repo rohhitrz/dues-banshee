@@ -227,10 +227,10 @@ Non-goals: PSTN calls; a server sideband connection to the Realtime session; `@o
 2. THE test suite SHALL assert with exact `toEqual` on the whole result, on the Demo_Seed with `call_today` `2026-11-12`, the `get_invoice_facts` result for Sharma Traders `LPC/26-27/0412`, with paise values, dates, day counts, names and rule IDs written as literals in the test:
    - `ok` true, buyer name "Sharma Traders", supplier name "Laxmi Precision Components (Demo)", invoice number `LPC/26-27/0412`, no caveat;
    - `principal_words` "four lakh twelve thousand rupees";
-   - due date `17 Oct 2026` with `MSMED-15`, 26 Days_Overdue;
+   - due date `17 October 2026` with `MSMED-15`, 26 Days_Overdue;
    - `interest_words` "five thousand one hundred twenty-seven rupees and ninety-four paise" with `MSMED-16`;
    - `total_due_words` "four lakh seventeen thousand one hundred twenty-seven rupees and ninety-four paise" and `total_due_paise` 41712794;
-   - tax-bomb date `31 Mar 2027` with 139 days left and `IT-43BH`.
+   - tax-bomb date `31 March 2027` with 139 days left and `IT-43BH`.
 3. THE test suite SHALL assert `record_promise_to_pay` for Sharma Traders at `call_today` `2026-11-12`, each case starting from the Demo_Seed:
    - 41712794 paise for `2026-11-20` is accepted with `is_partial` false and the date read as "Friday, 20 November 2026" and `amount_words` returned, with no digit amount;
    - 20000000 paise for `2026-11-20` is accepted with `is_partial` true;
