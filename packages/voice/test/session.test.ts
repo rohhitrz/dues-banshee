@@ -70,7 +70,7 @@ async function world(responses: FakeResponseSpec[]) {
     if (r === undefined) throw new Error("test setup: voice call row missing");
     return r;
   };
-  return { t, token, voiceCallId: created.voiceCallId, tokenExpiresAt: created.tokenExpiresAt, http, join, row };
+  return { t, token, voiceCallId: created.voiceCallId, buyerId: created.buyerId, tokenExpiresAt: created.tokenExpiresAt, http, join, row };
 }
 
 const text = (response: SessionResponse): string => JSON.stringify(response);
@@ -245,7 +245,7 @@ describe("handleSession: the mint fails", () => {
     const w = await world([failure]);
     const response = await w.join(new Date(NOW.getTime() + 2_000));
 
-    expect(response).toEqual({ status: 502, body: { error: "start_failed" } });
+    expect(response).toEqual({ status: 502, body: { error: "start_failed" }, revalidateBuyerId: w.buyerId });
     expect(w.http.requests).toHaveLength(1);
     const row = await w.row();
     expect(row.status).toBe("ended");
@@ -257,10 +257,20 @@ describe("handleSession: the mint fails", () => {
     expect(text(response)).not.toContain(EPHEMERAL);
   });
 
+  it("returns revalidateBuyerId only on the 502 that ended the call, never the key", async () => {
+    const w = await world([{ status: 500, json: {} }]);
+    const response = await w.join(NOW);
+    expect(response.revalidateBuyerId).toBe(w.buyerId);
+    expect((await w.row()).outcome).toBe("incomplete");
+    // A used token answers 404 and ends nothing, so there is nothing to revalidate.
+    expect((await w.join(NOW)).revalidateBuyerId).toBeUndefined();
+    const ok = await world([OK]);
+    expect((await ok.join(NOW)).revalidateBuyerId).toBeUndefined();
+  });
   it("returns 502 and ends the call when the mint times out on the fake clock (10 s)", async () => {
     const w = await world([{ delayMs: 10_001, json: { value: EPHEMERAL, expires_at: 1 } }]);
     const response = await w.join(NOW);
-    expect(response).toEqual({ status: 502, body: { error: "start_failed" } });
+    expect(response).toEqual({ status: 502, body: { error: "start_failed" }, revalidateBuyerId: w.buyerId });
     expect((await w.row()).outcome).toBe("incomplete");
   });
 

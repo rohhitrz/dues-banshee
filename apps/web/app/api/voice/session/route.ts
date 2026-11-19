@@ -1,5 +1,6 @@
 import { realtimeModel } from "@dues-banshee/agent/models";
 import { createOpenAiRealtime, handleSession, type SessionResponse } from "@dues-banshee/voice";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getDb } from "@/lib/db";
 
@@ -51,6 +52,16 @@ export async function POST(req: Request): Promise<Response> {
     result = { status: 500, body: { error: "internal" } };
   } finally {
     await close?.().catch(() => console.error("voice session route: close failed"));
+  }
+  // A join that ended the call as `incomplete` (key mint failed) changed what the Debtor_Page shows.
+  if (result.revalidateBuyerId !== undefined) {
+    try {
+      revalidatePath("/");
+      revalidatePath(`/debtors/${result.revalidateBuyerId}`);
+    } catch {
+      // The change is committed; a failed cache purge must not turn into an error for the client.
+      console.error("voice session route: revalidate failed");
+    }
   }
   return respond(result.status, result.body);
 }

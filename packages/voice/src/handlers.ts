@@ -76,6 +76,15 @@ function fail<B extends SessionErrorBody>(status: SessionResponse["status"], bod
   return { status, body };
 }
 
+/**
+ * The 502 for a join that could not start. The call was just ended as `incomplete`, so the Debtor_Page
+ * has a new call to show: hand back the buyer id for revalidation when the end changed a row.
+ */
+function startFailed(ended: { buyerId: string } | null): SessionResponse {
+  const response = fail(502, { error: "start_failed" });
+  return ended === null ? response : { ...response, revalidateBuyerId: ended.buyerId };
+}
+
 function errorName(error: unknown): string {
   return error instanceof Error ? error.name : "UnknownError";
 }
@@ -83,7 +92,7 @@ function errorName(error: unknown): string {
 /**
  * Handles one join (Req 2.4, 2.5, 3.1, 3.5). Order: key configured (503, no write), atomic
  * `claimJoin` (404 when it claims nothing, no mint), persona from the stored row, one `mintKey`.
- * A mint failure ends the call as `incomplete` and returns 502. Never logs or returns the standard
+ * A mint failure ends the call as `incomplete` and returns 502 with `revalidateBuyerId`. Never logs or returns the standard
  * key, and the Ephemeral_Key only in the success body.
  */
 export async function handleSession(deps: SessionDeps, req: { token: string }): Promise<SessionResponse> {
@@ -96,8 +105,7 @@ export async function handleSession(deps: SessionDeps, req: { token: string }): 
 
     const ctx = await getCallContext(deps.db, claim.voiceCallId);
     if (ctx === null) {
-      await endVoiceCall(deps.db, claim.voiceCallId, deps.now);
-      return fail(502, { error: "start_failed" });
+      return startFailed(await endVoiceCall(deps.db, claim.voiceCallId, deps.now));
     }
 
     const instructions = buildPersonaInstructions({
@@ -108,8 +116,7 @@ export async function handleSession(deps: SessionDeps, req: { token: string }): 
     });
     const minted = await deps.provider.mintKey({ instructions, tools: CALL_TOOLS });
     if (!minted.ok) {
-      await endVoiceCall(deps.db, claim.voiceCallId, deps.now);
-      return fail(502, { error: "start_failed" });
+      return startFailed(await endVoiceCall(deps.db, claim.voiceCallId, deps.now));
     }
 
     const startedAt = ctx.startedAt ?? deps.now;
