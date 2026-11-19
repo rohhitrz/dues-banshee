@@ -76,6 +76,9 @@ describe("tenseCheck on an overdue invoice", () => {
     "which was due on {{due_date}}",
     "Please pay {{principal}} at {{pay_link}}",
     "Please pay {{principal}} at {{pay_link}}. It was due by {{due_date}}",
+    "Please pay {{principal}}, which was due by {{due_date}}",
+    "Kindly clear {{principal}}; it was due before {{due_date}}",
+    "Please settle {{principal}}, which were due on or before {{due_date}}",
   ])("passes %j", (text) => {
     expect(tenseCheck(text, true)).toBeNull();
   });

@@ -17,8 +17,9 @@ export const FUTURE_TENSE_PATTERNS: readonly RegExp[] = [
   /(?:is|are|will be|falls|fall|becomes|become) due (?:for payment )?(?:on or before|on|by) \{\{due_date\}\}/iu,
   // E2: "is payable by {{due_date}}", "is payable on or before {{due_date}}"
   /(?:is|are|will be) payable (?:on or before|on|by) \{\{due_date\}\}/iu,
-  // E3: "pay {{principal}} by {{due_date}}" (one sentence; also "kindly pay", "clear", "settle")
-  /\b(?:pay|clear|settle)\b[^.!?]*?\b(?:by|before|on or before) \{\{due_date\}\}/iu,
+  // E3: "pay {{principal}} by {{due_date}}" (one sentence; also "kindly pay", "clear", "settle").
+  // Not after "was due" / "were due" ("which was due by {{due_date}}" is past tense).
+  /\b(?:pay|clear|settle)\b[^.!?]*?(?<!\b(?:was|were) due (?:on or )?)\b(?:by|before|on or before) \{\{due_date\}\}/iu,
   // H3: "{{due_date}} tak bhugtan kar dein"
   /\{\{due_date\}\} (?:tak|se pehle) (?:bhugtan|payment) kar(?:ein| ?dein| ?dijiye|na hoga)(?![\p{L}])/iu,
 ];
