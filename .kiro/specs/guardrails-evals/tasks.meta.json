@@ -1,0 +1,261 @@
+{
+  "pbtResults": {
+    "1.6 Write `packages/agent/test/draft-guard.property.test.ts`": {
+      "status": "passed",
+      "lastRunTimestamp": 1795115820818
+    }
+  },
+  "executionHistory": {
+    "1.1 Add `BLOCK_REASONS` to `packages/agent/src/core/citations.ts`": [
+      {
+        "executionId": "13accd11-12ce-4195-a384-a0620e4814ca",
+        "chatSessionId": "sess_7e650880-d917-46d7-9f6a-0ddf5461809a",
+        "timestamp": 1795115400668
+      },
+      {
+        "executionId": "13accd11-12ce-4195-a384-a0620e4814ca",
+        "chatSessionId": "sess_7e650880-d917-46d7-9f6a-0ddf5461809a",
+        "timestamp": 1795115455511
+      }
+    ],
+    "1.2 Implement `src/core/match.ts`, `src/core/tone-phrases.ts` and `src/core/tone.ts`": [
+      {
+        "executionId": "13accd11-12ce-4195-a384-a0620e4814ca",
+        "chatSessionId": "sess_7e650880-d917-46d7-9f6a-0ddf5461809a",
+        "timestamp": 1795115456021
+      },
+      {
+        "executionId": "13accd11-12ce-4195-a384-a0620e4814ca",
+        "chatSessionId": "sess_7e650880-d917-46d7-9f6a-0ddf5461809a",
+        "timestamp": 1795115543438
+      }
+    ],
+    "1.3 Implement `src/core/tense.ts`": [
+      {
+        "executionId": "13accd11-12ce-4195-a384-a0620e4814ca",
+        "chatSessionId": "sess_7e650880-d917-46d7-9f6a-0ddf5461809a",
+        "timestamp": 1795115456487
+      },
+      {
+        "executionId": "13accd11-12ce-4195-a384-a0620e4814ca",
+        "chatSessionId": "sess_7e650880-d917-46d7-9f6a-0ddf5461809a",
+        "timestamp": 1795115543936
+      }
+    ],
+    "1.4 Implement `src/core/draft-guard.ts`": [
+      {
+        "executionId": "13accd11-12ce-4195-a384-a0620e4814ca",
+        "chatSessionId": "sess_7e650880-d917-46d7-9f6a-0ddf5461809a",
+        "timestamp": 1795115549097
+      },
+      {
+        "executionId": "13accd11-12ce-4195-a384-a0620e4814ca",
+        "chatSessionId": "sess_7e650880-d917-46d7-9f6a-0ddf5461809a",
+        "timestamp": 1795115686617
+      }
+    ],
+    "1.5 Write `packages/agent/test/tone.test.ts` and `packages/agent/test/tense.test.ts`": [
+      {
+        "executionId": "13accd11-12ce-4195-a384-a0620e4814ca",
+        "chatSessionId": "sess_7e650880-d917-46d7-9f6a-0ddf5461809a",
+        "timestamp": 1795115549622
+      },
+      {
+        "executionId": "13accd11-12ce-4195-a384-a0620e4814ca",
+        "chatSessionId": "sess_7e650880-d917-46d7-9f6a-0ddf5461809a",
+        "timestamp": 1795115686873
+      }
+    ],
+    "1.6 Write `packages/agent/test/draft-guard.property.test.ts`": [
+      {
+        "executionId": "13accd11-12ce-4195-a384-a0620e4814ca",
+        "chatSessionId": "sess_7e650880-d917-46d7-9f6a-0ddf5461809a",
+        "timestamp": 1795115686915
+      },
+      {
+        "executionId": "13accd11-12ce-4195-a384-a0620e4814ca",
+        "chatSessionId": "sess_7e650880-d917-46d7-9f6a-0ddf5461809a",
+        "timestamp": 1795115835052
+      }
+    ],
+    "1. Add the Tone_Check, Tense_Check and Draft_Guard": [
+      {
+        "executionId": "13accd11-12ce-4195-a384-a0620e4814ca",
+        "chatSessionId": "sess_7e650880-d917-46d7-9f6a-0ddf5461809a",
+        "timestamp": 1795115835080
+      }
+    ],
+    "2.1 Update `packages/agent/src/prompts/draft-step.ts`": [
+      {
+        "executionId": "ca99fb46-be5e-4a2c-9f51-984eb188cecd",
+        "chatSessionId": "sess_f1652bc9-bb3b-4d43-b0e7-acbfc3353468",
+        "timestamp": 1795115933716
+      },
+      {
+        "executionId": "ca99fb46-be5e-4a2c-9f51-984eb188cecd",
+        "chatSessionId": "sess_f1652bc9-bb3b-4d43-b0e7-acbfc3353468",
+        "timestamp": 1795115986415
+      }
+    ],
+    "2.2 Update `packages/agent/src/draft-step.ts`": [
+      {
+        "executionId": "ca99fb46-be5e-4a2c-9f51-984eb188cecd",
+        "chatSessionId": "sess_f1652bc9-bb3b-4d43-b0e7-acbfc3353468",
+        "timestamp": 1795115986917
+      },
+      {
+        "executionId": "ca99fb46-be5e-4a2c-9f51-984eb188cecd",
+        "chatSessionId": "sess_f1652bc9-bb3b-4d43-b0e7-acbfc3353468",
+        "timestamp": 1795116068809
+      }
+    ],
+    "2.3 Extend `packages/agent/test/repair.test.ts` and keep `draft-step.test.ts`, `demo-sharma.test.ts` green": [
+      {
+        "executionId": "ca99fb46-be5e-4a2c-9f51-984eb188cecd",
+        "chatSessionId": "sess_f1652bc9-bb3b-4d43-b0e7-acbfc3353468",
+        "timestamp": 1795116068209
+      },
+      {
+        "executionId": "ca99fb46-be5e-4a2c-9f51-984eb188cecd",
+        "chatSessionId": "sess_f1652bc9-bb3b-4d43-b0e7-acbfc3353468",
+        "timestamp": 1795116132681
+      }
+    ],
+    "2. Run the Draft_Guard in draftStep and add the Overdue tense line to the prompt": [
+      {
+        "executionId": "ca99fb46-be5e-4a2c-9f51-984eb188cecd",
+        "chatSessionId": "sess_f1652bc9-bb3b-4d43-b0e7-acbfc3353468",
+        "timestamp": 1795116132710
+      }
+    ],
+    "3.1 Implement `packages/agent/src/evals/fixture.ts` and `src/evals/run.ts`": [
+      {
+        "executionId": "86a57676-1e0d-42d4-947c-893ff4b0a759",
+        "chatSessionId": "sess_7fb32e7c-5f3a-4418-83c0-fed6713cd31d",
+        "timestamp": 1795118068465
+      },
+      {
+        "executionId": "86a57676-1e0d-42d4-947c-893ff4b0a759",
+        "chatSessionId": "sess_7fb32e7c-5f3a-4418-83c0-fed6713cd31d",
+        "timestamp": 1795118158196
+      }
+    ],
+    "3.2 Write the 19 fixtures in `evals/draft-step/`": [
+      {
+        "executionId": "86a57676-1e0d-42d4-947c-893ff4b0a759",
+        "chatSessionId": "sess_7fb32e7c-5f3a-4418-83c0-fed6713cd31d",
+        "timestamp": 1795118163475
+      },
+      {
+        "executionId": "86a57676-1e0d-42d4-947c-893ff4b0a759",
+        "chatSessionId": "sess_7fb32e7c-5f3a-4418-83c0-fed6713cd31d",
+        "timestamp": 1795118279321
+      }
+    ],
+    "3.3 Add `packages/agent/scripts/eval.ts` and the `eval` script": [
+      {
+        "executionId": "86a57676-1e0d-42d4-947c-893ff4b0a759",
+        "chatSessionId": "sess_7fb32e7c-5f3a-4418-83c0-fed6713cd31d",
+        "timestamp": 1795118163509
+      },
+      {
+        "executionId": "86a57676-1e0d-42d4-947c-893ff4b0a759",
+        "chatSessionId": "sess_7fb32e7c-5f3a-4418-83c0-fed6713cd31d",
+        "timestamp": 1795118279827
+      }
+    ],
+    "3.4 Write `packages/agent/test/evals.test.ts`": [
+      {
+        "executionId": "86a57676-1e0d-42d4-947c-893ff4b0a759",
+        "chatSessionId": "sess_7fb32e7c-5f3a-4418-83c0-fed6713cd31d",
+        "timestamp": 1795118283387
+      },
+      {
+        "executionId": "4656795c-bbfe-47b6-afbf-c52f9a0fd83d",
+        "chatSessionId": "sess_600337f8-0c1c-4037-9be6-8ef5981bc360",
+        "timestamp": 1795119229037
+      },
+      {
+        "executionId": "4656795c-bbfe-47b6-afbf-c52f9a0fd83d",
+        "chatSessionId": "sess_600337f8-0c1c-4037-9be6-8ef5981bc360",
+        "timestamp": 1795119299622
+      }
+    ],
+    "3. Add the draft eval fixtures and runner": [
+      {
+        "executionId": "4656795c-bbfe-47b6-afbf-c52f9a0fd83d",
+        "chatSessionId": "sess_600337f8-0c1c-4037-9be6-8ef5981bc360",
+        "timestamp": 1795119299656
+      }
+    ],
+    "4.1 Extend `apps/web/test/start-call-refusal.property.test.ts`": [
+      {
+        "executionId": "811ae564-c3e4-4ffd-8e4f-55ec3148f115",
+        "chatSessionId": "sess_f69524e1-407d-4057-8fef-13e27122c2ae",
+        "timestamp": 1795119459789
+      },
+      {
+        "executionId": "811ae564-c3e4-4ffd-8e4f-55ec3148f115",
+        "chatSessionId": "sess_f69524e1-407d-4057-8fef-13e27122c2ae",
+        "timestamp": 1795119530622
+      }
+    ],
+    "4. Pin call hours with labelled cases": [
+      {
+        "executionId": "811ae564-c3e4-4ffd-8e4f-55ec3148f115",
+        "chatSessionId": "sess_f69524e1-407d-4057-8fef-13e27122c2ae",
+        "timestamp": 1795119530650
+      }
+    ],
+    "5.1 Extend `packages/agent/test/source-lint.test.ts`": [
+      {
+        "executionId": "551de33b-b62b-4385-acd4-0e87ac4dff86",
+        "chatSessionId": "sess_b88bf3bf-a8f1-49c5-8f71-4b6c907886a0",
+        "timestamp": 1795119655623
+      },
+      {
+        "executionId": "551de33b-b62b-4385-acd4-0e87ac4dff86",
+        "chatSessionId": "sess_b88bf3bf-a8f1-49c5-8f71-4b6c907886a0",
+        "timestamp": 1795119745473
+      }
+    ],
+    "5. Extend the source lint": [
+      {
+        "executionId": "551de33b-b62b-4385-acd4-0e87ac4dff86",
+        "chatSessionId": "sess_b88bf3bf-a8f1-49c5-8f71-4b6c907886a0",
+        "timestamp": 1795119745506
+      }
+    ],
+    "6.1 Add `.kiro/hooks/guardrails-evals-on-save.json`": [
+      {
+        "executionId": "28ca6af2-a2a7-4326-b105-6688e458733d",
+        "chatSessionId": "sess_abafa06d-b596-49f6-bb2d-31e9babf78ca",
+        "timestamp": 1795119945221
+      },
+      {
+        "executionId": "28ca6af2-a2a7-4326-b105-6688e458733d",
+        "chatSessionId": "sess_abafa06d-b596-49f6-bb2d-31e9babf78ca",
+        "timestamp": 1795120020617
+      }
+    ],
+    "6.2 Final check": [
+      {
+        "executionId": "28ca6af2-a2a7-4326-b105-6688e458733d",
+        "chatSessionId": "sess_abafa06d-b596-49f6-bb2d-31e9babf78ca",
+        "timestamp": 1795120020823
+      },
+      {
+        "executionId": "28ca6af2-a2a7-4326-b105-6688e458733d",
+        "chatSessionId": "sess_abafa06d-b596-49f6-bb2d-31e9babf78ca",
+        "timestamp": 1795120108553
+      }
+    ],
+    "6. Add the Kiro hook and run the final check": [
+      {
+        "executionId": "28ca6af2-a2a7-4326-b105-6688e458733d",
+        "chatSessionId": "sess_abafa06d-b596-49f6-bb2d-31e9babf78ca",
+        "timestamp": 1795120108583
+      }
+    ]
+  }
+}

@@ -61,11 +61,19 @@ Sharma Traders tombstone → escalation draft approved by the owner → WhatsApp
 - **Deferred to polish:** a failed key mint uses up the buyer's 1-per-day call; the demo 20/day cap is checked at link creation, so it can be exceeded by one call per buyer; no server-side cap on the OpenAI session itself (client countdown only, accepted); a link made at 18:59 can be joined after 19:00; join token in host access logs (single-use, 10 min, accepted); "one paise" → "one paisa"; trim polite filler lines before tool calls.
 
 
-### 6. guardrails-evals — risky-lite tier, Supervised, 1 review
+### 6. guardrails-evals — risky-lite tier, Supervised, 1 review (DONE 20 Nov, ~82 credits)
 - Rule-ID citation check, tone check, call-hours check, about 15 labelled eval fixtures.
 - Include a Hinglish tense fixture: drafts say "17 Oct 2026 ko due hai" for an overdue invoice.
 - A Kiro hook re-runs the evals whenever `prompts/**` changes.
+- **Reuse, don't re-implement:** citation check = `validateCitations` in `packages/agent/src/core/citations.ts` (+ `allowedRuleIds`); tone and tense checks are new `BlockReason`s run after it in the same repair path in `draft-step.ts`. Call hours: voice only, via `inCallWindow` (`packages/voice/src/dates.ts`) and `startCallRefusal` (`apps/web/lib/call/callable.ts`); no hours rule on WhatsApp sends; the agent must not import `@dues-banshee/voice` (voice depends on agent).
+- **Tone check:** deterministic phrase lists (Hinglish + English: threats, begging, missing "{{buyer_name}} ji"). No LLM judge.
+- **Evals:** about 15 labelled recorded `ModelOutput` fixtures (expected: accept or a specific `BlockReason`), run offline by `pnpm --filter @dues-banshee/agent eval` and inside `test`. No live LLM calls in tests or the hook.
+- **Hook:** add to `.kiro/hooks/` in the same shape as `engine-tests-on-save.json`; matcher `packages/agent/src/prompts/.*\.ts$|packages/voice/src/persona\.ts$`.
+- **Extend, don't overwrite:** `packages/agent/test/citations.test.ts`, `prompt.test.ts`, `source-lint.test.ts` (add the carry-forward gaps: approval-step sets, `indexOf` ranking).
 
+- **Built:** guardDraft (citations → tone → tense) in the draft repair path; 19 offline eval fixtures in `evals/draft-step/` run by `pnpm --filter @dues-banshee/agent eval` (fails outside 15–20 fixtures); call-hours table in `start-call-refusal.property.test.ts`; 3 source-lint rules; hook `.kiro/hooks/guardrails-evals-on-save.json`.
+- **Hook note:** Kiro file-save hooks fire only on agent edits, not on manual saves.
+- **Deferred to polish:** "please, please" with punctuation between the words is not caught; `{{pay_link}}` is accepted on any step (pre-existing, `validateCitations` does not tie placeholders to steps).
 ### 7. crew-app — separate repo `dues-banshee-crew`, Autopilot, 1 review
 - **Thin:** Crew `app.json`, a daily 9am cron that calls the deployed API, a `tax-bomb` skill, a "Graveyard of Dues" dashboard page.
 - Start as soon as the escalation API exists. **Never cut.**

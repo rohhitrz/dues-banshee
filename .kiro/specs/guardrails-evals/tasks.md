@@ -75,12 +75,12 @@ Commit rule for every top-level task (git-workflow.md): one Conventional Commit 
     - Add `stepSetHits`, `stepRankHits` and `voiceImportHits` (voice imports checked in `packages/agent/src` only); scan of the current source returns `[]` for each
     - Detector tests with the positive samples and near-misses from design.md, in the `source lint detectors` block; existing tests unchanged
     - _Requirements: 7.1, 7.4, 7.5, 7.6, 7.7, 7.8_
-- [~] 6. Add the Kiro hook and run the final check
+- [x] 6. Add the Kiro hook and run the final check
   - Commit: `chore(kiro): add hook to re-run guardrail evals on prompt save`
   - [x] 6.1 Add `.kiro/hooks/guardrails-evals-on-save.json`
     - Exactly the JSON in design.md; `engine-tests-on-save.json` unchanged
     - _Requirements: 6.1, 6.2, 6.3, 6.4_
-  - [-] 6.2 Final check
+  - [x] 6.2 Final check
     - Run `pnpm --filter @dues-banshee/agent eval` (prints `19/19 passed`, exit 0), then the hook command once by hand, then `test`, `typecheck` and `lint` for `@dues-banshee/agent`, `@dues-banshee/voice` and `apps/web`; all green, with no network or LLM call
     - _Requirements: 4.4, 4.6, 4.7, 6.3_
 ## Notes
