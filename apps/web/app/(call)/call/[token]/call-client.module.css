@@ -1,0 +1,80 @@
+/* Moonlit-graveyard theme (ui-theme.md). Bone #ece7db and secondary #a9a497 pass 4.5:1 on the night
+   background; spectral #7ce8c0 = join / safe; ember #ffb27a on dark = needs attention. All targets >= 44px. */
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.primary,
+.hangUp {
+  box-sizing: border-box;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 12px 28px;
+  border-radius: 999px;
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary {
+  border: 1px solid #7ce8c0;
+  background: #7ce8c0;
+  color: #07080b;
+}
+
+.hangUp {
+  border: 1px solid #ff8a3d;
+  background: transparent;
+  color: #ffb27a;
+}
+
+.primary:focus-visible,
+.hangUp:focus-visible {
+  outline: 3px solid #f3ebd3;
+  outline-offset: 3px;
+}
+
+.live {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.countdownLabel {
+  margin: 0;
+  color: #a9a497;
+  font-size: 0.875rem;
+}
+
+.countdown {
+  box-sizing: border-box;
+  min-width: 44px;
+  min-height: 44px;
+  margin: 0 0 8px;
+  font-family: var(--font-jetbrains-mono, "JetBrains Mono"), ui-monospace, monospace;
+  font-size: 2rem;
+  line-height: 44px;
+  color: #ece7db;
+}
+
+.status {
+  margin: 0;
+  color: #ece7db;
+}
+
+.alert {
+  margin: 0;
+  padding: 8px 14px;
+  border: 1px solid #ff8a3d;
+  border-radius: 6px;
+  background: rgba(255, 138, 61, 0.08);
+  color: #ffb27a;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
