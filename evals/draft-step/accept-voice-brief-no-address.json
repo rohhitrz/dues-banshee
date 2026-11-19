@@ -1,0 +1,24 @@
+{
+  "name": "accept-voice-brief-no-address",
+  "context": {
+    "subject": "sharma_2026_11_12",
+    "step": "voice_call",
+    "language": "english",
+    "allowed": [
+      "MSMED-15",
+      "MSMED-16",
+      "IT-43BH",
+      "MSMED-2B"
+    ],
+    "bankRateExists": true,
+    "overdue": true
+  },
+  "output": {
+    "text": "Brief for the call with {{buyer_name}}: invoice {{invoice_number}} for {{principal}} was due on {{due_date}}. Ask for a payment date, and mention that statutory interest of {{interest}} has accrued. Keep the tone calm and courteous.",
+    "ruleIds": [
+      "MSMED-15",
+      "MSMED-16"
+    ]
+  },
+  "expected": "accept"
+}

@@ -1,0 +1,23 @@
+{
+  "name": "block-english-notice-dear-sir",
+  "context": {
+    "subject": "sharma_2026_11_12",
+    "step": "legal_notice",
+    "language": "english",
+    "allowed": [
+      "MSMED-15",
+      "MSMED-16",
+      "IT-43BH",
+      "MSMED-2B"
+    ],
+    "bankRateExists": true,
+    "overdue": true
+  },
+  "output": {
+    "text": "Dear Sir, this notice concerns invoice {{invoice_number}} for {{principal}}, which was due on {{due_date}}. Please pay at {{pay_link}}.",
+    "ruleIds": [
+      "MSMED-15"
+    ]
+  },
+  "expected": "missing_address"
+}

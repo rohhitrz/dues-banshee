@@ -1,0 +1,23 @@
+{
+  "name": "block-hinglish-due-hai",
+  "context": {
+    "subject": "sharma_2026_11_12",
+    "step": "whatsapp_nudge",
+    "language": "hinglish",
+    "allowed": [
+      "MSMED-15",
+      "MSMED-16",
+      "IT-43BH",
+      "MSMED-2B"
+    ],
+    "bankRateExists": true,
+    "overdue": true
+  },
+  "output": {
+    "text": "Namaste {{buyer_name}} ji, invoice {{invoice_number}} ka {{principal}} {{due_date}} ko due hai. Kripya {{pay_link}} se bhugtan kar dein.",
+    "ruleIds": [
+      "MSMED-15"
+    ]
+  },
+  "expected": "overdue_tense"
+}

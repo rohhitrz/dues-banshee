@@ -1,0 +1,23 @@
+{
+  "name": "accept-english-paylink-please",
+  "context": {
+    "subject": "sharma_2026_11_12",
+    "step": "whatsapp_paylink",
+    "language": "english",
+    "allowed": [
+      "MSMED-15",
+      "MSMED-16",
+      "IT-43BH",
+      "MSMED-2B"
+    ],
+    "bankRateExists": true,
+    "overdue": true
+  },
+  "output": {
+    "text": "Dear {{buyer_name}} ji, please use {{pay_link}} to pay {{principal}} for invoice {{invoice_number}}, which was due on {{due_date}}. Thank you.",
+    "ruleIds": [
+      "MSMED-15"
+    ]
+  },
+  "expected": "accept"
+}

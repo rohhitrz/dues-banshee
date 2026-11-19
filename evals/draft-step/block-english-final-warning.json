@@ -1,0 +1,23 @@
+{
+  "name": "block-english-final-warning",
+  "context": {
+    "subject": "sharma_2026_11_12",
+    "step": "whatsapp_paylink",
+    "language": "english",
+    "allowed": [
+      "MSMED-15",
+      "MSMED-16",
+      "IT-43BH",
+      "MSMED-2B"
+    ],
+    "bankRateExists": true,
+    "overdue": true
+  },
+  "output": {
+    "text": "Dear {{buyer_name}} ji, this is a final warning about invoice {{invoice_number}} for {{principal}}, which was due on {{due_date}}. Pay at {{pay_link}} today.",
+    "ruleIds": [
+      "MSMED-15"
+    ]
+  },
+  "expected": "threat_phrase"
+}

@@ -1,0 +1,23 @@
+{
+  "name": "accept-hinglish-principal-still-due",
+  "context": {
+    "subject": "sharma_2026_11_12",
+    "step": "whatsapp_nudge",
+    "language": "hinglish",
+    "allowed": [
+      "MSMED-15",
+      "MSMED-16",
+      "IT-43BH",
+      "MSMED-2B"
+    ],
+    "bankRateExists": true,
+    "overdue": true
+  },
+  "output": {
+    "text": "Namaste {{buyer_name}} ji, {{principal}} abhi bhi due hai. Invoice {{invoice_number}} ka bhugtan kripya {{pay_link}} se kar dein.",
+    "ruleIds": [
+      "MSMED-15"
+    ]
+  },
+  "expected": "accept"
+}

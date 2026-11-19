@@ -1,0 +1,20 @@
+{
+  "name": "accept-not-overdue-future",
+  "context": {
+    "subject": "synthetic",
+    "step": "whatsapp_nudge",
+    "language": "hinglish",
+    "allowed": [
+      "MSMED-15"
+    ],
+    "bankRateExists": true,
+    "overdue": false
+  },
+  "output": {
+    "text": "Namaste {{buyer_name}} ji, invoice {{invoice_number}} ka {{principal}} {{due_date}} ko due hai. Kripya samay par {{pay_link}} se bhugtan kar dein.",
+    "ruleIds": [
+      "MSMED-15"
+    ]
+  },
+  "expected": "accept"
+}

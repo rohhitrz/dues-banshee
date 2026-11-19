@@ -1,0 +1,23 @@
+{
+  "name": "block-english-is-due-on",
+  "context": {
+    "subject": "sharma_2026_11_12",
+    "step": "whatsapp_nudge",
+    "language": "english",
+    "allowed": [
+      "MSMED-15",
+      "MSMED-16",
+      "IT-43BH",
+      "MSMED-2B"
+    ],
+    "bankRateExists": true,
+    "overdue": true
+  },
+  "output": {
+    "text": "Dear {{buyer_name}} ji, invoice {{invoice_number}} for {{principal}} is due on {{due_date}}. Please pay at {{pay_link}}.",
+    "ruleIds": [
+      "MSMED-15"
+    ]
+  },
+  "expected": "overdue_tense"
+}
