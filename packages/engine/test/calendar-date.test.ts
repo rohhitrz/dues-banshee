@@ -6,6 +6,7 @@ import {
   financialYearEnd,
   fromEpochDay,
   isValidCalendarDate,
+  isoWeekday,
   toEpochDay,
 } from "../src/calendar-date";
 
@@ -96,5 +97,30 @@ describe("epoch day conversion", () => {
   it("handles days before the epoch", () => {
     expect(toEpochDay("1969-12-31")).toBe(-1);
     expect(fromEpochDay(-1)).toBe("1969-12-31");
+  });
+});
+
+describe("isoWeekday", () => {
+  it("returns Thursday = 4 for the demo date 2026-11-12", () => {
+    expect(isoWeekday("2026-11-12")).toBe(4);
+  });
+  it("returns Friday = 5 for 2026-11-20", () => {
+    expect(isoWeekday("2026-11-20")).toBe(5);
+  });
+  it("returns Monday = 1 and Sunday = 7", () => {
+    expect(isoWeekday("2026-11-16")).toBe(1);
+    expect(isoWeekday("2026-11-15")).toBe(7);
+  });
+  it("returns Thursday = 4 for the epoch day 1970-01-01", () => {
+    expect(isoWeekday("1970-01-01")).toBe(4);
+  });
+  it("handles dates before 1970", () => {
+    expect(isoWeekday("1969-12-31")).toBe(3); // Wednesday
+    expect(isoWeekday("1969-07-20")).toBe(7); // Sunday
+    expect(isoWeekday("1900-01-01")).toBe(1); // Monday
+  });
+  it("handles the leap day 2028-02-29 (Tuesday) and the day after", () => {
+    expect(isoWeekday("2028-02-29")).toBe(2);
+    expect(isoWeekday("2028-03-01")).toBe(3);
   });
 });

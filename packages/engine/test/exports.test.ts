@@ -3,8 +3,11 @@ import {
   SUPPLIER_ACTIVITIES,
   SUPPLIER_CATEGORIES,
   ValidationError,
+  addDays,
+  financialYearEnd,
   fromEpochDay,
   isValidCalendarDate,
+  isoWeekday,
   validateInvoice,
 } from "../src/index";
 import type { Invoice } from "../src/index";
@@ -41,5 +44,11 @@ describe("engine public exports", () => {
     expect(isValidCalendarDate("2026-09-02")).toBe(true);
     expect(isValidCalendarDate("2026-02-30")).toBe(false);
     expect(isValidCalendarDate(fromEpochDay(0))).toBe(true);
+  });
+
+  it("exports addDays, financialYearEnd and isoWeekday from the package entry point", () => {
+    expect(addDays("2026-11-12", 8)).toBe("2026-11-20");
+    expect(financialYearEnd("2026-11-12")).toBe("2027-03-31");
+    expect(isoWeekday("2026-11-12")).toBe(4);
   });
 });

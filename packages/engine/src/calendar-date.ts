@@ -80,6 +80,11 @@ export function addDays(d: CalendarDate, n: number): CalendarDate {
   return fromEpochDay(toEpochDay(d) + n);
 }
 
+/** ISO weekday of `d`: Monday = 1 ... Sunday = 7. 1970-01-01 (epoch day 0) was a Thursday (4). */
+export function isoWeekday(d: CalendarDate): number {
+  return ((((toEpochDay(d) + 3) % 7) + 7) % 7) + 1;
+}
+
 /** Whole days from `a` to `b` (b - a). */
 export function dayDifference(a: CalendarDate, b: CalendarDate): number {
   return toEpochDay(b) - toEpochDay(a);

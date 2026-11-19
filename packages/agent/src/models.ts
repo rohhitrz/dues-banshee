@@ -18,6 +18,28 @@ export const MODEL_IDS = {
 
 export type ModelKey = keyof typeof MODEL_IDS;
 
+/** Voice call model IDs (tech.md: IDs live only here). Not used by the text router. */
+export const VOICE_MODEL_IDS = {
+  /** Default speech-to-speech model. */
+  realtime: "gpt-realtime-2.1-mini",
+  /** Switched on for the demo via the env override. */
+  realtimeDemo: "gpt-realtime-2.1",
+  /** Input transcription model (Hinglish). */
+  transcribe: "gpt-live-transcribe",
+  /** Realtime voice. */
+  voice: "marin",
+} as const;
+
+/**
+ * Picks the realtime model from an env value. Exactly "gpt-realtime-2.1" selects the demo
+ * model; anything else, including unset, selects the default mini model.
+ */
+export function realtimeModel(envValue: string | undefined): string {
+  return envValue === VOICE_MODEL_IDS.realtimeDemo
+    ? VOICE_MODEL_IDS.realtimeDemo
+    : VOICE_MODEL_IDS.realtime;
+}
+
 /** The three models the router can call. Tests pass mock models here. */
 export type ModelSet = {
   default: LanguageModel;

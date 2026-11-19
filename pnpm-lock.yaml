@@ -146,6 +146,21 @@ importers:
         specifier: workspace:*
         version: link:../engine
 
+  packages/voice:
+    dependencies:
+      '@dues-banshee/agent':
+        specifier: workspace:*
+        version: link:../agent
+      '@dues-banshee/db':
+        specifier: workspace:*
+        version: link:../db
+      '@dues-banshee/engine':
+        specifier: workspace:*
+        version: link:../engine
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
+
 packages:
 
   '@ai-sdk/anthropic@4.0.105':

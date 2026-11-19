@@ -1,0 +1,20 @@
+{
+  "name": "@dues-banshee/voice",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@dues-banshee/agent": "workspace:*",
+    "@dues-banshee/db": "workspace:*",
+    "@dues-banshee/engine": "workspace:*",
+    "zod": "4.6.7"
+  },
+  "scripts": {
+    "test": "vitest --run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  }
+}
