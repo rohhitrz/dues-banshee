@@ -241,6 +241,18 @@ describe("PERSONA_RULES contents", () => {
     );
   });
 
+  it("never calls end_call after a recorded promise; says the closing line and stops (rule 2a)", () => {
+    expect(PERSONA_RULES).toContain(
+      "After record_promise_to_pay succeeds, never call end_call. Thank the buyer by name, say the closing line and stop. The call ends by itself.",
+    );
+  });
+
+  it("names both date_list entries and asks which one when a date could match two (rule 2b)", () => {
+    expect(PERSONA_RULES).toContain(
+      'If the buyer\'s date could match two date_list entries (for example "agle Friday" when tomorrow is a Friday), say both entries and ask which one they mean.',
+    );
+  });
+
   it("holds no model IDs, banned or otherwise", () => {
     expect(PERSONA_RULES).not.toMatch(/gpt-|whisper|realtime/i);
   });

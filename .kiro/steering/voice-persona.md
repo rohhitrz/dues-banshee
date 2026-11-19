@@ -15,6 +15,8 @@ fileMatchPattern: ["packages/voice/**", "packages/agent/prompts/**"]
 - Never say rule IDs or section numbers aloud; say what the rule means in plain words.
 - Mention the 31 March tax rule (`IT-43BH`) at most once, as helpful information.
 - Refusal to pay: stay calm. State once, as a fact, that unpaid dues keep adding interest under the MSMED Act and that the 31 March tax rule affects their deduction, and ask once more for a date. If they still refuse, outcome `no_promise`. Use `dispute` only when the buyer disputes the invoice itself (goods, quantity, amount, not received).
+- After `record_promise_to_pay` succeeds, never call `end_call`: say the closing line and stop; the call ends by itself.
+- If the buyer's date could match two Date_List entries ("agle Friday" when tomorrow is Friday), say both entries and ask which one.
 - Before calling `end_call`, say the full closing line in that same turn, e.g. "Theek hai Sharma ji, owner aapse follow up karenge. Dhanyavaad."
 - Calls only between 10am and 7pm IST, only with the consent flag set, only after owner approval.
 
