@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { allowedRuleIds } from "../src/core/allowed-rule-ids";
 import { FixtureError, loadFixtures } from "../src/evals/fixture";
 import type { Fixture } from "../src/evals/fixture";
-import { formatReport, runEvals } from "../src/evals/run";
+import { fixtureCountProblem, formatReport, MAX_FIXTURES, MIN_FIXTURES, runEvals } from "../src/evals/run";
 import type { EvalResult } from "../src/evals/run";
 
 const TODAY = "2026-11-12";
@@ -268,6 +268,20 @@ describe("loadFixtures errors (Req 4.5)", () => {
   });
 });
 
+describe("fixtureCountProblem", () => {
+  it("accepts 15 to 20 fixtures", () => {
+    expect([MIN_FIXTURES, MAX_FIXTURES]).toEqual([15, 20]);
+    for (const count of [15, 16, 19, 20]) expect(fixtureCountProblem(count)).toBeNull();
+  });
+  it("names the count and the allowed range below 15 and above 20", () => {
+    for (const count of [0, 1, 14, 21, 100]) {
+      expect(fixtureCountProblem(count)).toEqual(`found ${count} fixtures, expected 15 to 20`);
+    }
+  });
+  it("accepts the real fixture folder", () => {
+    expect(fixtureCountProblem(FIXTURES.length)).toBeNull();
+  });
+});
 describe("formatReport (Req 4.4)", () => {
   it("ends with `<passed>/<total> passed` on a mixed result", () => {
     const results: EvalResult[] = [

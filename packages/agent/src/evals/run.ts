@@ -36,3 +36,11 @@ export function formatReport(results: readonly EvalResult[]): string {
   lines.push(`${passed}/${results.length} passed`);
   return lines.join("\n");
 }
+
+export const MIN_FIXTURES = 15;
+export const MAX_FIXTURES = 20;
+/** Null when the fixture count is within 15 to 20 (inclusive), else the reason the eval run must fail. */
+export function fixtureCountProblem(count: number): string | null {
+  if (count >= MIN_FIXTURES && count <= MAX_FIXTURES) return null;
+  return `found ${count} fixtures, expected ${MIN_FIXTURES} to ${MAX_FIXTURES}`;
+}
