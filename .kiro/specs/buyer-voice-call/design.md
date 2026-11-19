@@ -45,7 +45,7 @@ Checked 2026-11-19 against the official docs. Every name the requirements use ma
 | Mint call | `POST https://api.openai.com/v1/realtime/client_secrets`, body `{ expires_after, session }`, Bearer standard key | [client_secrets create](https://developers.openai.com/api/reference/resources/realtime/subresources/client_secrets/methods/create) |
 | `expires_after` | `{ anchor: "created_at", seconds }`; only `created_at`; `seconds` 10–7200, default 600. Req's "60 seconds" = `seconds: 60` | same |
 | Response | `{ value: "ek_…", expires_at: <unix seconds>, session }` | same |
-| Session shape | `session.type: "realtime"`, `model`, `instructions`, `audio.input.transcription.{model, languages, keywords}`, `audio.input.turn_detection.type: "semantic_vad"`, `audio.output.voice`, `tools[] { type: "function", name, description, parameters }`, `tool_choice` | same |
+| Session shape | `session.type: "realtime"`, `model`, `instructions`, `audio.input.transcription.{model, languages, keywords}`, `audio.input.noise_reduction.type: "far_field"`, `audio.input.turn_detection: { type: "semantic_vad", eagerness: "high" }`, `audio.output.voice`, `tools[] { type: "function", name, description, parameters }`, `tool_choice` | same |
 | Models | `gpt-realtime-2.1`, `gpt-realtime-2.1-mini` in the session `model` enum; `gpt-live-transcribe` in the transcription enum; `marin` is a listed voice | same |
 | Connect | `POST https://api.openai.com/v1/realtime/calls`, `Content-Type: application/sdp`, Bearer ephemeral key; answer SDP is the text body; data channel `oai-events` | [Realtime WebRTC guide](https://developers.openai.com/api/docs/guides/realtime-webrtc) |
 | Buyer transcript | `conversation.item.input_audio_transcription.completed { item_id, transcript }` | [server events](https://developers.openai.com/api/reference/resources/realtime/server-events) |
@@ -160,7 +160,8 @@ export function sessionConfigBody(model: string, spec: VoiceSessionSpec): unknow
           "languages": ["hi", "en"],
           "keywords": ["haan", "nahi", "ji", "agle", "lakh", "hazaar", "rupaye", "paisa", "Friday", "Sharma ji"]
         },
-        "turn_detection": { "type": "semantic_vad" }
+        "noise_reduction": { "type": "far_field" },
+        "turn_detection": { "type": "semantic_vad", "eagerness": "high" }
       },
       "output": { "voice": "marin" }
     },
