@@ -199,10 +199,10 @@ States: `ready` → `connecting` → `live` → `ended`, plus `mic_error` (back 
 
 | Event | Action |
 |---|---|
-| `response.function_call_arguments.done` | POST `/api/voice/tool` `{ callId, name, arguments }`; on 200 send `conversation.item.create { item: { type: "function_call_output", call_id, output: JSON.stringify(result) } }` then `response.create`. Successful `end_call` arms the end: next `response.done` or 10 s (Req 5 C13). 404 or `call_time_up` → end. |
+| `response.function_call_arguments.done` | POST `/api/voice/tool` `{ callId, name, arguments }`; on 200 send `conversation.item.create { item: { type: "function_call_output", call_id, output: JSON.stringify(result) } }` then `response.create`. Successful `end_call` arms the end: next `output_audio_buffer.stopped` or 10 s (Req 5 C13). 404 or `call_time_up` → end. |
 | `conversation.item.input_audio_transcription.completed` | POST transcript, `speaker: "buyer"`, if non-empty |
 | `response.output_audio_transcript.done` | same, `speaker: "agent"` |
-| `response.done` | fire the armed end, if any |
+| `output_audio_buffer.stopped` | fire the armed end, if any (WebRTC only: the output audio has drained) |
 | `error` | `console.warn` with `error.type` and `error.code` only; no end |
 | anything else | ignore |
 
