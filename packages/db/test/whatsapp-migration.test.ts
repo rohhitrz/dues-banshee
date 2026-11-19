@@ -123,7 +123,10 @@ describe("existing data across migration 0003", () => {
       entries: { tag: string }[];
     };
     journal.entries = journal.entries.filter(
-      (entry) => entry.tag !== "0003_whatsapp_channel" && entry.tag !== "0004_payment_links_provider_link_id_key",
+      (entry) =>
+        entry.tag !== "0003_whatsapp_channel" &&
+        entry.tag !== "0004_payment_links_provider_link_id_key" &&
+        entry.tag !== "0005_buyer_voice_call",
     );
     expect(journal.entries.map((entry) => entry.tag)).toEqual([
       "0000_opposite_piledriver",
@@ -314,7 +317,9 @@ describe("migration 0004: payment_links_provider_link_id_key", () => {
       cpSync(MIGRATIONS_FOLDER, upTo0003, { recursive: true });
       const journalPath = join(upTo0003, "meta", "_journal.json");
       const journal = JSON.parse(readFileSync(journalPath, "utf8")) as { entries: { tag: string }[] };
-      journal.entries = journal.entries.filter((entry) => entry.tag !== "0004_payment_links_provider_link_id_key");
+      journal.entries = journal.entries.filter(
+        (entry) => entry.tag !== "0004_payment_links_provider_link_id_key" && entry.tag !== "0005_buyer_voice_call",
+      );
       writeFileSync(journalPath, JSON.stringify(journal));
       const db = drizzle(pglite, { schema });
       await migrate(db, { migrationsFolder: upTo0003 });
