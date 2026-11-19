@@ -1,5 +1,5 @@
 // The browser-side connect, countdown and end of a call, driven with Node fakes: no jsdom, no WebRTC.
-// Requirements: 3.4, 3.9, 4.1, 4.3, 4.4, 4.5, 7.4
+// Requirements: 3.4, 3.9, 4.1, 4.3, 4.4, 4.5, 5.1, 5.13, 7.4, 8.1
 import { describe, expect, it, vi } from "vitest";
 import {
   DATA_CHANNEL_LABEL,
@@ -8,8 +8,11 @@ import {
   EXPIRED_TEXT,
   MIC_CONSTRAINTS,
   MIC_ERROR_TEXT,
+  END_CALL_FALLBACK_MS,
   SESSION_URL,
   START_ERROR_TEXT,
+  TOOL_URL,
+  TRANSCRIPT_URL,
   formatCountdown,
   secondsLeft,
   startCallSession,
@@ -61,6 +64,8 @@ interface Harness {
   tickCallback: () => (() => void) | null;
   clearedIntervals: unknown[];
   setNow(ms: number): void;
+  /** Fake one-shot timers: what the session armed, with its delay. `cleared` is set by clearTimeout. */
+  timeouts: { callback: () => void; ms: number; cleared: boolean }[];
 }
 
 class FakeDataChannel implements DataChannelLike {
@@ -119,6 +124,8 @@ interface Options {
   session?: Route;
   sdp?: Route;
   end?: Route;
+  tool?: Route;
+  transcript?: Route;
   onMessage?: CallSessionDeps["onMessage"];
 }
 
@@ -145,6 +152,7 @@ function harness(options: Options = {}): Harness {
   let nowMs = CAP_MS - 300_000;
   let intervalCallback: (() => void) | null = null;
   const clearedIntervals: unknown[] = [];
+  const timeouts: Harness["timeouts"] = [];
 
   const fetch: FetchLike = (url, init) => {
     order.push(`fetch:${url}`);
@@ -163,9 +171,13 @@ function harness(options: Options = {}): Harness {
           ? (options.sdp ?? (() => ({ text: ANSWER_SDP })))
           : url === END_URL
             ? (options.end ?? (() => ({ json: { ok: true } })))
-            : () => {
-                throw new Error(`unexpected fetch ${url}`);
-              };
+            : url === TOOL_URL
+              ? (options.tool ?? (() => ({ json: { ok: true } })))
+              : url === TRANSCRIPT_URL
+                ? (options.transcript ?? (() => ({ json: { ok: true } })))
+                : () => {
+                    throw new Error(`unexpected fetch ${url}`);
+                  };
     const result = route(call);
     if (result === "network") return Promise.reject(new TypeError("fetch failed"));
     const status = result.status ?? 200;
@@ -194,6 +206,14 @@ function harness(options: Options = {}): Harness {
     clearInterval: (handle) => {
       clearedIntervals.push(handle);
     },
+    setTimeout: (callback, ms) => {
+      timeouts.push({ callback, ms, cleared: false });
+      return timeouts.length - 1;
+    },
+    clearTimeout: (handle) => {
+      const entry = timeouts[handle as number];
+      if (entry) entry.cleared = true;
+    },
     now: () => nowMs,
     onChange: (view) => {
       views.push(view);
@@ -213,6 +233,7 @@ function harness(options: Options = {}): Harness {
     dc: pc.channel,
     tickCallback: () => intervalCallback,
     clearedIntervals,
+    timeouts,
     setNow: (ms) => {
       nowMs = ms;
     },
@@ -597,5 +618,324 @@ describe("the join request fails", () => {
     const { h } = await connect({ session: () => ({ json: { voiceCallId: CALL_ID } }) });
     expect(lastView(h).phase).toBe("start_error");
     expect(h.pcCreated()).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// Tool loop (task 5.3): forward function calls, send the output item then response.create, end_call,
+// error / call_time_up / 404 endings. Requirements 5.1, 5.13, 7.4, 8.1, 3.4.
+// ---------------------------------------------------------------------------------------------
+
+const FACTS_RESULT = { ok: true, buyer_name: "Sharma Traders", total_due: "₹4,17,127.94" };
+
+const functionCall = (callId: string, name: string, args = "{}") => ({
+  type: "response.function_call_arguments.done",
+  call_id: callId,
+  name,
+  arguments: args,
+  item_id: `item_${callId}`,
+});
+
+/** Delivers one Realtime server event on the data channel. */
+function deliver(h: Harness, event: unknown): void {
+  h.dc.onmessage?.({ data: typeof event === "string" ? event : JSON.stringify(event) });
+}
+
+/** Lets pending promise chains (fetch, json, send) finish. No timers are involved. */
+async function flush(): Promise<void> {
+  for (let i = 0; i < 20; i++) await Promise.resolve();
+}
+
+const toolCalls = (h: Harness): FetchCall[] => h.fetchCalls.filter((c) => c.url === TOOL_URL);
+const transcriptCalls = (h: Harness): FetchCall[] => h.fetchCalls.filter((c) => c.url === TRANSCRIPT_URL);
+
+/** A connected call whose channel is open; `sent` holds only what the tool loop adds after the first response.create. */
+async function liveCall(options: Options = {}): Promise<{ h: Harness; session: CallSession }> {
+  const c = await connect(options);
+  open(c.h);
+  return c;
+}
+
+describe("the tool loop: output item, then response.create", () => {
+  it("forwards the call to the tool endpoint with only the call fields", async () => {
+    const { h } = await liveCall({ tool: () => ({ json: FACTS_RESULT }) });
+    deliver(h, functionCall("call_abc", "get_invoice_facts", "{}"));
+    await flush();
+
+    const calls = toolCalls(h);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.method).toBe("POST");
+    expect(calls[0]!.headers["Content-Type"]).toBe("application/json");
+    expect(JSON.parse(calls[0]!.body!)).toEqual({
+      voiceCallId: CALL_ID,
+      token: TOKEN,
+      callId: "call_abc",
+      name: "get_invoice_facts",
+      arguments: "{}",
+    });
+    expect(calls[0]!.body).not.toContain(EPHEMERAL);
+  });
+
+  it("sends the function_call_output item first and response.create second", async () => {
+    const { h } = await liveCall({ tool: () => ({ json: FACTS_RESULT }) });
+    deliver(h, functionCall("call_abc", "get_invoice_facts"));
+    await flush();
+
+    expect(h.dc.sentEvents()).toEqual([
+      { type: "response.create" },
+      {
+        type: "conversation.item.create",
+        item: { type: "function_call_output", call_id: "call_abc", output: JSON.stringify(FACTS_RESULT) },
+      },
+      { type: "response.create" },
+    ]);
+  });
+
+  it("sends the raw arguments string of a record_promise_to_pay call and returns its error result as output", async () => {
+    const args = '{"amount_paise":0,"date_iso":"2026-11-20","spoken_text":"haan"}';
+    const error = { ok: false, error: "amount_out_of_range", message: "x", total_due: "₹4,17,127.94" };
+    const { h } = await liveCall({ tool: () => ({ json: error }) });
+    deliver(h, functionCall("call_p1", "record_promise_to_pay", args));
+    await flush();
+
+    expect(JSON.parse(toolCalls(h)[0]!.body!)).toMatchObject({ name: "record_promise_to_pay", arguments: args });
+    const events = h.dc.sentEvents();
+    expect(events[1]).toEqual({
+      type: "conversation.item.create",
+      item: { type: "function_call_output", call_id: "call_p1", output: JSON.stringify(error) },
+    });
+    expect(events[2]).toEqual({ type: "response.create" });
+    expect(endReports(h)).toHaveLength(0);
+  });
+
+  it("treats a call without an arguments string as empty arguments", async () => {
+    const { h } = await liveCall({ tool: () => ({ json: FACTS_RESULT }) });
+    deliver(h, { type: "response.function_call_arguments.done", call_id: "call_n", name: "get_invoice_facts" });
+    await flush();
+    expect(JSON.parse(toolCalls(h)[0]!.body!)).toMatchObject({ callId: "call_n", arguments: "" });
+  });
+
+  it("answers each of two function calls with its own output item and call_id", async () => {
+    const { h } = await liveCall({
+      tool: (call) => ({ json: { ok: true, echoed: (JSON.parse(call.body!) as { callId: string }).callId } }),
+    });
+    deliver(h, functionCall("call_1", "get_invoice_facts"));
+    deliver(h, functionCall("call_2", "get_invoice_facts"));
+    await flush();
+
+    const outputs = h.dc
+      .sentEvents()
+      .filter((e) => e.type === "conversation.item.create")
+      .map((e) => (e as unknown as { item: { call_id: string; output: string } }).item);
+    expect(outputs).toEqual([
+      { type: "function_call_output", call_id: "call_1", output: '{"ok":true,"echoed":"call_1"}' },
+      { type: "function_call_output", call_id: "call_2", output: '{"ok":true,"echoed":"call_2"}' },
+    ]);
+  });
+
+  it("sends nothing and keeps the call live when the tool request fails with 500 or at the network level", async () => {
+    for (const tool of [() => ({ status: 500, json: { error: "internal" } }), () => "network" as const]) {
+      const { h } = await liveCall({ tool });
+      deliver(h, functionCall("call_abc", "get_invoice_facts"));
+      await flush();
+      expect(h.dc.sentEvents()).toEqual([{ type: "response.create" }]);
+      expect(endReports(h)).toHaveLength(0);
+      expect(lastView(h).phase).toBe("live");
+    }
+  });
+
+  it("sends no output when the call ended while the tool request was in flight", async () => {
+    const { h, session } = await liveCall({ tool: () => ({ json: FACTS_RESULT }) });
+    deliver(h, functionCall("call_abc", "get_invoice_facts"));
+    session.hangUp();
+    await flush();
+    expect(h.dc.sentEvents()).toEqual([{ type: "response.create" }]);
+    expect(endReports(h)).toHaveLength(1);
+  });
+});
+
+describe("end_call: ends on the next response.done or after 10 seconds", () => {
+  const OK_RESULT = { json: { ok: true } };
+  const endCall = (callId = "call_end") => functionCall(callId, "end_call", '{"outcome":"dispute"}');
+
+  it("does not end the call when the output is sent, only on the next response.done", async () => {
+    const { h } = await liveCall({ tool: () => OK_RESULT });
+    deliver(h, endCall());
+    await flush();
+    expect(h.dc.sentEvents().map((e) => e.type)).toEqual([
+      "response.create",
+      "conversation.item.create",
+      "response.create",
+    ]);
+    expect(endReports(h)).toHaveLength(0);
+    expect(lastView(h).phase).toBe("live");
+
+    deliver(h, { type: "response.done" });
+    expect(endReports(h)).toHaveLength(1);
+    expect(JSON.parse(endReports(h)[0]!.body!)).toEqual({ voiceCallId: CALL_ID, token: TOKEN });
+    expect(h.pc.closed).toBe(1);
+    expect(h.track.stop).toHaveBeenCalledTimes(1);
+    expect(lastView(h)).toEqual({ phase: "ended" });
+  });
+
+  it("arms one 10-second timer when the output is sent, and clears it when response.done ends the call", async () => {
+    const { h } = await liveCall({ tool: () => OK_RESULT });
+    expect(END_CALL_FALLBACK_MS).toBe(10_000);
+    expect(h.timeouts).toEqual([]);
+    deliver(h, endCall());
+    await flush();
+    expect(h.timeouts).toEqual([{ callback: expect.any(Function), ms: 10_000, cleared: false }]);
+
+    deliver(h, { type: "response.done" });
+    expect(h.timeouts[0]!.cleared).toBe(true);
+  });
+
+  it("ends after 10 seconds when no response.done arrives", async () => {
+    const { h } = await liveCall({ tool: () => OK_RESULT });
+    deliver(h, endCall());
+    await flush();
+    expect(endReports(h)).toHaveLength(0);
+
+    h.timeouts[0]!.callback();
+    expect(endReports(h)).toHaveLength(1);
+    expect(lastView(h)).toEqual({ phase: "ended" });
+    expect(h.pc.closed).toBe(1);
+
+    // A response.done after the timer end sends no second End_Report.
+    deliver(h, { type: "response.done" });
+    expect(endReports(h)).toHaveLength(1);
+  });
+
+  it("ignores a response.done that arrives before the end_call output is sent", async () => {
+    const { h } = await liveCall({ tool: () => OK_RESULT });
+    deliver(h, endCall());
+    // The response that held the function call finishes before the tool round trip is back.
+    deliver(h, { type: "response.done" });
+    expect(endReports(h)).toHaveLength(0);
+    await flush();
+    expect(endReports(h)).toHaveLength(0);
+    deliver(h, { type: "response.done" });
+    expect(endReports(h)).toHaveLength(1);
+  });
+
+  it("does not end on response.done or arm a timer for other tools or for a failed end_call", async () => {
+    const { h } = await liveCall({ tool: () => ({ json: { ok: false, error: "invalid_arguments" } }) });
+    deliver(h, functionCall("call_x", "end_call", "{}"));
+    deliver(h, functionCall("call_y", "get_invoice_facts"));
+    await flush();
+    deliver(h, { type: "response.done" });
+    expect(h.timeouts).toEqual([]);
+    expect(endReports(h)).toHaveLength(0);
+    expect(lastView(h).phase).toBe("live");
+  });
+
+  it("sends one End_Report when response.done, the timer and a hang-up all fire", async () => {
+    const { h, session } = await liveCall({ tool: () => OK_RESULT });
+    deliver(h, endCall());
+    await flush();
+    deliver(h, { type: "response.done" });
+    h.timeouts[0]!.callback();
+    session.hangUp();
+    expect(endReports(h)).toHaveLength(1);
+  });
+});
+
+describe("ending on errors", () => {
+  it("a Realtime error event ends the call with one End_Report", async () => {
+    const { h } = await liveCall();
+    deliver(h, { type: "error", error: { type: "server_error", message: "boom" } });
+    expect(endReports(h)).toHaveLength(1);
+    expect(h.pc.closed).toBe(1);
+    expect(h.track.stop).toHaveBeenCalledTimes(1);
+    expect(lastView(h)).toEqual({ phase: "ended" });
+    // Nothing else is sent to the model and a second error changes nothing.
+    deliver(h, { type: "error" });
+    expect(endReports(h)).toHaveLength(1);
+    expect(h.dc.sentEvents()).toEqual([{ type: "response.create" }]);
+  });
+
+  it("a call_time_up result ends the call and sends no output item", async () => {
+    const result = { ok: false, error: "call_time_up", message: "The call time is over." };
+    const { h } = await liveCall({ tool: () => ({ json: result }) });
+    deliver(h, functionCall("call_abc", "get_invoice_facts"));
+    await flush();
+    expect(endReports(h)).toHaveLength(1);
+    expect(lastView(h)).toEqual({ phase: "ended" });
+    expect(h.dc.sentEvents()).toEqual([{ type: "response.create" }]);
+    expect(h.pc.closed).toBe(1);
+  });
+
+  it("a 404 from the tool endpoint ends the call and sends no output item", async () => {
+    const { h } = await liveCall({ tool: () => ({ status: 404, json: { error: "not_found" } }) });
+    deliver(h, functionCall("call_abc", "record_promise_to_pay", "{}"));
+    await flush();
+    expect(endReports(h)).toHaveLength(1);
+    expect(lastView(h)).toEqual({ phase: "ended" });
+    expect(h.dc.sentEvents()).toEqual([{ type: "response.create" }]);
+  });
+
+  it("sends exactly one End_Report when several end triggers follow each other", async () => {
+    const { h, session } = await liveCall({ tool: () => ({ json: { ok: false, error: "call_time_up" } }) });
+    deliver(h, functionCall("call_1", "get_invoice_facts"));
+    deliver(h, functionCall("call_2", "get_invoice_facts"));
+    await flush();
+    deliver(h, { type: "error" });
+    h.setNow(CAP_MS);
+    h.tickCallback()!();
+    h.dc.onclose?.();
+    session.hangUp();
+    expect(endReports(h)).toHaveLength(1);
+    expect(h.views.filter((v) => v.phase === "ended")).toHaveLength(1);
+  });
+});
+
+describe("transcript lines and the rest of the data channel", () => {
+  it("posts buyer and agent transcript lines with the item id and skips blank text", async () => {
+    const { h } = await liveCall();
+    deliver(h, {
+      type: "conversation.item.input_audio_transcription.completed",
+      item_id: "item_b1",
+      transcript: "Haan ji, Friday tak",
+    });
+    deliver(h, { type: "response.output_audio_transcript.done", item_id: "item_a1", transcript: "Shukriya Sharma ji" });
+    deliver(h, { type: "response.output_audio_transcript.done", item_id: "item_a2", transcript: "   " });
+    await flush();
+
+    expect(transcriptCalls(h).map((c) => JSON.parse(c.body!))).toEqual([
+      { voiceCallId: CALL_ID, token: TOKEN, speaker: "buyer", itemId: "item_b1", text: "Haan ji, Friday tak" },
+      { voiceCallId: CALL_ID, token: TOKEN, speaker: "agent", itemId: "item_a1", text: "Shukriya Sharma ji" },
+    ]);
+  });
+
+  it("ignores messages that are not JSON, not strings or not known events", async () => {
+    const { h } = await liveCall();
+    deliver(h, "not json {");
+    h.dc.onmessage?.({ data: 42 });
+    deliver(h, { type: "response.created" });
+    deliver(h, null);
+    await flush();
+    expect(toolCalls(h)).toEqual([]);
+    expect(transcriptCalls(h)).toEqual([]);
+    expect(endReports(h)).toHaveLength(0);
+    expect(lastView(h).phase).toBe("live");
+  });
+
+  it("never sends a session.update during a whole call: tool call, transcripts, end_call and hang-up", async () => {
+    const { h, session } = await liveCall({ tool: () => ({ json: { ok: true } }) });
+    deliver(h, functionCall("call_1", "get_invoice_facts"));
+    deliver(h, functionCall("call_2", "record_promise_to_pay", "{}"));
+    deliver(h, { type: "response.output_audio_transcript.done", item_id: "a1", transcript: "Namaste" });
+    deliver(h, functionCall("call_3", "end_call", '{"outcome":"no_promise"}'));
+    await flush();
+    deliver(h, { type: "response.done" });
+    session.hangUp();
+
+    expect(h.dc.sentEvents().map((e) => e.type)).not.toContain("session.update");
+    expect(h.dc.sent.join("")).not.toContain("session.update");
+    const requestBodies = h.fetchCalls.map((c) => c.body ?? "").join("\n");
+    expect(requestBodies).not.toContain("session.update");
+    // Every event the client sent is one of the two kinds the design allows.
+    const kinds = new Set(h.dc.sentEvents().map((e) => e.type));
+    expect([...kinds].sort()).toEqual(["conversation.item.create", "response.create"]);
   });
 });

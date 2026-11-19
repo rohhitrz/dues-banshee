@@ -323,7 +323,14 @@ export function startCallSession(deps: CallSessionDeps): CallSession {
   const postTranscript = (line: { speaker: "buyer" | "agent"; itemId: string; text: string }): void => {
     const id = voiceCallId;
     if (id === null) return;
-    postJson(TRANSCRIPT_URL, { voiceCallId: id, token, ...line }).catch(() => {});
+    // Send only the declared fields: `line` is the routed action and also carries `kind`.
+    postJson(TRANSCRIPT_URL, {
+      voiceCallId: id,
+      token,
+      speaker: line.speaker,
+      itemId: line.itemId,
+      text: line.text,
+    }).catch(() => {});
   };
 
   /** Built-in routing of one data-channel message (the table in the design's Call_Client section). */
