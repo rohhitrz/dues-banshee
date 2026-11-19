@@ -309,16 +309,19 @@ describe("proxy: module shape", () => {
   });
 });
 
+// Shared by the two blocks below. A matcher pattern is `/literal` or `/literal/:name*`; no other form is in use.
+const patternToRegExp = (pattern: string): RegExp => {
+  const star = pattern.endsWith("/:path*");
+  const base = star ? pattern.slice(0, -"/:path*".length) : pattern;
+  expect(base).not.toContain(":");
+  return new RegExp(`^${base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}${star ? "(?:/.*)?" : ""}$`);
+};
+/** The matcher patterns that match `path`. */
+const matchedBy = (path: string): string[] => (config.matcher as string[]).filter((p) => patternToRegExp(p).test(path));
+
 // Feature: whatsapp-channel, Req 8.6, 8.7, 9.15: the webhooks have no session, only a signature, so the
-// proxy must not run on them. A pattern is `/literal` or `/literal/:name*`; no other form is in use.
+// proxy must not run on them.
 describe("proxy: webhook routes are not guarded", () => {
-  const patternToRegExp = (pattern: string): RegExp => {
-    const star = pattern.endsWith("/:path*");
-    const base = star ? pattern.slice(0, -"/:path*".length) : pattern;
-    expect(base).not.toContain(":");
-    return new RegExp(`^${base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}${star ? "(?:/.*)?" : ""}$`);
-  };
-  const matchedBy = (path: string): string[] => (config.matcher as string[]).filter((p) => patternToRegExp(p).test(path));
 
   it.each(["/api/webhooks/razorpay", "/api/webhooks/twilio"])("matches no pattern for %s", (path) => {
     expect(matchedBy(path)).toEqual([]);
@@ -339,13 +342,6 @@ describe("proxy: webhook routes are not guarded", () => {
 // routes must stay outside the proxy (the matcher is unchanged), while `/` and `/debtors/<id>` stay guarded.
 // Next runs the proxy only on paths the matcher lists, so "not matched" means "never redirected".
 describe("proxy: call page and voice routes are not guarded", () => {
-  const patternToRegExp = (pattern: string): RegExp => {
-    const star = pattern.endsWith("/:path*");
-    const base = star ? pattern.slice(0, -"/:path*".length) : pattern;
-    expect(base).not.toContain(":");
-    return new RegExp(`^${base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}${star ? "(?:/.*)?" : ""}$`);
-  };
-  const matchedBy = (path: string): string[] => (config.matcher as string[]).filter((p) => patternToRegExp(p).test(path));
 
   const TOKEN = "aB3_-xYz0123456789abcdefghijklmnopqrstuvwxy";
   const DEBTOR_ID = "22222222-2222-4222-8222-222222222222";
