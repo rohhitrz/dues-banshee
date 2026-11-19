@@ -71,11 +71,26 @@ export function buyerAddress(buyerName: string): string {
 }
 
 /**
+ * The supplier name as it is said aloud: trailing parentheticals such as "(Demo)" are left out.
+ * "Laxmi Precision Components (Demo)" -> "Laxmi Precision Components". A name that is only a
+ * parenthetical is kept as it is. Only the opening line uses this; `supplier_name` stays unchanged.
+ */
+export function spokenSupplierName(supplierName: string): string {
+  let name = supplierName.trim();
+  for (;;) {
+    const stripped = name.replace(/\([^()]*\)$/, "").trim();
+    if (stripped === name) break;
+    name = stripped;
+  }
+  return name === "" ? supplierName.trim() : name;
+}
+
+/**
  * The first words of the call, built here so the model does not word the disclosure itself. Names are
  * untrusted: this string only ever goes into the escaped JSON data line.
  */
 function openingLine(supplierName: string, addressAs: string): string {
-  return `Namaste ${addressAs}, main ${supplierName} ki taraf se ek AI assistant bol rahi hoon. Yeh call record aur transcribe ho rahi hai.`;
+  return `Namaste ${addressAs}, main ${spokenSupplierName(supplierName)} ki taraf se ek AI assistant bol rahi hoon. Yeh call record aur transcribe ho rahi hai.`;
 }
 
 /** JSON on one line with `<`, `>` and the Unicode line separators written as \uXXXX escapes. */

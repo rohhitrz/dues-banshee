@@ -51,6 +51,13 @@ const scenario = fc.record({
   callToday,
 });
 
+// Independent oracle for the spoken supplier name: drop trailing "(...)" groups until none is left.
+function oracleSpokenName(name: string): string {
+  let current = name.trim();
+  while (/\([^()]*\)$/.test(current)) current = current.replace(/\([^()]*\)$/, "").trim();
+  return current === "" ? name.trim() : current;
+}
+
 describe("Property 6: Data block round trip", () => {
   it("keeps exactly one BEGIN and one END line after the rules, and the JSON between them parses back", () => {
     fc.assert(
@@ -77,7 +84,7 @@ describe("Property 6: Data block round trip", () => {
         expect(json).not.toMatch(/[<>\u2028\u2029]/);
 
         expect(JSON.parse(json)).toEqual({
-          opening_line: `Namaste ${buyerAddress(input.buyerName)}, main ${input.supplierName} ki taraf se ek AI assistant bol rahi hoon. Yeh call record aur transcribe ho rahi hai.`,
+          opening_line: `Namaste ${buyerAddress(input.buyerName)}, main ${oracleSpokenName(input.supplierName)} ki taraf se ek AI assistant bol rahi hoon. Yeh call record aur transcribe ho rahi hai.`,
           supplier_name: input.supplierName,
           buyer_name: input.buyerName,
           address_as: buyerAddress(input.buyerName),
