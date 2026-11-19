@@ -156,7 +156,7 @@ describe("buildDebtorView: Sharma Traders panel at 2026-11-12 (Req 4.1, 4.2, 4.4
   });
 });
 
-describe("buildDebtorView: promise to pay (Req 6.4)", () => {
+describe("buildDebtorView: promise to pay (Req 6.4; buyer-voice-call Req 9.8, 9.9)", () => {
   it("shows 'Promise to pay active until 20 Nov 2026' on an unpaid invoice with a promise to 2026-11-20", () => {
     const history: EscalationHistory = [
       { kind: "promise", promisedDate: "2026-11-20", amountPaise: 41200000, recordedOn: "2026-11-10" },
@@ -165,6 +165,24 @@ describe("buildDebtorView: promise to pay (Req 6.4)", () => {
     expect(panel?.promiseUntilText).toBe("Promise to pay active until 20 Nov 2026");
     expect(panel?.showPlaceholders).toBe(true);
     expect(panel?.tombstone.look.wisp).toBe(true);
+  });
+
+  it("shows 'Promise due today' and not the active text when the promise date equals Today (Req 9.9)", () => {
+    const history: EscalationHistory = [
+      { kind: "promise", promisedDate: TODAY, amountPaise: 41200000, recordedOn: "2026-11-10" },
+    ];
+    const panel = buildDebtorView(input(demoRecord("LPC/26-27/0412", history))).panels[0];
+    expect(panel?.promiseUntilText).toBe("Promise due today");
+    expect(panel?.showPlaceholders).toBe(true);
+  });
+
+  it("uses the latest promise date: due today is replaced by a later date (Req 9.8)", () => {
+    const history: EscalationHistory = [
+      { kind: "promise", promisedDate: TODAY, amountPaise: 41200000, recordedOn: "2026-11-10" },
+      { kind: "promise", promisedDate: "2026-11-15", amountPaise: 41200000, recordedOn: "2026-11-12" },
+    ];
+    const panel = buildDebtorView(input(demoRecord("LPC/26-27/0412", history))).panels[0];
+    expect(panel?.promiseUntilText).toBe("Promise to pay active until 15 Nov 2026");
   });
 
   it("shows no promise text when the promise date is before Today", () => {

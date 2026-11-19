@@ -12,7 +12,7 @@ export interface InvoicePanelView {
   panelId: `invoice-${string}`;
   /** Same rule as the Tombstone: `labels.overdueText`. */
   overdueText: string | null;
-  /** "Promise to pay active until <D MMM YYYY>", or null. */
+  /** "Promise to pay active until <D MMM YYYY>" (date after Today), "Promise due today", or null. */
   promiseUntilText: string | null;
   /** True iff the invoice is not resurrected. */
   showPlaceholders: boolean;
@@ -43,6 +43,16 @@ export interface BuildDebtorViewInput {
 }
 
 /**
+ * Panel text for the Engine's `activePromiseUntil` (which includes a promise dated Today). The Engine
+ * `nextEscalationStep` pauses only while the promise date is after Today, so a promise due Today says so
+ * instead of "active" (buyer-voice-call Req 9.8, 9.9). Both are normalized `YYYY-MM-DD` strings.
+ */
+function promiseText(until: CalendarDate | null, today: CalendarDate): string | null {
+  if (until === null) return null;
+  return until === today ? "Promise due today" : `Promise to pay active until ${formatDisplayDate(until)}`;
+}
+
+/**
  * Builds the Debtor_View. Pure: no I/O, no clock, inputs are never mutated. Every legal figure comes from
  * the Graveyard_Builder (and so the Engine); this function only selects, formats and orders.
  */
@@ -67,7 +77,7 @@ export function buildDebtorView({
       buyerId: data.buyer.id,
       panelId: `invoice-${tombstone.id}`,
       overdueText: overdueText(tombstone),
-      promiseUntilText: until === null ? null : `Promise to pay active until ${formatDisplayDate(until)}`,
+      promiseUntilText: promiseText(until, today),
       showPlaceholders: !resurrected,
     };
   });
