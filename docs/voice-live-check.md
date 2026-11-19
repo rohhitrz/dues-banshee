@@ -63,22 +63,22 @@ Fill this in after the run.
 
 | Field | Result |
 |---|---|
-| Date of the run | |
-| Realtime_Model used (`gpt-realtime-2.1-mini` or `gpt-realtime-2.1`) | |
-| Transcription language | Left unset (design open item 2). Decide below whether to set it or add a `prompt`. |
-| Observed Hinglish quality (buyer transcript accuracy, agent voice and pacing) | |
+| Date of the run | 19 Nov 2026 |
+| Realtime_Model used | `gpt-realtime-2.1` (`VOICE_REALTIME_MODEL` is set to exactly this in `apps/web/.env.local`) |
+| Transcription config | `languages: ["hi", "en"]` plus `keywords` ("haan", "nahi", "ji", "agle", "lakh", "hazaar", "rupaye", "paisa", "Friday", "Sharma ji"). Decision below. |
+| Observed Hinglish quality | Amounts and dates are spoken correctly in words after the words-only facts change. Early runs had mid-sentence restarts; far-field noise reduction and `eagerness: "high"` fixed them. The "(Demo)" fumble in the opening is fixed by dropping the trailing parenthetical from the spoken supplier name. Buyer transcript lines come out in Devanagari. |
 
 | Check | Pass / fail | Notes |
 |---|---|---|
-| Disclosure line first | | |
-| `get_invoice_facts` figures match the page | | |
-| Read-back of amount (digits + words) and weekday + date | | |
-| Clear yes before `record_promise_to_pay` | | |
-| Promise on the Candle_Timeline after reload | | |
-| Next Ladder_Run pauses (`promise_active`) | | |
-| Transcript_Lines stored | | |
+| Disclosure line first | Pass | |
+| `get_invoice_facts` figures match the page | Pass | 26 days late; total "four lakh seventeen thousand one hundred twenty-seven rupees and ninety-four paise". |
+| Read-back of amount (words) and weekday + date | Pass | |
+| Clear yes before `record_promise_to_pay` | Pass | |
+| Promise on the Candle_Timeline after reload | Pass | The page shows "Promise to pay active until 13 Nov 2026" and "Waiting: Promise to pay active". |
+| Next Ladder_Run pauses (`promise_active`) | Pass | Checked through the invoice panel. The `curl` ladder run was skipped. |
+| Transcript_Lines stored | Pass | |
 
-Decision on transcription language (leave unset / set `language` / add `prompt`):
+Decision on transcription language (leave unset / set `language` / add `prompt`): keep `languages: ["hi", "en"]` and the `keywords`; set no single `language` and add no `prompt`. Buyer lines come out in Devanagari, which is acceptable.
 
 ## Troubleshooting
 
