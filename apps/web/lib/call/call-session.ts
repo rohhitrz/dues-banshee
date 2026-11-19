@@ -310,12 +310,20 @@ export function startCallSession(deps: CallSessionDeps): CallSession {
   /**
    * Forwards one function call to the server, which takes the invoice from its own Voice_Call row.
    * 200: send the result back as a `function_call_output` item, then `response.create` so the model
-   * continues. 404 or `call_time_up`: the call is over, end it. Any other failure sends nothing (the
-   * server rolled back, so the model may retry the call).
+   * continues. 404 or `call_time_up`: the call is over, end it. Any other failure (non-2xx, network, bad
+   * body) sends `{"ok":false,"error":"internal"}` as the output, so the agent can apologise and go on
+   * instead of waiting for a result that never comes. That does not arm the end.
    */
   const forwardToolCall = async (call: { callId: string; name: string; arguments: string }): Promise<void> => {
     const id = voiceCallId;
     if (id === null) return;
+    const sendOutput = (result: unknown): void => {
+      send({
+        type: "conversation.item.create",
+        item: { type: "function_call_output", call_id: call.callId, output: JSON.stringify(result) },
+      });
+      send({ type: "response.create" });
+    };
     try {
       const response = await postJson(TOOL_URL, {
         voiceCallId: id,
@@ -329,23 +337,29 @@ export function startCallSession(deps: CallSessionDeps): CallSession {
         end();
         return;
       }
-      if (response.status !== 200) return;
+      if (response.status !== 200) {
+        sendOutput({ ok: false, error: "internal" });
+        return;
+      }
       const result: unknown = await response.json();
       if (ended) return;
       if (isRecord(result) && result.error === "call_time_up") {
         end();
         return;
       }
-      send({
-        type: "conversation.item.create",
-        item: { type: "function_call_output", call_id: call.callId, output: JSON.stringify(result) },
-      });
-      send({ type: "response.create" });
+      sendOutput(result);
       if ((call.name === "end_call" || call.name === "record_promise_to_pay") && isRecord(result) && result.ok === true) {
         armEnd();
       }
     } catch {
-      // Network or parse failure: nothing is sent; the cap and the buyer's hang-up still end the call.
+      // Network or parse failure: tell the model, so it does not wait for a result that never comes.
+      if (!ended) {
+        try {
+          sendOutput({ ok: false, error: "internal" });
+        } catch {
+          // The channel is gone; the cap and the buyer's hang-up still end the call.
+        }
+      }
     }
   };
 

@@ -779,17 +779,46 @@ describe("the tool loop: output item, then response.create", () => {
     ]);
   });
 
-  it("sends nothing and keeps the call live when the tool request fails with 500 or at the network level", async () => {
-    for (const tool of [() => ({ status: 500, json: { error: "internal" } }), () => "network" as const]) {
-      const { h } = await liveCall({ tool });
-      deliver(h, functionCall("call_abc", "get_invoice_facts"));
-      await flush();
-      expect(h.dc.sentEvents()).toEqual([{ type: "response.create" }]);
-      expect(endReports(h)).toHaveLength(0);
-      expect(lastView(h).phase).toBe("live");
-    }
+  it.each([
+    ["a 500", () => ({ status: 500, json: { error: "internal" } })],
+    ["a 502", () => ({ status: 502, json: {} })],
+    ["a network failure", () => "network" as const],
+  ])("sends an internal-error output and response.create, and keeps the call live, after %s", async (_name, tool) => {
+    const { h } = await liveCall({ tool });
+    deliver(h, functionCall("call_abc", "get_invoice_facts"));
+    await flush();
+    expect(h.dc.sentEvents()).toEqual([
+      { type: "response.create" },
+      {
+        type: "conversation.item.create",
+        item: { type: "function_call_output", call_id: "call_abc", output: '{"ok":false,"error":"internal"}' },
+      },
+      { type: "response.create" },
+    ]);
+    expect(endReports(h)).toHaveLength(0);
+    expect(h.timeouts).toEqual([]);
+    expect(lastView(h).phase).toBe("live");
   });
-
+  it("sends an internal-error output for a 200 whose body is not JSON, and does not arm the end for end_call", async () => {
+    const { h } = await liveCall();
+    // The route fakes always return valid JSON, so wrap fetch to make the tool body unreadable.
+    const original = h.deps.fetch;
+    h.deps.fetch = (url, init) =>
+      url === TOOL_URL
+        ? Promise.resolve({ ok: true, status: 200, json: () => Promise.reject(new SyntaxError("bad")), text: () => Promise.resolve("") })
+        : original(url, init);
+    deliver(h, functionCall("call_end", "end_call", '{"outcome":"dispute"}'));
+    await flush();
+    expect(h.dc.sentEvents()).toEqual([
+      { type: "response.create" },
+      {
+        type: "conversation.item.create",
+        item: { type: "function_call_output", call_id: "call_end", output: '{"ok":false,"error":"internal"}' },
+      },
+      { type: "response.create" },
+    ]);
+    expect(h.timeouts).toEqual([]);
+  });
   it("sends no output when the call ended while the tool request was in flight", async () => {
     const { h, session } = await liveCall({ tool: () => ({ json: FACTS_RESULT }) });
     deliver(h, functionCall("call_abc", "get_invoice_facts"));
