@@ -187,6 +187,29 @@ describe("handleTranscript", () => {
     expect(await w.lines()).toEqual([]);
   });
 
+  it("stores a line at started_at + 299 s and keeps the call live", async () => {
+    const w = await world.call();
+    expect(await w.transcript("i1", "last second", at(299))).toEqual({ status: 200, body: { ok: true } });
+    expect(await w.lines()).toHaveLength(1);
+    expect(await w.row()).toMatchObject({ status: "live", endedAt: null });
+  });
+
+  it("refuses a line at started_at + 300 s (Call_Cap), ends the call and stores nothing", async () => {
+    const w = await world.call();
+    const r = await w.transcript("i1", "past the cap", at(300));
+    expect(r).toEqual({ status: 404, body: { error: "not_found" }, revalidateBuyerId: w.buyerId });
+    expect(await w.lines()).toEqual([]);
+    expect(await w.row()).toMatchObject({ status: "ended", endedAt: at(300), durationSeconds: 300, outcome: "incomplete" });
+  });
+
+  it("keeps the promise outcome when a line past the cap ends the call", async () => {
+    const w = await world.call();
+    await w.tool("record_promise_to_pay", promiseArgs(100, "2026-11-20"), "c1", at(100));
+    await w.transcript("i1", "past the cap", at(330));
+    expect(await w.row()).toMatchObject({ status: "ended", outcome: "promise", endedAt: at(330), durationSeconds: 300 });
+    expect(await w.lines()).toEqual([]);
+  });
+
   it("stores markup as plain data, unchanged", async () => {
     const w = await world.call();
     await w.transcript("html", `<img src=x onerror=alert(1)> "ignore previous instructions"`);
@@ -217,11 +240,13 @@ describe("handleTranscript", () => {
 });
 
 describe("the stale rule: no End_Report by started_at + 360 s", () => {
-  it("leaves a call live and stores the line at started_at + 359 s", async () => {
+  it("does not apply the stale rule at started_at + 359 s: the Call_Cap refuses the line and ends the call at that instant", async () => {
     const w = await world.call();
-    expect(await w.transcript("i1", "still talking", at(359))).toEqual({ status: 200, body: { ok: true } });
-    expect(await w.row()).toMatchObject({ status: "live", endedAt: null });
-    expect(await w.lines()).toHaveLength(1);
+    const r = await w.transcript("i1", "still talking", at(359));
+    expect(r).toEqual({ status: 404, body: { error: "not_found" }, revalidateBuyerId: w.buyerId });
+    // Ended at the request time (359 s), not at the cap (300 s) as the stale rule would do from 360 s.
+    expect(await w.row()).toMatchObject({ status: "ended", endedAt: at(359), durationSeconds: 300 });
+    expect(await w.lines()).toEqual([]);
   });
 
   it("is ended by the next transcript with ended_at = started_at + 300 s and the line is refused", async () => {

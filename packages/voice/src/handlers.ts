@@ -329,7 +329,8 @@ export interface TranscriptRequest {
 
 /**
  * Stores one Transcript_Line for a `live` call matched by id and token hash (else 404, nothing
- * stored). A stale call is ended first. Blank text answers 200 and stores nothing; longer text is cut
+ * stored). A stale call is ended first. At or after `started_at` + 300 s (the Call_Cap) a line is refused
+ * like a tool request: nothing stored, the call ends, 404. Blank text answers 200 and stores nothing; longer text is cut
  * to 2,000 characters; a repeated item id is dropped (still 200). Text is stored as data only.
  */
 export async function handleTranscript(deps: CallReportDeps, req: TranscriptRequest): Promise<CallReportResponse> {
@@ -338,9 +339,16 @@ export async function handleTranscript(deps: CallReportDeps, req: TranscriptRequ
     const staleBuyerIds = await endStaleCalls(db, now, { voiceCallId: req.voiceCallId });
     const revalidate = staleBuyerIds[0] === undefined ? {} : { revalidateBuyerId: staleBuyerIds[0] };
 
-    const stored = await db.transaction(async (tx) => {
+    const stored = await db.transaction(async (tx): Promise<{ kind: "stored" | "none" } | { kind: "cap"; buyerId: string }> => {
       const live = await lockLiveCall(tx, req.voiceCallId, hashToken(req.token));
-      if (live === null) return false;
+      if (live === null) return { kind: "none" };
+      // Call_Cap, as for a tool request: at or after started_at + 300 s store nothing and end the call.
+      const capEnd = live.startedAt.getTime() + CALL_CAP_MS;
+      if (now.getTime() >= capEnd) {
+        const endedAt = now.getTime() < capEnd + STALE_GRACE_MS ? now : new Date(capEnd);
+        await endVoiceCall(tx, live.voiceCallId, endedAt);
+        return { kind: "cap", buyerId: live.buyerId };
+      }
       await insertTranscriptLine(tx, {
         voiceCallId: live.voiceCallId,
         speaker: req.speaker,
@@ -348,9 +356,12 @@ export async function handleTranscript(deps: CallReportDeps, req: TranscriptRequ
         text: req.text,
         now,
       });
-      return true;
+      return { kind: "stored" };
     });
-    if (!stored) return { status: 404, body: { error: "not_found" }, ...revalidate };
+    if (stored.kind === "cap") {
+      return { status: 404, body: { error: "not_found" }, revalidateBuyerId: stored.buyerId };
+    }
+    if (stored.kind === "none") return { status: 404, body: { error: "not_found" }, ...revalidate };
     return { status: 200, body: { ok: true }, ...revalidate };
   } catch (error) {
     console.error("voice transcript: failed", errorName(error));
