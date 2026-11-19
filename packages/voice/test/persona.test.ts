@@ -208,6 +208,20 @@ describe("PERSONA_RULES contents", () => {
     expect(PERSONA_RULES).toContain("Never call end_call before the closing line has been said.");
   });
 
+  it("always reads back the amount in words and the date, even after poora or full (rule 2a)", () => {
+    expect(PERSONA_RULES).toContain(
+      'The read-back before you ask for a yes must always say the amount in words, even when the buyer said "poora" or "full": use total_due_words for the full amount, or the amount the buyer stated, in words. Always add the date_list entry.',
+    );
+    expect(PERSONA_RULES).toContain('Never ask for a yes on "poora" or "full" alone.');
+  });
+
+  it("never narrates or fills around a tool call (rule 2b)", () => {
+    expect(PERSONA_RULES).toContain("TOOL CALLS");
+    expect(PERSONA_RULES).toContain(
+      'Never say filler or narrate before or after a tool call (no "let me confirm", no "I\'ll proceed", no "main record kar rahi hoon"). Call the tool silently and speak only after its result.',
+    );
+  });
+
   it("holds no model IDs, banned or otherwise", () => {
     expect(PERSONA_RULES).not.toMatch(/gpt-|whisper|realtime/i);
   });
