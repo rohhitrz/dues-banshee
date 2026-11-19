@@ -36,6 +36,11 @@ describe("routeRealtimeEvent", () => {
     ).toEqual({ kind: "ignore" });
   });
 
+  it("maps response.created", () => {
+    expect(routeRealtimeEvent({ type: "response.created", response: { id: "resp_1" } })).toEqual({
+      kind: "response_created",
+    });
+  });
   it("maps response.done", () => {
     expect(routeRealtimeEvent({ type: "response.done" })).toEqual({ kind: "response_done" });
   });

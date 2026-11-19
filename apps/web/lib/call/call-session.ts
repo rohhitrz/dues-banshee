@@ -17,7 +17,10 @@ export const END_URL = "/api/voice/end";
 export const TOOL_URL = "/api/voice/tool";
 export const TRANSCRIPT_URL = "/api/voice/transcript";
 export const DATA_CHANNEL_LABEL = "oai-events";
-/** After a successful `end_call` output, the call ends on the next `output_audio_buffer.stopped` or after this long. */
+/**
+ * After a successful `end_call` or `record_promise_to_pay` output, the call ends on the first
+ * `output_audio_buffer.stopped` that follows a `response.created` seen after the arm, or after this long.
+ */
 export const END_CALL_FALLBACK_MS = 10_000;
 
 export const MIC_ERROR_TEXT = "Microphone access is needed for the call";
@@ -185,8 +188,13 @@ export function startCallSession(deps: CallSessionDeps): CallSession {
   let pc: PeerConnectionLike | null = null;
   let channel: DataChannelLike | null = null;
   let timer: unknown = null;
-  /** Set once a successful `end_call` output went out: the next `output_audio_buffer.stopped` ends the call. */
+  /** Set once a successful `end_call` or `record_promise_to_pay` output went out. */
   let endArmed = false;
+  /**
+   * Set by the first `response.created` after the arm. Only then can `output_audio_buffer.stopped` end the
+   * call: an earlier response's audio draining must not cut off the closing line that has not started yet.
+   */
+  let closingResponseStarted = false;
   let armedTimer: unknown = null;
 
   // --- Synchronous part of the tap: audio unlock and mic request, before any await. ---
@@ -273,10 +281,15 @@ export function startCallSession(deps: CallSessionDeps): CallSession {
       body: JSON.stringify(body),
     });
 
-  /** A successful `end_call` output went out: end once the output audio has drained (`output_audio_buffer.stopped`, WebRTC only), or after 10 s. */
+  /**
+   * A successful `end_call` or `record_promise_to_pay` output went out: end once the closing response's
+   * audio has drained (the first `output_audio_buffer.stopped` after a `response.created` that came after
+   * this arm; WebRTC only), or after 10 s.
+   */
   const armEnd = (): void => {
     if (ended || endArmed) return;
     endArmed = true;
+    closingResponseStarted = false;
     armedTimer = (deps.setTimeout ?? globalThis.setTimeout)(() => end(), END_CALL_FALLBACK_MS);
   };
 
@@ -314,7 +327,9 @@ export function startCallSession(deps: CallSessionDeps): CallSession {
         item: { type: "function_call_output", call_id: call.callId, output: JSON.stringify(result) },
       });
       send({ type: "response.create" });
-      if (call.name === "end_call" && isRecord(result) && result.ok === true) armEnd();
+      if ((call.name === "end_call" || call.name === "record_promise_to_pay") && isRecord(result) && result.ok === true) {
+        armEnd();
+      }
     } catch {
       // Network or parse failure: nothing is sent; the cap and the buyer's hang-up still end the call.
     }
@@ -349,8 +364,11 @@ export function startCallSession(deps: CallSessionDeps): CallSession {
       case "transcript":
         postTranscript(action);
         break;
+      case "response_created":
+        if (endArmed) closingResponseStarted = true;
+        break;
       case "output_audio_stopped":
-        if (endArmed) end();
+        if (endArmed && closingResponseStarted) end();
         break;
       case "response_done":
         break;
