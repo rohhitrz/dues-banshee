@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./models": "./src/models.ts",
     "./testing": "./src/testing/fake-http.ts"
   },
   "dependencies": {

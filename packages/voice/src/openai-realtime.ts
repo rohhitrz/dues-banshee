@@ -1,4 +1,4 @@
-import { VOICE_MODEL_IDS } from "@dues-banshee/agent";
+import { VOICE_MODEL_IDS } from "@dues-banshee/agent/models";
 import { z } from "zod";
 import type { MintResult, VoiceProvider, VoiceSessionSpec } from "./provider";
 
