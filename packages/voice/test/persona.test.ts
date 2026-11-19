@@ -91,7 +91,7 @@ describe("PERSONA_RULES contents", () => {
   });
 
   it("requires an explicit haan before record_promise_to_pay, after a read-back", () => {
-    expect(PERSONA_RULES).toContain("Read back the amount in digits and in words");
+    expect(PERSONA_RULES).toContain("read them back: the amount in rupees, in words");
     expect(PERSONA_RULES).toContain('explicit "haan"');
     expect(PERSONA_RULES).toContain("Only then call record_promise_to_pay");
   });
@@ -116,6 +116,64 @@ describe("PERSONA_RULES contents", () => {
     expect(PERSONA_RULES).toContain("rule ID IT-43BH) at most once in the whole call");
     expect(PERSONA_RULES).toContain("Never shout, threaten or shame");
     expect(PERSONA_RULES).toContain("never as threats");
+  });
+
+  it("says the AI and recording disclosure exactly once, then calls get_invoice_facts (rule a)", () => {
+    expect(PERSONA_RULES).toContain("exactly once, that you are an AI assistant");
+    expect(PERSONA_RULES).toContain("Then call get_invoice_facts.");
+    expect(PERSONA_RULES).toContain(
+      "After the get_invoice_facts result arrives, do not greet again and do not repeat the AI or recording disclosure.",
+    );
+    expect(PERSONA_RULES.split("yeh call record aur transcribe ho rahi hai")).toHaveLength(2);
+  });
+
+  it("speaks money only in rupees from the words fields, never dollars or the rupee symbol (rule b)", () => {
+    expect(PERSONA_RULES).toContain("Speak money only in rupees.");
+    for (const field of ["principal_words", "interest_words", "total_due_words", "amount_words"]) {
+      expect(PERSONA_RULES).toContain(field);
+    }
+    expect(PERSONA_RULES).toContain('Never say "dollars" and never read the ₹ symbol.');
+  });
+
+  it("never says rule IDs or section numbers aloud (rule c)", () => {
+    expect(PERSONA_RULES).toContain(
+      "Never say a rule ID (such as MSMED-16 or IT-43BH) or a section number aloud.",
+    );
+  });
+
+  it("limits the first facts turn to total due, due date and days overdue, with one question (rule d)", () => {
+    expect(PERSONA_RULES).toContain(
+      "In that first facts turn state only the total due, the due date and the days overdue.",
+    );
+    expect(PERSONA_RULES).toContain("Then ask one question: by which date can they pay.");
+    expect(PERSONA_RULES).toContain(
+      'Ask for "haan" only after that read-back.',
+    );
+    expect(PERSONA_RULES).toContain("Once the buyer has given an amount and a date, read them back");
+  });
+
+  it("handles a refusal: one fact statement, one more ask, then no_promise (rule e)", () => {
+    expect(PERSONA_RULES).toContain("IF THE BUYER REFUSES TO PAY");
+    expect(PERSONA_RULES).toContain(
+      "State once, as a fact, that unpaid dues keep adding interest under the MSMED Act and that the 31 March tax rule affects their deduction.",
+    );
+    expect(PERSONA_RULES).toContain("Then ask once more for a date.");
+    expect(PERSONA_RULES).toContain(
+      "If the buyer still refuses, call end_call with outcome no_promise and end the call.",
+    );
+  });
+
+  it("uses dispute only when the buyer disputes the invoice itself (rule e)", () => {
+    expect(PERSONA_RULES).toContain(
+      "Use outcome dispute only when the buyer disputes the invoice itself: the goods, the quantity, the amount, or says the goods were not received.",
+    );
+  });
+
+  it("says the full closing line in the same turn before end_call (rule f)", () => {
+    expect(PERSONA_RULES).toContain(
+      'Before you call end_call, first say the full closing line in that same turn, for example: "Theek hai Sharma ji, owner aapse follow up karenge. Dhanyavaad."',
+    );
+    expect(PERSONA_RULES).toContain("Never call end_call before the closing line has been said.");
   });
 
   it("holds no model IDs, banned or otherwise", () => {
