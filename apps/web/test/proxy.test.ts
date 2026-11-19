@@ -334,3 +334,47 @@ describe("proxy: webhook routes are not guarded", () => {
     expect(matchedBy("/debtors/abc")).toEqual(["/debtors/:path*"]);
   });
 });
+
+// Feature: buyer-voice-call, Req 10.3, 11.10: the buyer is signed out, so the Call_Page and the four voice
+// routes must stay outside the proxy (the matcher is unchanged), while `/` and `/debtors/<id>` stay guarded.
+// Next runs the proxy only on paths the matcher lists, so "not matched" means "never redirected".
+describe("proxy: call page and voice routes are not guarded", () => {
+  const patternToRegExp = (pattern: string): RegExp => {
+    const star = pattern.endsWith("/:path*");
+    const base = star ? pattern.slice(0, -"/:path*".length) : pattern;
+    expect(base).not.toContain(":");
+    return new RegExp(`^${base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}${star ? "(?:/.*)?" : ""}$`);
+  };
+  const matchedBy = (path: string): string[] => (config.matcher as string[]).filter((p) => patternToRegExp(p).test(path));
+
+  const TOKEN = "aB3_-xYz0123456789abcdefghijklmnopqrstuvwxy";
+  const DEBTOR_ID = "22222222-2222-4222-8222-222222222222";
+
+  it("matches no pattern for /call/<token>", () => {
+    expect(matchedBy(`/call/${TOKEN}`)).toEqual([]);
+    expect(matchedBy("/call")).toEqual([]);
+  });
+
+  it.each(["session", "tool", "transcript", "end"])("matches no pattern for /api/voice/%s", (name) => {
+    expect(matchedBy(`/api/voice/${name}`)).toEqual([]);
+  });
+
+  it("matches nothing under /api/voice", () => {
+    expect(matchedBy("/api/voice")).toEqual([]);
+    expect(matchedBy("/api/voice/session/extra")).toEqual([]);
+  });
+
+  it("still matches / and /debtors/<id>, so a signed-out request reaches the redirect", () => {
+    expect(matchedBy("/")).toEqual(["/"]);
+    expect(matchedBy(`/debtors/${DEBTOR_ID}`)).toEqual(["/debtors/:path*"]);
+  });
+
+  it("redirects signed-out / and /debtors/<id> to /signin through the real Auth.js wrapper", async () => {
+    for (const path of ["/", `/debtors/${DEBTOR_ID}`]) {
+      const res = await callProxy(`http://localhost:3000${path}`, null);
+
+      expect(res.status).toBe(307);
+      expect(res.headers.get("location")).toBe("http://localhost:3000/signin");
+    }
+  });
+});
