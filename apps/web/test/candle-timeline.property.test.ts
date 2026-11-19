@@ -1,6 +1,7 @@
-// Property tests for `buildCandleTimeline` (debtor-ui, Properties 5 to 7).
+// Property tests for `buildCandleTimeline` (debtor-ui, Properties 5 to 7; buyer-voice-call, Property 7).
 // Shared generators come first so the later properties can reuse them.
 import type {
+  BuyerVoiceCall,
   DebtorData,
   DebtorEventRow,
   DebtorPromiseRow,
@@ -10,6 +11,8 @@ import type {
 } from "@dues-banshee/db";
 import {
   dueDate,
+  formatDisplayDate,
+  formatINR,
   LADDER_STEPS,
   SUPPLIER_ACTIVITIES,
   SUPPLIER_CATEGORIES,
@@ -328,6 +331,184 @@ describe("buildCandleTimeline properties", () => {
             expect(entry.tone).toBe(ember ? "ember" : "bone");
           } else {
             expect(entry.tone).toBe("bone");
+          }
+        }
+      }),
+      { numRuns: 300 },
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buyer-voice-call Property 7
+// ---------------------------------------------------------------------------
+
+type CallOutcomeName = "promise" | "dispute" | "no_promise" | "incomplete" | "consent_declined";
+type CallStatusName = BuyerVoiceCall["status"];
+
+/** Outcome texts as written in Req 9 criterion 4. */
+const SPEC_OUTCOME_TEXT: Record<CallOutcomeName, string> = {
+  promise: "promise to pay",
+  dispute: "disputed",
+  no_promise: "no promise",
+  incomplete: "incomplete",
+  consent_declined: "declined the AI call",
+};
+
+/** Entry_Kind order for entries on the same date, as written in Req 9 criterion 4. */
+const SPEC_KIND_ORDER: readonly EntryKind[] = ["invoice", "due", "ladder", "call", "promise", "payment"];
+
+/** `m:ss` from whole seconds. */
+function specDuration(seconds: number): string {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
+interface VoicePromiseSpec {
+  invoiceSeed: number;
+  promisedOffset: number;
+  /** Mostly close to Today so rows land on both sides of the boundary. */
+  recordedOffset: number;
+  amountPaise: number;
+  source: "manual" | "voice";
+  isPartial: boolean;
+  supersededOffset: number | null;
+}
+
+interface CallSpec {
+  invoiceSeed: number;
+  callOffset: number;
+  status: CallStatusName;
+  outcome: CallOutcomeName;
+  durationSeconds: number;
+}
+
+const arbVoicePromiseSpec: fc.Arbitrary<VoicePromiseSpec> = fc.record({
+  invoiceSeed: fc.nat(),
+  promisedOffset: fc.integer({ min: -30, max: 60 }),
+  recordedOffset: fc.oneof(
+    { weight: 2, arbitrary: fc.integer({ min: -2, max: 2 }) },
+    { weight: 1, arbitrary: fc.integer({ min: -200, max: 40 }) },
+  ),
+  amountPaise: fc.integer({ min: 1, max: 10_000_000_000 }),
+  source: fc.constantFrom("manual", "voice"),
+  isPartial: fc.boolean(),
+  supersededOffset: fc.option(
+    fc.oneof(
+      { weight: 2, arbitrary: fc.integer({ min: -2, max: 2 }) },
+      { weight: 1, arbitrary: fc.integer({ min: -60, max: 60 }) },
+    ),
+    { nil: null },
+  ),
+});
+
+const arbCallSpec: fc.Arbitrary<CallSpec> = fc.record({
+  invoiceSeed: fc.nat(),
+  callOffset: fc.oneof(
+    { weight: 2, arbitrary: fc.integer({ min: -2, max: 2 }) },
+    { weight: 1, arbitrary: fc.integer({ min: -60, max: 30 }) },
+  ),
+  status: fc.oneof(
+    { weight: 4, arbitrary: fc.constant<CallStatusName>("ended") },
+    { weight: 1, arbitrary: fc.constantFrom<CallStatusName>("created", "live", "expired") },
+  ),
+  outcome: fc.constantFrom<CallOutcomeName>("promise", "dispute", "no_promise", "incomplete", "consent_declined"),
+  // Includes 0, 59, 60, 61, 300 so the m:ss padding and minute carry are hit.
+  durationSeconds: fc.oneof(
+    { weight: 1, arbitrary: fc.constantFrom(0, 7, 59, 60, 61, 125, 299, 300) },
+    { weight: 2, arbitrary: fc.integer({ min: 0, max: 300 }) },
+  ),
+});
+
+describe("buildCandleTimeline promise and call entries", () => {
+  // Feature: buyer-voice-call, Property 7: Timeline promise and call entries
+  // **Validates: Requirements 9.3, 9.4**
+  it("Property 7: Timeline promise and call entries", () => {
+    const arbVoiceScenario = fc.record({
+      scenario: arbTimelineScenario,
+      promiseSpecs: fc.array(arbVoicePromiseSpec, { maxLength: 8 }),
+      callSpecs: fc.array(arbCallSpec, { maxLength: 8 }),
+    });
+
+    fc.assert(
+      fc.property(arbVoiceScenario, ({ scenario, promiseSpecs, callSpecs }) => {
+        const { today, records, events, panels } = scenario;
+        const todayDay = Date.parse(today) / MS_PER_DAY;
+        const panelIds = panels.map((p) => p.tombstone.id);
+        // Rows may point at an invoice with no panel (accepted after Today, or unknown); those get no entry.
+        const pickInvoice = (seed: number): string => invoiceIdFor(seed, records.length);
+
+        const promises: DebtorPromiseRow[] = promiseSpecs.map((s, i) => ({
+          id: `pr-${i}`,
+          invoiceId: pickInvoice(s.invoiceSeed),
+          promisedDate: dayToDate(todayDay + s.promisedOffset),
+          amountPaise: s.amountPaise,
+          recordedOn: dayToDate(todayDay + s.recordedOffset),
+          source: s.source,
+          isPartial: s.isPartial,
+          supersededOn: s.supersededOffset === null ? null : dayToDate(todayDay + s.supersededOffset),
+        }));
+        const calls: BuyerVoiceCall[] = callSpecs.map((s, i) => {
+          const ended = s.status === "ended";
+          return {
+            id: `call-${i}`,
+            invoiceId: pickInvoice(s.invoiceSeed),
+            callToday: dayToDate(todayDay + s.callOffset),
+            status: s.status,
+            startedAt: new Date(Date.UTC(2026, 10, 12, 6, 0, 0)),
+            endedAt: ended ? new Date(Date.UTC(2026, 10, 12, 6, 5, 0)) : null,
+            durationSeconds: ended ? s.durationSeconds : null,
+            outcome: ended ? s.outcome : null,
+            transcript: [],
+            toolCalls: [],
+          };
+        });
+
+        const timeline = buildCandleTimeline({ panels, records, events, promises, calls, today });
+        const hasPanel = (id: string): boolean => panelIds.includes(id);
+
+        // Promise entries: one per visible row (recorded on or before Today) of a Debtor_Invoice.
+        const expectedPromises = new Map<string, { date: string; text: string }>();
+        for (const p of promises) {
+          if (!hasPanel(p.invoiceId) || p.recordedOn > today) continue;
+          let text = `Promised ${formatINR(p.amountPaise, "full")} by ${formatDisplayDate(p.promisedDate)}`;
+          if (p.source === "voice") text += p.isPartial ? " (by voice, partial)" : " (by voice)";
+          if (p.supersededOn !== null && p.supersededOn <= today) text += " (replaced)";
+          expectedPromises.set(p.id, { date: p.recordedOn, text });
+        }
+        const actualPromises = timeline.filter((t) => t.kind === "promise");
+        expect(actualPromises.length).toBe(expectedPromises.size);
+        for (const entry of actualPromises) {
+          const want = expectedPromises.get(entry.rowId);
+          expect(want).toBeDefined();
+          expect(entry.date).toBe(want!.date);
+          expect(entry.text).toBe(want!.text);
+        }
+
+        // Call entries: one per ended call of a Debtor_Invoice dated on or before Today.
+        const expectedCalls = new Map<string, { date: string; text: string }>();
+        for (const c of calls) {
+          if (!hasPanel(c.invoiceId) || c.status !== "ended" || c.callToday > today) continue;
+          expectedCalls.set(c.id, {
+            date: c.callToday,
+            text: `Voice call: ${SPEC_OUTCOME_TEXT[c.outcome!]}, ${specDuration(c.durationSeconds!)}`,
+          });
+        }
+        const actualCalls = timeline.filter((t) => t.kind === "call");
+        expect(actualCalls.length).toBe(expectedCalls.size);
+        for (const entry of actualCalls) {
+          const want = expectedCalls.get(entry.rowId);
+          expect(want).toBeDefined();
+          expect(entry.date).toBe(want!.date);
+          expect(entry.text).toBe(want!.text);
+        }
+
+        // Order: by date, and for the same date by the Req 9 C4 kind order.
+        for (let i = 1; i < timeline.length; i++) {
+          const a = timeline[i - 1]!;
+          const b = timeline[i]!;
+          expect(a.date <= b.date).toBe(true);
+          if (a.date === b.date) {
+            expect(SPEC_KIND_ORDER.indexOf(a.kind)).toBeLessThanOrEqual(SPEC_KIND_ORDER.indexOf(b.kind));
           }
         }
       }),

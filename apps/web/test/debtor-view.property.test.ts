@@ -9,6 +9,7 @@ import type {
 } from "@dues-banshee/engine";
 import fc from "fast-check";
 import { describe, it, expect } from "vitest";
+import { formatDisplayDate } from "@dues-banshee/engine";
 import { buildGraveyard } from "@/lib/graveyard/build-graveyard";
 import { buildDebtorView } from "@/lib/debtor/build-debtor-view";
 
@@ -253,6 +254,66 @@ describe("buildDebtorView drafts", () => {
         },
       ),
       { numRuns: 200 },
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buyer-voice-call Property 8
+// ---------------------------------------------------------------------------
+
+describe("buildDebtorView promise text", () => {
+  // Feature: buyer-voice-call, Property 8: Promise text on the Invoice_Panel
+  // **Validates: Requirements 9.8, 9.9**
+  it("Property 8: shows 'active until' iff the latest promise date is after Today, 'due today' iff it is Today, else neither", () => {
+    /** Promise dates close to Today (offsets -1, 0, 1 are common) so both boundaries are hit. */
+    const arbPromiseOffsets = fc.array(pooledOffset([-1, 0, 1, 7], -40, 60), { maxLength: 3 });
+
+    const arbWithPromises = arbScenario.chain((scenario) =>
+      fc
+        .array(arbPromiseOffsets, { minLength: scenario.records.length, maxLength: scenario.records.length })
+        .map((offsets) => ({ scenario, offsets })),
+    );
+
+    fc.assert(
+      fc.property(arbWithPromises, ({ scenario: { today, bankRate, records, buyer }, offsets }) => {
+        const todayEpoch = Date.parse(today) / MS_PER_DAY;
+        const withPromises = records
+          .map((r, i): GraveyardInvoiceRecord => ({
+            ...r,
+            history: offsets[i]!.map((o) => ({
+              kind: "promise" as const,
+              promisedDate: dateOf(todayEpoch + o),
+              amountPaise: 1000,
+              recordedOn: dateOf(todayEpoch - 5),
+            })),
+          }))
+          .filter((r) => r.buyerId === buyer.id);
+        const data: DebtorData = { buyer, records: withPromises, events: [], promises: [] };
+
+        const view = buildDebtorView({ supplier: SUPPLIER, data, bankRate, drafts: [], calls: [], today, override: null });
+
+        for (const panel of view.panels) {
+          const record = withPromises.find((r) => r.invoice.id === panel.tombstone.id)!;
+          const paidOn = record.invoice.paidOn;
+          const unpaid = paidOn === undefined || paidOn > today;
+
+          // The latest promised date that is Today or later (the Promise_Until_Date), if any.
+          let until: string | null = null;
+          for (const e of record.history) {
+            if (e.kind === "promise" && e.promisedDate >= today && (until === null || e.promisedDate > until)) {
+              until = e.promisedDate;
+            }
+          }
+
+          let expected: string | null = null;
+          if (unpaid && until !== null) {
+            expected = until > today ? `Promise to pay active until ${formatDisplayDate(until)}` : "Promise due today";
+          }
+          expect(panel.promiseUntilText).toBe(expected);
+        }
+      }),
+      { numRuns: 300 },
     );
   });
 });
