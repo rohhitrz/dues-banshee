@@ -4,7 +4,9 @@ import {
   SupplierNotFoundError,
   toEngineInvoice,
   type Db,
+  type BuyerVoiceCall,
   type DebtorData,
+  type DebtorPromiseRow,
   type DraftRow,
   type DraftWithContext,
   type GraveyardInvoiceRecord,
@@ -822,5 +824,167 @@ describe("DebtorPage footer through the App_Shell (Req 4.8)", () => {
 
     expect(html).toContain(FOOTER);
     expect(html).toContain("Sharma Traders");
+  });
+});
+
+describe("DebtorPage voice promises and calls (Req 8.4, 9.3-9.9, 11.5, 11.11)", () => {
+  // Demo seed: Sharma Traders LPC/26-27/0412, principal 41200000 paise, interest 512794 at 2026-11-12.
+  // 41200000 + 512794 = 41712794 paise, the amount the buyer promised by voice.
+  const VOICE_AMOUNT = 41712794;
+  const VOICE_PROMISE_TEXT = `Promised ${formatINR(41712794, "full")} by 20 Nov 2026 (by voice)`;
+
+  /** A voice promise recorded 2026-11-12 for 2026-11-20, as the history and the promises rows hold it. */
+  function withVoicePromise(): DebtorData {
+    const record = sharmaRecord();
+    const promise: DebtorPromiseRow = {
+      id: "pr-voice-1",
+      invoiceId: SHARMA_INVOICE_ID,
+      promisedDate: "2026-11-20",
+      amountPaise: VOICE_AMOUNT,
+      recordedOn: "2026-11-12",
+      source: "voice",
+      isPartial: false,
+      supersededOn: null,
+    };
+    return {
+      ...debtorData([
+        {
+          ...record,
+          history: [
+            { kind: "promise", promisedDate: "2026-11-20", amountPaise: VOICE_AMOUNT, recordedOn: "2026-11-12" },
+          ],
+        },
+      ]),
+      promises: [promise],
+    };
+  }
+
+  function voiceCall(over: Partial<BuyerVoiceCall> = {}): BuyerVoiceCall {
+    return {
+      id: "call-1",
+      invoiceId: SHARMA_INVOICE_ID,
+      callToday: "2026-11-12",
+      status: "ended",
+      startedAt: new Date("2026-11-12T06:00:00Z"),
+      endedAt: new Date("2026-11-12T06:01:07Z"),
+      durationSeconds: 67,
+      outcome: "promise",
+      transcript: [
+        { id: "tl-1", speaker: "buyer", text: "haan, 20 tareekh tak", receivedAt: new Date("2026-11-12T06:00:30Z") },
+      ],
+      toolCalls: [
+        {
+          id: "tc-1",
+          callId: "call_a",
+          tool: "get_invoice_facts",
+          arguments: "{}",
+          result: { ok: true },
+          createdAt: new Date("2026-11-12T06:00:10Z"),
+        },
+      ],
+      ...over,
+    };
+  }
+
+  it("shows the active-until text and the voice promise entry at Today 2026-11-12", async () => {
+    mocks.getDebtorData.mockResolvedValue(withVoicePromise());
+
+    const html = await render();
+    const panel = visibleText(panelHtml(html, SHARMA_INVOICE_ID));
+
+    expect(panel).toContain("Promise to pay active until 20 Nov 2026");
+    expect(panel).not.toContain("Promise due today");
+    expect(visibleText(html)).toContain("12 Nov 2026 " + VOICE_PROMISE_TEXT + " LPC/26-27/0412");
+    expect(VOICE_PROMISE_TEXT).toBe("Promised ₹4,17,127.94 by 20 Nov 2026 (by voice)");
+  });
+
+  it("shows 'Promise due today' and not the active-until text at Today 2026-11-20", async () => {
+    mocks.getDebtorData.mockResolvedValue(withVoicePromise());
+
+    const html = await render(BUYER_ID, { today: "2026-11-20" });
+    const panel = visibleText(panelHtml(html, SHARMA_INVOICE_ID));
+
+    expect(visibleText(html)).toContain("Demo date: 20 Nov 2026");
+    expect(panel).toContain("Promise due today");
+    expect(panel).not.toContain("active until");
+    expect(html).not.toContain("Promise to pay active until");
+  });
+
+  it.each([
+    ["promise", 67, "Voice call: promise to pay, 1:07"],
+    ["dispute", 5, "Voice call: disputed, 0:05"],
+    ["no_promise", 300, "Voice call: no promise, 5:00"],
+    ["incomplete", 0, "Voice call: incomplete, 0:00"],
+    ["consent_declined", 12, "Voice call: declined the AI call, 0:12"],
+  ] as const)("shows the call entry for outcome %s with its m:ss duration", async (outcome, seconds, expected) => {
+    mocks.listBuyerVoiceCalls.mockResolvedValue([voiceCall({ outcome, durationSeconds: seconds })]);
+
+    const html = await render();
+
+    expect(visibleText(html)).toContain(`12 Nov 2026 ${expected} LPC/26-27/0412`);
+    expect(count(html, 'data-kind="call"')).toBe(1);
+  });
+
+  it("keeps the call details closed by default", async () => {
+    mocks.listBuyerVoiceCalls.mockResolvedValue([voiceCall()]);
+
+    const html = await render();
+    const tag = /<details[^>]*>/.exec(html)?.[0];
+
+    expect(count(html, "<details")).toBe(1);
+    expect(tag).toBeDefined();
+    expect(tag).not.toMatch(/\sopen(=|\s|>)/);
+    expect(visibleText(html)).toContain("Call details Transcript Buyer haan, 20 tareekh tak Tool calls get_invoice_facts");
+  });
+
+  it("escapes transcript lines and tool-call data as text", async () => {
+    mocks.listBuyerVoiceCalls.mockResolvedValue([
+      voiceCall({
+        transcript: [
+          { id: "tl-x", speaker: "buyer", text: "<script>alert(1)</script>", receivedAt: new Date("2026-11-12T06:00:30Z") },
+        ],
+        toolCalls: [
+          {
+            id: "tc-x",
+            callId: "call_x",
+            tool: "record_promise_to_pay",
+            arguments: '{"spoken_text":"<img src=x onerror=alert(2)>"}',
+            result: { note: "<b>done</b>" },
+            createdAt: new Date("2026-11-12T06:00:40Z"),
+          },
+        ],
+      }),
+    ]);
+
+    const html = await render();
+
+    expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
+    expect(html).not.toContain("<script>alert(1)");
+    expect(html).toContain("&lt;img src=x onerror=alert(2)&gt;");
+    expect(html).not.toContain("<img");
+    expect(html).toContain("&lt;b&gt;done&lt;/b&gt;");
+    expect(html).not.toContain("<b>done");
+  });
+
+  it("shows no other supplier's calls: the read is scoped by the session supplier", async () => {
+    // The fake read behaves like the real one: only the owning supplier's calls come back.
+    mocks.listBuyerVoiceCalls.mockImplementation(async (_db: Db, supplierId: string, buyerId: string) =>
+      supplierId === SUPPLIER_ID && buyerId === BUYER_ID
+        ? [voiceCall({ transcript: [{ id: "tl-s", speaker: "buyer", text: "private words", receivedAt: new Date(0) }] })]
+        : [],
+    );
+
+    const own = await render();
+    expect(visibleText(own)).toContain("Voice call: promise to pay, 1:07");
+    expect(mocks.listBuyerVoiceCalls).toHaveBeenLastCalledWith(DB, SUPPLIER_ID, BUYER_ID, new Date(NOW));
+
+    mocks.auth.mockResolvedValue({ supplierId: OTHER_SUPPLIER_ID });
+    mocks.getSupplier.mockResolvedValue(NON_DEMO);
+    const other = await render();
+
+    expect(mocks.listBuyerVoiceCalls).toHaveBeenLastCalledWith(DB, OTHER_SUPPLIER_ID, BUYER_ID, new Date(NOW));
+    expect(other).not.toContain("Voice call:");
+    expect(other).not.toContain("private words");
+    expect(other).not.toContain("<details");
   });
 });
