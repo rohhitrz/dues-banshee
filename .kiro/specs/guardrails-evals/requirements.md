@@ -22,7 +22,7 @@ Non-goals: an LLM tone judge; live-model evals; checks on the voice agent's spok
 - **Draft_Guard**: the new pure function that runs Citation_Check, then Tone_Check, then Tense_Check, and returns the first block or the Citation_Check acceptance. Its result has the existing `CitationResult` shape.
 - **Address_Form**: the exact text `{{buyer_name}} ji`, matched with `ji` as a whole word in any letter case.
 - **Threat_List**, **Begging_List**: two lists of phrases, each with Hinglish (Roman script) and English entries, kept in one file in `packages/agent/src/core/`. Matching is case-insensitive, on whole words, after collapsing runs of whitespace to one space.
-- **Future_Tense_Patterns**: phrases that place `{{due_date}}` in the present or future, in Hinglish and English (for example `{{due_date}} ko due hai`, `{{due_date}} ko due hoga`, `is due on {{due_date}}`, `will be due on {{due_date}}`).
+- **Future_Tense_Patterns**: phrases that place `{{due_date}}` in the present or future, in Hinglish and English (for example `{{due_date}} ko due hai`, `{{due_date}} ko due hoga`, `{{due_date}} ko due hogi`, `is due on {{due_date}}`, `will be due on {{due_date}}`), matched case-insensitively after collapsing runs of whitespace to one space.
 - **Overdue**: Today is after the Engine `dueDate` of the invoice. An invoice with no Engine due date is not Overdue.
 - **Eval_Fixture**: one JSON file in `evals/draft-step/` holding a name, a Draft_Context, a recorded Model_Output and an Expected_Result.
 - **Draft_Context**: the Draft_Guard inputs other than the Model_Output: Ladder_Step, language, allowed rule IDs, whether a Bank_Rate exists, and Overdue.
@@ -38,16 +38,16 @@ Non-goals: an LLM tone judge; live-model evals; checks on the voice agent's spok
 3. WHEN the text contains a Threat_List phrase, THE Tone_Check SHALL block it with `threat_phrase` and the matched phrase as offending.
 4. WHEN the text contains a Begging_List phrase, THE Tone_Check SHALL block it with `begging_phrase` and the matched phrase as offending.
 5. THE Tone_Check SHALL run its checks in the order of criteria 2, 3 and 4, and the first failure SHALL win.
-6. THE Threat_List SHALL hold at least 8 entries and the Begging_List at least 6, each with both Hinglish and English entries. Words that a respectful draft uses for facts (for example "please", "interest", "MSME", "ODR") SHALL not be list entries.
-7. THE Tone_Check SHALL apply to every Ladder_Step and both languages.
-8. THE Tone_Check SHALL be pure and SHALL take only the Model_Output text, so buyer names and invoice numbers cannot change its result.
+6. THE Threat_List SHALL hold at least 8 entries and the Begging_List at least 6, each with both Hinglish and English entries. Words that a respectful draft uses for facts or courtesy (for example "please", "kripya", "request", "interest", "MSME", "ODR", "Facilitation Council", "Samadhaan") SHALL not be list entries, so a legal remedy stated as information is never a threat; the existing accepted drafts in `packages/agent/test` (for example the "Kripya {{pay_link}} se bhugtan kar dein." line in `demo-sharma.test.ts`) SHALL still pass.
+7. THE missing_address check (criterion 2) SHALL apply to the `whatsapp_nudge`, `whatsapp_paylink` and `legal_notice` steps only, because `voice_call` is a brief for the owner and `odr_pack` is a statement for the portal; criteria 3 and 4 SHALL apply to every Ladder_Step and both languages.
+8. THE Tone_Check SHALL be pure and SHALL take only the Model_Output text and the Ladder_Step, so buyer names and invoice numbers cannot change its result.
 ### Requirement 2: Tense_Check
 **User Story:** As a supplier, I want a reminder for an overdue invoice to say the due date has passed, so that the buyer is not told the payment is due later.
 #### Acceptance Criteria
 1. THE `BlockReason` union SHALL gain `overdue_tense`.
 2. WHEN the invoice is Overdue and the text matches a Future_Tense_Pattern, THE Tense_Check SHALL block it with `overdue_tense` and the matched phrase as offending.
 3. WHEN the invoice is not Overdue, THE Tense_Check SHALL accept the text.
-4. THE Tense_Check SHALL accept past forms such as `{{due_date}} ko due tha`, `due ho chuka hai` and `was due on {{due_date}}`.
+4. THE Tense_Check SHALL accept past forms such as `{{due_date}} ko due tha`, `due ho chuka hai` and `was due on {{due_date}}`, and SHALL accept a present-tense amount such as `{{principal}} abhi bhi due hai`, because every Future_Tense_Pattern is anchored on `{{due_date}}`.
 5. THE draft prompt (`packages/agent/src/prompts/draft-step.ts`) SHALL, when the invoice is Overdue, tell the model the due date has passed and to write of it in the past tense, giving one Hinglish and one English example; WHEN the invoice is not Overdue, the prompt SHALL not carry that line.
 6. THE Overdue value SHALL come from the Engine `dueDate` and Today; the Tense_Check SHALL compute no date itself.
 ### Requirement 3: Draft_Guard in the repair path
@@ -67,10 +67,10 @@ Non-goals: an LLM tone judge; live-model evals; checks on the voice agent's spok
 2. THE fixtures SHALL include:
    - at least 3 `accept` fixtures, with at least one Hinglish and one English;
    - for each of `missing_address`, `threat_phrase`, `begging_phrase` and `overdue_tense`, at least one Hinglish and one English fixture;
-   - at least one `accept` near-miss for the Tone_Check (polite text using "please" or a factual mention of interest) and one for the Tense_Check (a past-tense due date on an Overdue invoice);
+   - at least one `accept` near-miss for the Tone_Check (polite text using "please" or a factual mention of interest), one for the Tense_Check (a past-tense due date on an Overdue invoice), one for `{{principal}} abhi bhi due hai` on an Overdue invoice, and one English `legal_notice` that states the Facilitation Council remedy as information; near-miss fixtures count toward the `accept` fixtures;
    - the Hinglish tense pair from the roadmap: `17 Oct 2026 ko due hai` expecting `literal_figure` (Citation_Check runs first), and `{{due_date}} ko due hai` on an Overdue invoice expecting `overdue_tense`;
    - at least one fixture each for `missing_citation`, `invalid_rule_id` and `uncited_placeholder`.
-3. THE Draft_Context of each fixture SHALL use the Demo_Seed invoice for Sharma Traders at Today = 2026-11-12 (Overdue, 26 days late) unless the fixture tests a not-Overdue case.
+3. THE Draft_Context of each fixture SHALL use the Demo_Seed invoice for Sharma Traders at Today = 2026-11-12 (Overdue, 26 days late) unless the fixture tests a not-Overdue case; a test SHALL check that each such fixture's allowed rule IDs equal `allowedRuleIds` for that invoice and Today.
 4. THE Eval_Runner SHALL run the Draft_Guard on every fixture, print one line per fixture with its name, expected and actual result, and a final line `<passed>/<total> passed`.
 5. WHEN any fixture's actual result differs from its Expected_Result, or a fixture file fails schema validation, THE Eval_Runner SHALL exit with a non-zero code.
 6. THE `packages/agent` Vitest suite SHALL run the same fixtures through the same loader, so `pnpm --filter @dues-banshee/agent test` fails on any mismatch.
@@ -78,7 +78,7 @@ Non-goals: an LLM tone judge; live-model evals; checks on the voice agent's spok
 ### Requirement 5: Call-hours eval cases
 **User Story:** As a supplier, I want the call-hours rule pinned by labelled cases, so that a change cannot start calls to my buyers at night or on Sunday.
 #### Acceptance Criteria
-1. THE `apps/web` test suite SHALL hold a table of Call_Hours_Cases run through `inCallWindow` and `startCallRefusal`, with no new hours logic.
+1. THE existing `apps/web/test/start-call-refusal.property.test.ts` SHALL be extended with a table of Call_Hours_Cases run through `inCallWindow` and `startCallRefusal`, with no new hours logic.
 2. THE cases SHALL include, for a non-demo supplier: Monday 09:59 IST `outside_window`; Monday 10:00 IST allowed; Saturday 18:59 IST allowed; Saturday 19:00 IST `outside_window`; Sunday 12:00 IST `outside_window`.
 3. THE cases SHALL include a Demo_Supplier at Sunday 22:00 IST that is allowed below the Demo_Call_Limit and refused with `demo_limit` at it.
 4. THE WhatsApp send path SHALL stay without an hours rule.
@@ -92,7 +92,7 @@ Non-goals: an LLM tone judge; live-model evals; checks on the voice agent's spok
 ### Requirement 7: Extended existing tests and source lint
 **User Story:** As the builder, I want the existing guard tests extended rather than replaced, so that earlier guarantees stay covered.
 #### Acceptance Criteria
-1. THE files `packages/agent/test/citations.test.ts`, `prompt.test.ts` and `source-lint.test.ts` SHALL be extended; no existing test in them SHALL be removed or weakened.
+1. THE files `packages/agent/test/citations.test.ts`, `prompt.test.ts`, `source-lint.test.ts` and `apps/web/test/start-call-refusal.property.test.ts` SHALL be extended; no existing test in them SHALL be removed or weakened.
 2. THE `prompt.test.ts` file SHALL cover the Overdue tense line of Requirement 2 criterion 5, present and absent.
 3. THE `citations.test.ts` file SHALL show that `validateCitations` results are unchanged for its existing cases.
 4. THE source lint SHALL flag, in `packages/agent/src` and `apps/web` (tests and build output skipped), any array or `Set` literal naming two or more distinct Ladder_Step strings, so no copy of the Engine's approval-step set exists outside the Engine.
