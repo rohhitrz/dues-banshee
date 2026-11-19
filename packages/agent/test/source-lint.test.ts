@@ -95,7 +95,58 @@ function stepOrderArrayHits(file: string, text: string): string[] {
   return hits;
 }
 
+/** Distinct ladder-step names quoted inside one bracket literal. */
+function distinctStepNames(literal: string): Set<string> {
+  const found = new Set<string>();
+  for (const quoted of literal.matchAll(/["'`]([a-z_]+)["'`]/g)) {
+    const name = quoted[1];
+    if (name !== undefined && STEP_ORDER.includes(name)) found.add(name);
+  }
+  return found;
+}
+
+/**
+ * Array or `new Set([...])` literals (no nested brackets) naming two or more distinct ladder steps,
+ * in any order. The approval-step set lives in the Engine only. A Record keyed by step is not a bracket literal.
+ */
+function stepSetHits(file: string, text: string): string[] {
+  const hits: string[] = [];
+  for (const match of text.matchAll(/\[[^[\]]*\]/g)) {
+    if (distinctStepNames(match[0]).size >= 2) {
+      hits.push(`${display(file)}:${lineOf(text, match.index ?? 0)}: ladder-step set literal`);
+    }
+  }
+  return hits;
+}
+
+/**
+ * `indexOf` or `findIndex` called on LADDER_STEPS, or directly on a bracket literal holding a ladder
+ * step. Step ranking lives in the Engine `stepRank` only.
+ */
+function stepRankHits(file: string, text: string): string[] {
+  const hits: string[] = [];
+  for (const match of text.matchAll(/LADDER_STEPS\s*\.\s*(?:indexOf|findIndex)\s*\(/g)) {
+    hits.push(`${display(file)}:${lineOf(text, match.index ?? 0)}: ladder-step ranking`);
+  }
+  for (const match of text.matchAll(/\[[^[\]]*\](?:\s*as\s+const\s*\))?\s*\.\s*(?:indexOf|findIndex)\s*\(/g)) {
+    if (distinctStepNames(match[0]).size >= 1) {
+      hits.push(`${display(file)}:${lineOf(text, match.index ?? 0)}: ladder-step ranking`);
+    }
+  }
+  return hits;
+}
+
+/** Any static or dynamic import of `@dues-banshee/voice` (voice depends on agent, not the reverse). */
+function voiceImportHits(file: string, text: string): string[] {
+  const hits: string[] = [];
+  for (const match of text.matchAll(/(?:from\s+|import\s*\(\s*)["']@dues-banshee\/voice(?![\w-])/g)) {
+    hits.push(`${display(file)}:${lineOf(text, match.index ?? 0)}: voice import in agent`);
+  }
+  return hits;
+}
+
 const files = [...listSourceFiles(AGENT_SRC), ...listSourceFiles(WEB_ROOT)];
+const agentFiles = listSourceFiles(AGENT_SRC);
 const contents = new Map(files.map((file) => [file, readFileSync(file, "utf8")]));
 
 describe("source lint", () => {
@@ -137,6 +188,30 @@ describe("source lint", () => {
     }
     expect(offenders).toEqual([]);
   });
+
+  it("never writes two or more ladder steps in one array or Set literal", () => {
+    const offenders: string[] = [];
+    for (const file of files) {
+      offenders.push(...stepSetHits(file, contents.get(file) ?? ""));
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it("never ranks ladder steps with indexOf or findIndex", () => {
+    const offenders: string[] = [];
+    for (const file of files) {
+      offenders.push(...stepRankHits(file, contents.get(file) ?? ""));
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it("never imports @dues-banshee/voice from packages/agent/src", () => {
+    const offenders: string[] = [];
+    for (const file of agentFiles) {
+      offenders.push(...voiceImportHits(file, contents.get(file) ?? ""));
+    }
+    expect(offenders).toEqual([]);
+  });
 });
 
 describe("source lint detectors", () => {
@@ -164,5 +239,42 @@ describe("source lint detectors", () => {
     expect(lineHits(sample, `{ stepGapDays: 7 }`, TIMING_PATTERN)).toEqual([
       "apps/web/sample.ts:1: { stepGapDays: 7 }",
     ]);
+  });
+
+  it("flags a ladder-step set literal and passes a Record or a single-step array", () => {
+    const set = `const s = new Set(["voice_call", "legal_notice"]);`;
+    const plain = `const a = [\n  "odr_pack",\n  'whatsapp_nudge',\n];`;
+    expect(stepSetHits(sample, set)).toEqual(["apps/web/sample.ts:1: ladder-step set literal"]);
+    expect(stepSetHits(sample, plain)).toEqual(["apps/web/sample.ts:1: ladder-step set literal"]);
+    const record = `const ADDRESS_REQUIRED = { whatsapp_nudge: true, voice_call: false, odr_pack: false };`;
+    const single = `const one = ["voice_call"];\nconst twice = ["voice_call", "voice_call"];`;
+    const other = `const names = ["alpha", "beta"];`;
+    expect(stepSetHits(sample, `${record}\n${single}\n${other}`)).toEqual([]);
+  });
+
+  it("flags step ranking with indexOf or findIndex and passes other indexOf calls", () => {
+    const onConst = `const r = LADDER_STEPS.indexOf(step);\nconst f = LADDER_STEPS\n  .findIndex((s) => s === step);`;
+    const onLiteral = `const r = ["voice_call", "legal_notice"].indexOf(step);\nconst q = (["odr_pack"] as const).findIndex((s) => s === step);`;
+    expect(stepRankHits(sample, onConst)).toEqual([
+      "apps/web/sample.ts:1: ladder-step ranking",
+      "apps/web/sample.ts:2: ladder-step ranking",
+    ]);
+    expect(stepRankHits(sample, onLiteral)).toEqual([
+      "apps/web/sample.ts:1: ladder-step ranking",
+      "apps/web/sample.ts:2: ladder-step ranking",
+    ]);
+    const near = `const i = PLACEHOLDERS.indexOf(x);\nconst j = ["a", "b"].indexOf(x);\nconst k = LADDER_STEPS.map(String);`;
+    expect(stepRankHits(sample, near)).toEqual([]);
+  });
+
+  it("flags imports of @dues-banshee/voice and passes lookalike package names", () => {
+    const staticImport = `import { x } from "@dues-banshee/voice";`;
+    const subpath = `import { y } from '@dues-banshee/voice/persona';`;
+    const dynamic = `const m = await import("@dues-banshee/voice");`;
+    expect(voiceImportHits(sample, staticImport)).toEqual(["apps/web/sample.ts:1: voice import in agent"]);
+    expect(voiceImportHits(sample, subpath)).toEqual(["apps/web/sample.ts:1: voice import in agent"]);
+    expect(voiceImportHits(sample, dynamic)).toEqual(["apps/web/sample.ts:1: voice import in agent"]);
+    const near = `import { x } from "@dues-banshee/voice-x";\nimport { e } from "@dues-banshee/engine";`;
+    expect(voiceImportHits(sample, near)).toEqual([]);
   });
 });
