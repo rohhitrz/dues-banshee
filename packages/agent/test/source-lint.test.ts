@@ -119,27 +119,35 @@ function stepSetHits(file: string, text: string): string[] {
   return hits;
 }
 
+const RANK_METHODS = "(?:indexOf|lastIndexOf|findIndex|findLastIndex)";
+const RANK_ON_CONST = new RegExp(`LADDER_STEPS\\s*\\.\\s*${RANK_METHODS}\\s*\\(`, "g");
+const RANK_ON_LITERAL = new RegExp(`\\[[^[\\]]*\\](?:\\s*as\\s+const\\s*\\))?\\s*\\.\\s*${RANK_METHODS}\\s*\\(`, "g");
+const SPREADS_LADDER_STEPS = /\.\.\.\s*LADDER_STEPS\b/;
 /**
- * `indexOf` or `findIndex` called on LADDER_STEPS, or directly on a bracket literal holding a ladder
- * step. Step ranking lives in the Engine `stepRank` only.
+ * `indexOf`, `lastIndexOf`, `findIndex` or `findLastIndex` called on LADDER_STEPS, or directly on a
+ * bracket literal holding a ladder step or spreading LADDER_STEPS. Step ranking lives in the Engine
+ * `stepRank` only.
  */
 function stepRankHits(file: string, text: string): string[] {
   const hits: string[] = [];
-  for (const match of text.matchAll(/LADDER_STEPS\s*\.\s*(?:indexOf|findIndex)\s*\(/g)) {
+  for (const match of text.matchAll(RANK_ON_CONST)) {
     hits.push(`${display(file)}:${lineOf(text, match.index ?? 0)}: ladder-step ranking`);
   }
-  for (const match of text.matchAll(/\[[^[\]]*\](?:\s*as\s+const\s*\))?\s*\.\s*(?:indexOf|findIndex)\s*\(/g)) {
-    if (distinctStepNames(match[0]).size >= 1) {
+  for (const match of text.matchAll(RANK_ON_LITERAL)) {
+    if (distinctStepNames(match[0]).size >= 1 || SPREADS_LADDER_STEPS.test(match[0])) {
       hits.push(`${display(file)}:${lineOf(text, match.index ?? 0)}: ladder-step ranking`);
     }
   }
   return hits;
 }
 
-/** Any static or dynamic import of `@dues-banshee/voice` (voice depends on agent, not the reverse). */
+/**
+ * Any static, side-effect, dynamic or `require` import of `@dues-banshee/voice` (voice depends on
+ * agent, not the reverse).
+ */
 function voiceImportHits(file: string, text: string): string[] {
   const hits: string[] = [];
-  for (const match of text.matchAll(/(?:from\s+|import\s*\(\s*)["']@dues-banshee\/voice(?![\w-])/g)) {
+  for (const match of text.matchAll(/(?:from\s+|import\s+|import\s*\(\s*|require\s*\(\s*)["']@dues-banshee\/voice(?![\w-])/g)) {
     hits.push(`${display(file)}:${lineOf(text, match.index ?? 0)}: voice import in agent`);
   }
   return hits;
@@ -266,6 +274,31 @@ describe("source lint detectors", () => {
     const near = `const i = PLACEHOLDERS.indexOf(x);\nconst j = ["a", "b"].indexOf(x);\nconst k = LADDER_STEPS.map(String);`;
     expect(stepRankHits(sample, near)).toEqual([]);
   });
+  it("flags lastIndexOf and findLastIndex on LADDER_STEPS and on step literals", () => {
+    const onConst = `const a = LADDER_STEPS.lastIndexOf(step);\nconst b = LADDER_STEPS\n  .findLastIndex((s) => s === step);`;
+    const onLiteral = `const c = ["voice_call", "legal_notice"].lastIndexOf(step);\nconst d = (["odr_pack"] as const).findLastIndex((s) => s === step);`;
+    expect(stepRankHits(sample, onConst)).toEqual([
+      "apps/web/sample.ts:1: ladder-step ranking",
+      "apps/web/sample.ts:2: ladder-step ranking",
+    ]);
+    expect(stepRankHits(sample, onLiteral)).toEqual([
+      "apps/web/sample.ts:1: ladder-step ranking",
+      "apps/web/sample.ts:2: ladder-step ranking",
+    ]);
+    const near = `const e = PLACEHOLDERS.lastIndexOf(x);\nconst f = ["a", "b"].findLastIndex((s) => s === x);\nconst g = LADDER_STEPS.at(-1);`;
+    expect(stepRankHits(sample, near)).toEqual([]);
+  });
+  it("flags a literal that spreads LADDER_STEPS and passes other spreads", () => {
+    const spread = `const a = [...LADDER_STEPS].indexOf(step);\nconst b = [...LADDER_STEPS, "x"].findIndex((s) => s === step);\nconst c = ([...LADDER_STEPS] as const).lastIndexOf(step);\nconst d = [ ... LADDER_STEPS ].findLastIndex((s) => s === step);`;
+    expect(stepRankHits(sample, spread)).toEqual([
+      "apps/web/sample.ts:1: ladder-step ranking",
+      "apps/web/sample.ts:2: ladder-step ranking",
+      "apps/web/sample.ts:3: ladder-step ranking",
+      "apps/web/sample.ts:4: ladder-step ranking",
+    ]);
+    const near = `const e = [...OTHER_STEPS].indexOf(x);\nconst f = [...LADDER_STEPS].map(String);\nconst g = [...LADDER_STEPS_COPY].indexOf(x);`;
+    expect(stepRankHits(sample, near)).toEqual([]);
+  });
 
   it("flags imports of @dues-banshee/voice and passes lookalike package names", () => {
     const staticImport = `import { x } from "@dues-banshee/voice";`;
@@ -275,6 +308,20 @@ describe("source lint detectors", () => {
     expect(voiceImportHits(sample, subpath)).toEqual(["apps/web/sample.ts:1: voice import in agent"]);
     expect(voiceImportHits(sample, dynamic)).toEqual(["apps/web/sample.ts:1: voice import in agent"]);
     const near = `import { x } from "@dues-banshee/voice-x";\nimport { e } from "@dues-banshee/engine";`;
+    expect(voiceImportHits(sample, near)).toEqual([]);
+  });
+  it("flags a side-effect import and a require of @dues-banshee/voice", () => {
+    const sideEffect = `import "@dues-banshee/voice";\nimport '@dues-banshee/voice/persona';`;
+    const required = `const v = require("@dues-banshee/voice");\nconst w = require( '@dues-banshee/voice/persona' );`;
+    expect(voiceImportHits(sample, sideEffect)).toEqual([
+      "apps/web/sample.ts:1: voice import in agent",
+      "apps/web/sample.ts:2: voice import in agent",
+    ]);
+    expect(voiceImportHits(sample, required)).toEqual([
+      "apps/web/sample.ts:1: voice import in agent",
+      "apps/web/sample.ts:2: voice import in agent",
+    ]);
+    const near = `import "@dues-banshee/voice-x";\nimport "@dues-banshee/engine";\nconst a = require("@dues-banshee/voicemail");\nconst b = require("@dues-banshee/engine");\n// import "@dues-banshee/other"`;
     expect(voiceImportHits(sample, near)).toEqual([]);
   });
 });
