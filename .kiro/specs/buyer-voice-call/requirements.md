@@ -48,14 +48,14 @@ Non-goals: PSTN calls; a server sideband connection to the Realtime session; `@o
 - **Call_Client**: the browser code on the Call_Page that opens an `RTCPeerConnection`, adds the microphone track, opens the `oai-events` data channel and posts the SDP offer to the connect URL with the Ephemeral_Key.
 - **Call_Tools**: the three server-run functions offered to the model: `get_invoice_facts`, `record_promise_to_pay` and `end_call`.
 - **Tool_Endpoint**: the `apps/web` route that runs a Call_Tool for the Call_Client. A request carries the `voiceCallId`, the Join_Token, the Realtime `call_id`, the tool name and the raw arguments.
-- **Invoice_Facts**: the `get_invoice_facts` result: buyer name, supplier name, invoice number, principal, interest to `call_today`, Days_Overdue, Total_Due (each amount as a `formatINR` string), the Engine due date, the tax-bomb date and days left, the Engine caveat if any, and the rule IDs `MSMED-15`, `MSMED-16` and `IT-43BH` where the Engine results cite them.
+- **Invoice_Facts**: the `get_invoice_facts` result: buyer name, supplier name, invoice number, principal, interest to `call_today`, Days_Overdue, Total_Due (each amount as spoken English words in rupees and paise, `principal_words`, `interest_words`, `total_due_words`, and no digit amount string), `total_due_paise` (integer), the Engine due date, the tax-bomb date and days left, the Engine caveat if any, and the rule IDs `MSMED-15`, `MSMED-16` and `IT-43BH` where the Engine results cite them.
 - **Total_Due**: the invoice principal plus the Engine `statutoryInterest` `interestPaise` for `call_today`, in integer paise.
 - **Promise_Window**: the dates from `call_today` to the earlier of `call_today` + 30 days and `financialYearEnd(call_today)`, both ends inclusive.
 - **Partial_Promise**: a promise whose amount is less than Total_Due.
 - **Current_Promise**: a `promises` row of an invoice with `superseded_on` null.
 - **Visible_Promise**: a `promises` row whose `recorded_on` is on or before Today.
 - **Replaced_Promise**: a Visible_Promise whose `superseded_on` is on or before Today.
-- **Agent_Date**: a date written as `<Weekday>, D MMM YYYY` with the English weekday name (for example "Friday, 20 Nov 2026").
+- **Agent_Date**: a date written as `<Weekday>, D <full month name> YYYY` with the English weekday name (for example "Friday, 20 November 2026").
 - **Date_List**: the list of every Promise_Window date, in ascending order, each written as an Agent_Date, computed on the server with the `packages/engine` date functions.
 - **Persona_Instructions**: the instructions text in `packages/voice`, built from the buyer-facing section of `.kiro/steering/voice-persona.md` and Requirement 6.
 - **Transcript_Line**: one stored line of a Voice_Call: speaker (`buyer` or `agent`), text, Realtime item id and time, from the Realtime events `conversation.item.input_audio_transcription.completed` (buyer) and `response.output_audio_transcript.done` (agent).
@@ -139,10 +139,10 @@ Non-goals: PSTN calls; a server sideband connection to the Realtime session; `@o
 4. IF the `voiceCallId` and Join_Token hash do not match one Voice_Call, or the Voice_Call is not `live`, THEN THE Tool_Endpoint SHALL respond with HTTP 404, run no tool and write no Tool_Log row.
 5. IF the tool name is unknown or the arguments fail the tool's Zod schema, THEN THE Tool_Endpoint SHALL return `{ "ok": false, "error": "unknown_tool" }` or `{ "ok": false, "error": "invalid_arguments" }` respectively, each with a `message`, and change no data. The `record_promise_to_pay` schema SHALL require `amount_paise` as an integer, `date_iso` as a string matching `YYYY-MM-DD`, and `spoken_text` as a string of 1 to 2,000 characters, and SHALL leave sign, range and calendar validity to criteria 10 and 11.
 6. WHEN the Tool_Endpoint receives a `call_id` it already answered for the same Voice_Call, THE Tool_Endpoint SHALL return the stored result, including a stored error result, and change no data.
-7. WHEN `get_invoice_facts` runs, THE Tool_Endpoint SHALL return `{ "ok": true }` with the Invoice_Facts computed by the Engine for the Voice_Call's invoice and `call_today`, with every amount formatted only by the Engine `formatINR`.
+7. WHEN `get_invoice_facts` runs, THE Tool_Endpoint SHALL return `{ "ok": true }` with the Invoice_Facts computed by the Engine for the Voice_Call's invoice and `call_today`, with every amount written as words from the Engine paise value and no amount as a digit string.
 8. IF no Bank_Rate is effective on `call_today`, THEN `get_invoice_facts` SHALL return `{ "ok": false, "error": "bank_rate_missing" }` with every Invoice_Facts field except interest and Total_Due, and `record_promise_to_pay` SHALL return `{ "ok": false, "error": "bank_rate_missing" }` and change no data.
 9. WHEN `record_promise_to_pay` runs with `amount_paise` greater than 0 and at most Total_Due and `date_iso` inside the Promise_Window, THE Tool_Endpoint SHALL, in one transaction, set `superseded_on` = `call_today` on the invoice's Current_Promise if one exists, insert one `promises` row with `promised_date` = `date_iso`, `amount_paise`, `recorded_on` = `call_today`, `source` = `voice`, `voice_call_id`, `spoken_text` and `is_partial` = (amount < Total_Due), and return `{ "ok": true }` with the amount as a `formatINR` string, the date as an Agent_Date equal to its Date_List entry, and `is_partial`. The invoice SHALL have exactly one Current_Promise afterwards, also when two such requests overlap.
-10. IF `amount_paise` is 0 or less, or above Total_Due, THEN `record_promise_to_pay` SHALL return `{ "ok": false, "error": "amount_out_of_range" }` with Total_Due as a `formatINR` string and change no data.
+10. IF `amount_paise` is 0 or less, or above Total_Due, THEN `record_promise_to_pay` SHALL return `{ "ok": false, "error": "amount_out_of_range" }` with `total_due_words` and `total_due_paise` and change no data.
 11. IF `date_iso` is outside the Promise_Window or not a valid calendar date, THEN `record_promise_to_pay` SHALL return `{ "ok": false, "error": "date_out_of_range" }` with the first and last allowed dates and change no data.
 12. WHEN `end_call` runs with `outcome` one of `dispute`, `no_promise` or `consent_declined`, THE Tool_Endpoint SHALL store that outcome as the Voice_Call's requested outcome, replacing any earlier requested outcome, and return `{ "ok": true }`.
 13. WHEN the Call_Client has sent the `end_call` function output, THE Call_Client SHALL end the call as in Requirement 4 criterion 5 on the next `output_audio_buffer.stopped` event or 10 seconds after sending, whichever comes first.
@@ -226,13 +226,13 @@ Non-goals: PSTN calls; a server sideband connection to the Realtime session; `@o
 1. THE test suite SHALL make no network call to OpenAI, SHALL mock the `client_secrets` call at the HTTP client boundary, and SHALL fail any test that issues an unmocked HTTP request.
 2. THE test suite SHALL assert with exact `toEqual` on the whole result, on the Demo_Seed with `call_today` `2026-11-12`, the `get_invoice_facts` result for Sharma Traders `LPC/26-27/0412`, with paise values, dates, day counts, names and rule IDs written as literals in the test:
    - `ok` true, buyer name "Sharma Traders", supplier name "Laxmi Precision Components (Demo)", invoice number `LPC/26-27/0412`, no caveat;
-   - principal `formatINR(41200000)`;
+   - `principal_words` "four lakh twelve thousand rupees";
    - due date `17 Oct 2026` with `MSMED-15`, 26 Days_Overdue;
-   - interest `formatINR(512794)` with `MSMED-16`;
-   - Total_Due `formatINR(41712794)`;
+   - `interest_words` "five thousand one hundred twenty-seven rupees and ninety-four paise" with `MSMED-16`;
+   - `total_due_words` "four lakh seventeen thousand one hundred twenty-seven rupees and ninety-four paise" and `total_due_paise` 41712794;
    - tax-bomb date `31 Mar 2027` with 139 days left and `IT-43BH`.
 3. THE test suite SHALL assert `record_promise_to_pay` for Sharma Traders at `call_today` `2026-11-12`, each case starting from the Demo_Seed:
-   - 41712794 paise for `2026-11-20` is accepted with `is_partial` false and the date read as "Friday, 20 Nov 2026";
+   - 41712794 paise for `2026-11-20` is accepted with `is_partial` false and the date read as "Friday, 20 November 2026" and `amount_words` returned, with no digit amount;
    - 20000000 paise for `2026-11-20` is accepted with `is_partial` true;
    - 0, −1 and 41712795 paise return `amount_out_of_range`;
    - `2026-11-11`, `2026-12-13` and `2026-02-30` return `date_out_of_range`;
@@ -260,7 +260,7 @@ Non-goals: PSTN calls; a server sideband connection to the Realtime session; `@o
    - a second call for the same buyer on the same Call_Day is accepted;
    - with 20 Voice_Calls of the Demo_Supplier started on the Call_Day, the next start is refused with "Demo call limit reached for today" and creates no Voice_Call;
    - the Invoice_Panel shows the Demo_Hours_Text.
-9. THE test suite SHALL assert that for `call_today` `2026-11-12` the Persona_Instructions data block holds `call_today` as "Thursday, 12 Nov 2026" and a Date_List of exactly 31 entries whose first entry is "Thursday, 12 Nov 2026", whose last entry is "Saturday, 12 Dec 2026", and which contains "Friday, 20 Nov 2026".
+9. THE test suite SHALL assert that for `call_today` `2026-11-12` the Persona_Instructions data block holds `call_today` as "Thursday, 12 November 2026" and a Date_List of exactly 31 entries whose first entry is "Thursday, 12 November 2026", whose last entry is "Saturday, 12 December 2026", and which contains "Friday, 20 November 2026".
 10. THE test suite SHALL assert that, with the `apps/web/proxy.ts` matcher and handler of this spec, a signed-out request to `/` and to `/debtors/<id>` redirects to `/signin`, and a signed-out request to `/call/<token>`, the Session_Endpoint, the Tool_Endpoint, the transcript route and the End_Report route is not redirected.
 11. THE test suite SHALL assert: the outcome rules of Requirement 7 criterion 1 for each Call_Outcome; the `call` Timeline_Entry texts; that `models.ts` selects `gpt-realtime-2.1` for `VOICE_REALTIME_MODEL` equal to `gpt-realtime-2.1` exactly, and `gpt-realtime-2.1-mini` for an unset value and for `gpt-4o-realtime`; that the files in the scope of Requirement 3 criterion 8 (non-test TS and JS files, with test files and Markdown excluded) hold no Realtime_Model or Transcribe_Model ID outside `models.ts` and no Banned_Model_ID; that no `package.json` lists `@openai/agents`; and that the Persona_Instructions contain the AI-identity and recording-disclosure line, the "haan" read-back rule, the Date_List lookup rule, the `end_call` rules and the data block of Requirement 6.
 12. WHERE a developer sets `OPENAI_API_KEY` locally, THE repository SHALL provide one manual live check, outside the test suite and CI, that runs a Hinglish call with Sharma Traders at `?today=2026-11-12` on one laptop and confirms the disclosure, a read-back, a recorded promise on the timeline and the transcript.

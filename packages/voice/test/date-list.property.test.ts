@@ -7,7 +7,20 @@ import { agentDate, buildDateList, inPromiseWindow } from "../src/dates";
 const DAY_MS = 86_400_000;
 // Independent oracle: JS Date, Sunday = 0.
 const JS_WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
-const JS_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
+const JS_MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
 
 const RANGE_FIRST = Date.UTC(2024, 3, 1);
 const RANGE_LAST = Date.UTC(2035, 2, 31);

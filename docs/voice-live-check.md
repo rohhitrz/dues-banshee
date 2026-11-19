@@ -28,15 +28,15 @@ This applies `0005_buyer_voice_call` to Neon. Without it the start-call action a
 1. In the invoice panel, click "Start call". The demo supplier has no call-hours limit.
 2. Click "Open call here". The call page opens in a new tab.
 3. Click "Join call" and allow the microphone.
-4. Speak Hinglish as the buyer. Ask about the amount, then promise a date, for example "agle Friday tak de dunga". At `2026-11-12` (a Thursday) that is Friday, 20 Nov 2026.
+4. Speak Hinglish as the buyer. Ask about the amount, then promise a date, for example "agle Friday tak de dunga". At `2026-11-12` (a Thursday) that is Friday, 20 November 2026.
 5. Answer "haan" when the agent reads the amount and date back. Let the agent end the call, or click "Hang up".
 6. Reload the debtor page (keep `?today=2026-11-12`).
 
 ## 4. What to confirm
 
 - **Disclosure first.** The agent opens by saying it is an AI assistant calling for the supplier, and says "yeh call record aur transcribe ho rahi hai", before talking about the invoice.
-- **Facts match the page.** The figures the agent speaks match the invoice panel: principal ₹4,12,000, due 17 Oct 2026, 26 days late, interest ₹5,127.94 (512794 paise), total ₹4,17,127.94 (41712794 paise), tax-bomb date 31 Mar 2027 with 139 days left.
-- **Read-back.** The agent reads the amount in digits and in words, and the date with its weekday exactly as the Date_List writes it ("Friday, 20 Nov 2026").
+- **Facts match the page.** The figures the agent speaks, in words, match the invoice panel: principal ₹4,12,000, due 17 Oct 2026, 26 days late, interest ₹5,127.94 (512794 paise), total ₹4,17,127.94 (41712794 paise), tax-bomb date 31 Mar 2027 with 139 days left.
+- **Read-back.** The agent reads the amount in rupees, in words (never digits, the rupee symbol or "dollars"), and the date with its weekday exactly as the Date_List writes it ("Friday, 20 November 2026").
 - **Explicit "haan".** The agent calls `record_promise_to_pay` only after you say "haan". If it records before that, mark this item as failed.
 - **Promise on the Candle_Timeline.** After the reload, the timeline shows "Promised ₹4,17,127.94 by 20 Nov 2026" (or the amount you gave), and the invoice panel shows "Promise to pay active until 20 Nov 2026". The "(by voice)" suffix and the call entry are task 7 and are not expected yet.
 - **Next Ladder_Run pauses.** With the dev server still running, in the shell where you sourced `.env.local`:

@@ -1,7 +1,6 @@
 import {
   addDays,
   financialYearEnd,
-  formatDisplayDate,
   isoWeekday,
   isValidCalendarDate,
   istCalendarDate,
@@ -18,6 +17,21 @@ const CALL_CLOSE_MINUTE = 19 * 60;
 const LAST_CALL_WEEKDAY = 6; // Saturday; Sunday is 7
 
 const WEEKDAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
+
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
 
 /** Both inputs are zero-padded YYYY-MM-DD, so string order is date order. */
 function earlier(a: CalendarDate, b: CalendarDate): CalendarDate {
@@ -42,9 +56,11 @@ export function inPromiseWindow(date: string, callToday: CalendarDate): boolean 
   return date >= first && date <= last;
 }
 
-/** "2026-11-12" -> "Thursday, 12 Nov 2026": English weekday, then D MMM YYYY. */
+/** "2026-11-12" -> "Thursday, 12 November 2026": English weekday, then D, the full month name and YYYY. */
 export function agentDate(d: CalendarDate): string {
-  return `${WEEKDAY_NAMES[isoWeekday(d) - 1]}, ${formatDisplayDate(d)}`;
+  const day = Number(d.slice(8, 10));
+  const month = MONTH_NAMES[Number(d.slice(5, 7)) - 1];
+  return `${WEEKDAY_NAMES[isoWeekday(d) - 1]}, ${day} ${month} ${d.slice(0, 4)}`;
 }
 
 /** `agentDate` for every date in `promiseWindow(callToday)`, ascending. */

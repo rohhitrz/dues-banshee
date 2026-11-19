@@ -88,7 +88,7 @@ export function realtimeModel(envValue: string | undefined): string; // exactly 
 // packages/voice/src/dates.ts
 export function promiseWindow(callToday): { first; last };   // [callToday, min(callToday+30, financialYearEnd)]
 export function inPromiseWindow(date: string, callToday): boolean;
-export function agentDate(d): string;                        // "Thursday, 12 Nov 2026"
+export function agentDate(d): string;                        // "Thursday, 12 November 2026"
 export function buildDateList(callToday): string[];          // agentDate(first..last)
 export function inCallWindow(nowMs: number): boolean;        // IST minute in [600, 1140), Mon–Sat
 export function istDayBounds(day): { start: Date; end: Date };
@@ -111,8 +111,8 @@ export const CALL_TOOLS: readonly { name: CallToolName; description: string; par
 export function parseToolArgs(name: string, raw: string): ParsedArgs | { ok: false; error: "unknown_tool" | "invalid_arguments" };
 export interface InvoiceFacts {
   buyer_name: string; supplier_name: string; invoice_number: string;
-  principal: string; due_date: string; due_rule_ids: RuleId[]; days_overdue: number;
-  interest?: string; interest_rule_ids?: RuleId[]; total_due?: string;   // absent when bank_rate_missing
+  principal_words: string; due_date: string; due_rule_ids: RuleId[]; days_overdue: number;
+  interest_words?: string; interest_rule_ids?: RuleId[]; total_due_words?: string; total_due_paise?: Paise;   // absent when bank_rate_missing
   tax_bomb_date: string; tax_bomb_days_left: number; tax_bomb_rule_ids: RuleId[]; caveat?: Caveat;
 }
 export function buildInvoiceFacts(i: { invoice; bankRate: BankRate | null; callToday; buyerName; supplierName; invoiceNumber })
@@ -120,7 +120,7 @@ export function buildInvoiceFacts(i: { invoice; bankRate: BankRate | null; callT
 export function checkPromiseAmount(amount: number, total: Paise): { ok: true; isPartial: boolean } | { ok: false };
 ```
 
-Figures come only from `dueDate`, `statutoryInterest`, `taxBomb` and `formatINR(…, "full")` (Req 11 C2). Error results carry `message`; `amount_out_of_range` adds `total_due`, `date_out_of_range` adds `first_date`/`last_date` as Agent_Dates.
+Figures come only from `dueDate`, `statutoryInterest`, `taxBomb` and `paiseToWords` (Req 11 C2); no amount is a digit string. `record_promise_to_pay` success returns `amount_words`, not a digit amount. Error results carry `message`; `amount_out_of_range` adds `total_due_words` and `total_due_paise`, `date_out_of_range` adds `first_date`/`last_date` as Agent_Dates.
 
 ### Voice_Provider (`provider.ts`, `openai-realtime.ts`)
 

@@ -15,7 +15,6 @@ import {
   storeToolResult,
 } from "@dues-banshee/db";
 import type { Db, TranscriptSpeaker } from "@dues-banshee/db";
-import { formatINR } from "@dues-banshee/engine";
 import type { BankRate, CalendarDate } from "@dues-banshee/engine";
 import { agentDate, inPromiseWindow, promiseWindow } from "./dates";
 import { buildInvoiceFacts, checkPromiseAmount } from "./invoice-facts";
@@ -267,8 +266,8 @@ export async function runCallTool(deps: ToolDeps, req: ToolRequest): Promise<Too
               ok: false,
               error: "amount_out_of_range",
               message: "The amount must be more than zero and at most the total due.",
-              total_due: built.facts.total_due,
               total_due_words: built.facts.total_due_words,
+              total_due_paise: built.totalDuePaise,
             };
           } else if (!inPromiseWindow(date_iso, live.callToday)) {
             const window = promiseWindow(live.callToday);
@@ -292,7 +291,6 @@ export async function runCallTool(deps: ToolDeps, req: ToolRequest): Promise<Too
             });
             result = {
               ok: true,
-              amount: formatINR(amount_paise, "full"),
               amount_words: paiseToWords(amount_paise),
               date: agentDate(date_iso),
               is_partial: amount.isPartial,

@@ -626,7 +626,12 @@ describe("the join request fails", () => {
 // error / call_time_up / 404 endings. Requirements 5.1, 5.13, 7.4, 8.1, 3.4.
 // ---------------------------------------------------------------------------------------------
 
-const FACTS_RESULT = { ok: true, buyer_name: "Sharma Traders", total_due: "₹4,17,127.94" };
+const FACTS_RESULT = {
+  ok: true,
+  buyer_name: "Sharma Traders",
+  total_due_words: "four lakh seventeen thousand one hundred twenty-seven rupees and ninety-four paise",
+  total_due_paise: 41_712_794,
+};
 
 const functionCall = (callId: string, name: string, args = "{}") => ({
   type: "response.function_call_arguments.done",
@@ -693,7 +698,13 @@ describe("the tool loop: output item, then response.create", () => {
 
   it("sends the raw arguments string of a record_promise_to_pay call and returns its error result as output", async () => {
     const args = '{"amount_paise":0,"date_iso":"2026-11-20","spoken_text":"haan"}';
-    const error = { ok: false, error: "amount_out_of_range", message: "x", total_due: "₹4,17,127.94" };
+    const error = {
+      ok: false,
+      error: "amount_out_of_range",
+      message: "x",
+      total_due_words: "four lakh seventeen thousand one hundred twenty-seven rupees and ninety-four paise",
+      total_due_paise: 41_712_794,
+    };
     const { h } = await liveCall({ tool: () => ({ json: error }) });
     deliver(h, functionCall("call_p1", "record_promise_to_pay", args));
     await flush();

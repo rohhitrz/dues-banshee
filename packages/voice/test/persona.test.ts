@@ -39,14 +39,14 @@ describe("buildPersonaInstructions data block at call_today 2026-11-12", () => {
   const data = dataBlock(build());
 
   it("writes today as the weekday, day, month and year", () => {
-    expect(data.today).toEqual("Thursday, 12 Nov 2026");
+    expect(data.today).toEqual("Thursday, 12 November 2026");
   });
 
-  it("lists 31 dates from today to 12 Dec 2026", () => {
+  it("lists 31 dates from today to 12 December 2026", () => {
     expect(data.date_list).toHaveLength(31);
-    expect(data.date_list[0]).toEqual("Thursday, 12 Nov 2026");
-    expect(data.date_list[30]).toEqual("Saturday, 12 Dec 2026");
-    expect(data.date_list).toContain("Friday, 20 Nov 2026");
+    expect(data.date_list[0]).toEqual("Thursday, 12 November 2026");
+    expect(data.date_list[30]).toEqual("Saturday, 12 December 2026");
+    expect(data.date_list).toContain("Friday, 20 November 2026");
   });
 
   it("builds the opening line on the server from the address form and the supplier name", () => {
