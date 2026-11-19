@@ -129,7 +129,7 @@ async function seeded(): Promise<Fixture> {
   open.push(t);
   const supplierId = await findSupplierIdByUdyam(t.db, DEMO_SUPPLIER.udyamNumber);
   if (supplierId === null) throw new Error("demo supplier missing after seed");
-  const sharma = (await listLadderRecords(t.db, supplierId)).find((r) => r.buyerName === SHARMA);
+  const sharma = (await listLadderRecords(t.db, supplierId, TODAY)).find((r) => r.buyerName === SHARMA);
   if (sharma === undefined) throw new Error("Sharma invoice missing after seed");
   return { t, supplierId, sharmaInvoiceId: sharma.invoice.id };
 }
@@ -206,7 +206,7 @@ describe("approveDraft", () => {
     expect((await allEvents(f.t)).filter((e) => e.action !== "drafted")).toHaveLength(1);
 
     // The approved step now counts in the ladder history.
-    const record = (await listLadderRecords(f.t.db, f.supplierId, f.sharmaInvoiceId))[0];
+    const record = (await listLadderRecords(f.t.db, f.supplierId, TODAY, f.sharmaInvoiceId))[0];
     expect(record?.steps.filter((s) => s.action === "approved")).toEqual([
       { step: "whatsapp_nudge", occurredOn: TODAY, action: "approved", draftId: f.draftId },
     ]);
@@ -376,7 +376,7 @@ describe("editDraft", () => {
 
   it("rebuilds the document of a legal_notice Draft from the edited Final_Text", async () => {
     const f = await seeded();
-    const record = (await listLadderRecords(f.t.db, f.supplierId, f.sharmaInvoiceId))[0];
+    const record = (await listLadderRecords(f.t.db, f.supplierId, TODAY, f.sharmaInvoiceId))[0];
     if (record === undefined) throw new Error("Sharma record missing");
     const supplier = await getSupplier(f.t.db, f.supplierId);
     const attempt = await draftStep(
@@ -516,7 +516,7 @@ describe("redraft", () => {
 
     // The Pending_Index holds: exactly one pending Draft for the invoice, and it is the new one.
     expect(sharmaDrafts.filter((d) => d.status === "pending").map((d) => d.id)).toEqual([fresh.id]);
-    const record = (await listLadderRecords(f.t.db, f.supplierId, f.sharmaInvoiceId))[0];
+    const record = (await listLadderRecords(f.t.db, f.supplierId, TODAY, f.sharmaInvoiceId))[0];
     expect(record?.pendingDraftId).toEqual(fresh.id);
 
     expect(await sharmaEvents(f)).toEqual([

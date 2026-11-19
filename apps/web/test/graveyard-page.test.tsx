@@ -144,7 +144,7 @@ describe("GraveyardPage session", () => {
 
     expect(html).toContain("LPC/26-27/0412");
     expect(mocks.getSupplier).toHaveBeenCalledExactlyOnceWith(DB, SUPPLIER_ID);
-    expect(mocks.listGraveyardInvoices).toHaveBeenCalledExactlyOnceWith(DB, SUPPLIER_ID);
+    expect(mocks.listGraveyardInvoices).toHaveBeenCalledExactlyOnceWith(DB, SUPPLIER_ID, "2026-11-12");
     expect(JSON.stringify(mocks.getSupplier.mock.calls)).not.toContain("other-supplier");
     expect(JSON.stringify(mocks.listGraveyardInvoices.mock.calls)).not.toContain("other-supplier");
   });

@@ -126,7 +126,7 @@ describe("listLadderRecords", () => {
   it("returns the six demo records with display fields and an empty ladder state", async () => {
     const { t, supplierId } = await seeded();
 
-    const records = await listLadderRecords(t.db, supplierId);
+    const records = await listLadderRecords(t.db, supplierId, TODAY);
 
     const view = records
       .map((r) => ({
@@ -162,10 +162,10 @@ describe("listLadderRecords", () => {
     const { t, supplierId, invoiceIds } = await seeded();
     const sharmaId = invoiceIdOf(invoiceIds, SHARMA);
 
-    const one = await listLadderRecords(t.db, supplierId, sharmaId);
+    const one = await listLadderRecords(t.db, supplierId, TODAY, sharmaId);
 
     expect(one.map((r) => [r.invoiceNumber, r.invoice.id, r.invoice.amountPaise])).toEqual([[SHARMA, sharmaId, 41_200_000]]);
-    expect(await listLadderRecords(t.db, "00000000-0000-4000-8000-000000000000")).toEqual([]);
+    expect(await listLadderRecords(t.db, "00000000-0000-4000-8000-000000000000", TODAY)).toEqual([]);
   });
 
   it("returns steps (all actions), promises and the pending Draft id of the invoice", async () => {
@@ -179,7 +179,7 @@ describe("listLadderRecords", () => {
     const inserted = await insertDraft(t.db, newDraft(sharmaId), TODAY);
     if (inserted.kind !== "ok") throw new Error("draft not inserted");
 
-    const [record] = await listLadderRecords(t.db, supplierId, sharmaId);
+    const [record] = await listLadderRecords(t.db, supplierId, TODAY, sharmaId);
 
     expect(record?.steps).toEqual([
       { step: "whatsapp_nudge", occurredOn: "2026-10-20", action: "approved", draftId: null },
@@ -200,24 +200,24 @@ describe("supplier scoping", () => {
     if (demoInserted.kind !== "ok") throw new Error("draft not inserted");
 
     // Demo supplier's view.
-    const demoRecords = await listLadderRecords(t.db, supplierId);
+    const demoRecords = await listLadderRecords(t.db, supplierId, TODAY);
     expect(demoRecords).toHaveLength(6);
     expect(demoRecords.map((r) => r.invoiceNumber)).not.toContain("OTH/26-27/0001");
     expect(demoRecords.flatMap((r) => r.steps)).toEqual([
       { step: "whatsapp_nudge", occurredOn: TODAY, action: "drafted", draftId: demoInserted.draftId },
     ]);
     expect(demoRecords.map((r) => r.pendingDraftId).filter((id) => id !== null)).toEqual([demoInserted.draftId]);
-    expect(await listLadderRecords(t.db, supplierId, other.invoice.id)).toEqual([]);
+    expect(await listLadderRecords(t.db, supplierId, TODAY, other.invoice.id)).toEqual([]);
     expect((await listPendingDrafts(t.db, supplierId)).map((d) => d.draft.id)).toEqual([demoInserted.draftId]);
     expect(await getDraftForSupplier(t.db, supplierId, other.draftId)).toBeNull();
 
     // Second supplier's view.
-    const otherRecords = await listLadderRecords(t.db, other.supplier.id);
+    const otherRecords = await listLadderRecords(t.db, other.supplier.id, TODAY);
     expect(otherRecords.map((r) => [r.invoiceNumber, r.buyerName, r.pendingDraftId])).toEqual([
       ["OTH/26-27/0001", "Sharma Traders", other.draftId],
     ]);
     expect(otherRecords[0]?.steps).toEqual([{ step: "whatsapp_nudge", occurredOn: "2026-10-01", action: "drafted", draftId: other.draftId }]);
-    expect(await listLadderRecords(t.db, other.supplier.id, sharmaId)).toEqual([]);
+    expect(await listLadderRecords(t.db, other.supplier.id, TODAY, sharmaId)).toEqual([]);
     expect((await listPendingDrafts(t.db, other.supplier.id)).map((d) => d.draft.id)).toEqual([other.draftId]);
     expect(await getDraftForSupplier(t.db, other.supplier.id, demoInserted.draftId)).toBeNull();
 

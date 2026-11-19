@@ -8,6 +8,8 @@ import { buyers, escalationEvents, invoices, promises, suppliers } from "../src/
 import { getSupplier } from "../src/suppliers";
 import { cloneTestDb, createTestDb, type TestDb } from "../src/testing";
 
+const TODAY = "2026-11-12";
+
 let template: TestDb;
 const open: TestDb[] = [];
 
@@ -100,7 +102,7 @@ describe("listGraveyardInvoices", () => {
   it("returns the six demo records with buyer names, invoice numbers and empty history", async () => {
     const { t, supplierId } = await seeded();
 
-    const records = byInvoiceNumber(await listGraveyardInvoices(t.db, supplierId));
+    const records = byInvoiceNumber(await listGraveyardInvoices(t.db, supplierId, TODAY));
 
     expect(records.map((r) => [r.invoiceNumber, r.buyerName])).toEqual([
       ["LPC/23-24/0098", "Bansal Hardware"],
@@ -116,7 +118,7 @@ describe("listGraveyardInvoices", () => {
 
   it("carries the Engine invoice for each demo record", async () => {
     const { t, supplierId } = await seeded();
-    const records = await listGraveyardInvoices(t.db, supplierId);
+    const records = await listGraveyardInvoices(t.db, supplierId, TODAY);
 
     const sharma = recordFor(records, "LPC/26-27/0412");
     expect(sharma.invoice).toStrictEqual({
@@ -146,7 +148,7 @@ describe("listGraveyardInvoices", () => {
 
   it("returns step and promise history merged and ordered by date, whatever the insert order", async () => {
     const { t, supplierId } = await seeded();
-    const sharma = recordFor(await listGraveyardInvoices(t.db, supplierId), "LPC/26-27/0412");
+    const sharma = recordFor(await listGraveyardInvoices(t.db, supplierId, TODAY), "LPC/26-27/0412");
     const invoiceId = sharma.invoice.id;
 
     await t.db.insert(escalationEvents).values([
@@ -157,7 +159,7 @@ describe("listGraveyardInvoices", () => {
       .insert(promises)
       .values({ invoiceId, promisedDate: "2026-11-20", amountPaise: 20_000_000, recordedOn: "2026-10-28" });
 
-    const records = await listGraveyardInvoices(t.db, supplierId);
+    const records = await listGraveyardInvoices(t.db, supplierId, TODAY);
 
     expect(recordFor(records, "LPC/26-27/0412").history).toEqual([
       { kind: "step", step: "whatsapp_nudge", on: "2026-10-20" },
@@ -172,7 +174,7 @@ describe("listGraveyardInvoices", () => {
     const { t, supplierId } = await seeded();
     // Same buyer name as a demo buyer: scoping must be by supplier, not by name.
     const other = await insertOtherSupplier(t, "Sharma Traders");
-    const demoSharmaId = recordFor(await listGraveyardInvoices(t.db, supplierId), "LPC/26-27/0412").invoice.id;
+    const demoSharmaId = recordFor(await listGraveyardInvoices(t.db, supplierId, TODAY), "LPC/26-27/0412").invoice.id;
     await t.db
       .insert(escalationEvents)
       .values({ invoiceId: demoSharmaId, step: "whatsapp_nudge", occurredOn: "2026-10-20", action: "approved" });
@@ -180,8 +182,8 @@ describe("listGraveyardInvoices", () => {
       .insert(promises)
       .values({ invoiceId: demoSharmaId, promisedDate: "2026-11-20", amountPaise: 1_000_000, recordedOn: "2026-10-28" });
 
-    const demo = await listGraveyardInvoices(t.db, supplierId);
-    const second = await listGraveyardInvoices(t.db, other.supplier.id);
+    const demo = await listGraveyardInvoices(t.db, supplierId, TODAY);
+    const second = await listGraveyardInvoices(t.db, other.supplier.id, TODAY);
 
     expect(demo).toHaveLength(6);
     expect(demo.map((r) => r.invoiceNumber)).not.toContain("OTH/26-27/0001");
@@ -225,7 +227,7 @@ describe("listGraveyardInvoices", () => {
 
   it("returns [] for an unknown supplier id", async () => {
     const { t } = await seeded();
-    expect(await listGraveyardInvoices(t.db, "00000000-0000-4000-8000-000000000000")).toEqual([]);
+    expect(await listGraveyardInvoices(t.db, "00000000-0000-4000-8000-000000000000", TODAY)).toEqual([]);
   });
 
   it("returns [] for a supplier with no invoices", async () => {
@@ -240,7 +242,7 @@ describe("listGraveyardInvoices", () => {
       })
       .returning();
     if (supplier === undefined) throw new Error("supplier not inserted");
-    expect(await listGraveyardInvoices(t.db, supplier.id)).toEqual([]);
+    expect(await listGraveyardInvoices(t.db, supplier.id, TODAY)).toEqual([]);
   });
 });
 

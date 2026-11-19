@@ -133,7 +133,7 @@ export async function draftAndApproveSharma(
   const output = options.output ?? DEMO_MODEL_OUTPUT;
   const { db, supplierId, invoiceId } = world;
 
-  const [record] = await listLadderRecords(db, supplierId, invoiceId);
+  const [record] = await listLadderRecords(db, supplierId, today, invoiceId);
   if (record === undefined) throw new Error("no ladder record for the Sharma invoice");
   const decision = nextEscalationStep(record.invoice, engineHistory(record), today);
   if (decision.action !== "advance" || decision.step !== step) {

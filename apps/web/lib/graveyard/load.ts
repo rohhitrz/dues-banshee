@@ -46,7 +46,7 @@ export async function loadGraveyardData(
       if (!(err instanceof BankRateNotFoundError)) throw err;
       bankRate = null;
     }
-    const records = await listGraveyardInvoices(db, supplierId);
+    const records = await listGraveyardInvoices(db, supplierId, today);
     const view = buildGraveyard(supplier, records, bankRate, today);
     return { kind: "ok", supplier, bankRate, records, view };
   } catch (err) {

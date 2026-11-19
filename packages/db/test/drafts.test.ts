@@ -16,6 +16,7 @@ import { cloneTestDb, createTestDb, type TestDb } from "../src/testing";
 const MIGRATIONS_FOLDER = fileURLToPath(new URL("../drizzle", import.meta.url));
 const UNIQUE_VIOLATION = "23505";
 const CHECK_VIOLATION = "23514";
+const TODAY = "2026-11-12";
 const SHARMA = "LPC/26-27/0412";
 const DECISION: EscalationDecision = {
   action: "advance",
@@ -204,7 +205,7 @@ describe("listGraveyardInvoices and escalation actions", () => {
       { ...base, step: "voice_call", occurredOn: "2026-11-04", action: "expired" },
     ]);
     const sharmaHistory = async () =>
-      (await listGraveyardInvoices(t.db, supplierId)).find((r) => r.invoiceNumber === SHARMA)?.history;
+      (await listGraveyardInvoices(t.db, supplierId, TODAY)).find((r) => r.invoiceNumber === SHARMA)?.history;
     expect(await sharmaHistory()).toEqual([]);
     await t.db.insert(escalationEvents).values({
       ...base,

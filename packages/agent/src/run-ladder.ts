@@ -37,7 +37,7 @@ export async function runLadder(
   const { db, models } = deps;
   const supplier = await getSupplier(db, supplierId);
   const bankRate = await loadBankRate(db, today);
-  const records = await listLadderRecords(db, supplierId);
+  const records = await listLadderRecords(db, supplierId, today);
 
   const outcomes: Record<string, InvoiceOutcome> = {};
   const classified: Classified[] = [];

@@ -249,7 +249,7 @@ export async function sendDraft(deps: SendDeps, input: SendInput): Promise<SendO
 
   // 1. Same result for a non-uuid, an unknown id and another supplier's Draft.
   if (!UUID.test(draftId)) return { kind: "not_found" };
-  const ctx = await getSendContext(db, supplierId, draftId);
+  const ctx = await getSendContext(db, supplierId, draftId, today);
   if (ctx === null) return { kind: "not_found" };
 
   // 2. Approved WhatsApp Draft with no Sent_Message.

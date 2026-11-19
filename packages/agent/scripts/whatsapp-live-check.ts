@@ -24,6 +24,8 @@ import { MAX_OUTBOUND_LENGTH } from "../src/channel/send-draft";
 import { createTwilioSandbox } from "../src/channel/twilio-sandbox";
 
 const SHARMA_INVOICE_NUMBER = "LPC/26-27/0412";
+// Only the invoice amount is read; Today just satisfies the promise filter of listLadderRecords.
+const TODAY = "2026-11-12";
 const RULE_IDS: readonly RuleId[] = ["MSMED-15", "MSMED-16"];
 const BODY_TEXT =
   "Namaste Sharma ji, invoice LPC/26-27/0412 ka bhugtan abhi baaki hai. " +
@@ -88,7 +90,7 @@ async function main(): Promise<number> {
       console.error("whatsapp-live-check: demo supplier not found. Seed the demo data first (pnpm --filter @dues-banshee/db db:seed).");
       return 1;
     }
-    const records = await listLadderRecords(db, supplierId);
+    const records = await listLadderRecords(db, supplierId, TODAY);
     const record = records.find((r) => r.invoiceNumber === SHARMA_INVOICE_NUMBER);
     if (record === undefined) {
       console.error(`whatsapp-live-check: invoice ${SHARMA_INVOICE_NUMBER} (Sharma Traders) not found for the demo supplier.`);

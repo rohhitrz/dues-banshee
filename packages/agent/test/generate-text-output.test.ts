@@ -78,7 +78,7 @@ async function sharmaInput(): Promise<{ t: TestDb; input: DraftAttemptInput; rec
   const supplierId = supplierRow?.id;
   if (supplierId === undefined) throw new Error("demo supplier missing after seed");
   const supplier = await getSupplier(t.db, supplierId);
-  const records = await listLadderRecords(t.db, supplierId);
+  const records = await listLadderRecords(t.db, supplierId, TODAY);
   const record = records.find((r) => r.invoiceNumber === SHARMA_NUMBER);
   if (record === undefined) throw new Error("Sharma invoice missing after seed");
   const decision: EscalationDecision = nextEscalationStep(

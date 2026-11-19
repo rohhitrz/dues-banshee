@@ -35,7 +35,7 @@ export interface SendContext extends DraftWithContext {
   payLink: (PayLinkInfo & { createdOn: CalendarDate | null }) | null;
   /** The buyer's E.164 WhatsApp number, or `null`. */
   buyerNumber: string | null;
-  /** `listLadderRecords(db, supplierId, invoiceId)[0]`. */
+  /** `listLadderRecords(db, supplierId, today, invoiceId)[0]`. */
   record: LadderRecord;
 }
 
@@ -62,11 +62,16 @@ export async function getPayLinkForDraft(
  * Reads one Draft with its send facts, only if its invoice belongs to `supplierId`. Returns `null`
  * for an unknown id and for another supplier's Draft (the two look the same to the caller).
  */
-export async function getSendContext(db: Db, supplierId: string, draftId: string): Promise<SendContext | null> {
+export async function getSendContext(
+  db: Db,
+  supplierId: string,
+  draftId: string,
+  today: CalendarDate,
+): Promise<SendContext | null> {
   const ctx = await getDraftForSupplier(db, supplierId, draftId);
   if (ctx === null) return null;
 
-  const [record] = await listLadderRecords(db, supplierId, ctx.draft.invoiceId);
+  const [record] = await listLadderRecords(db, supplierId, today, ctx.draft.invoiceId);
   if (record === undefined) return null;
 
   const approved = record.steps

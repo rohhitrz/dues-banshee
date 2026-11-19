@@ -2,6 +2,7 @@ import type { CalendarDate, EscalationDecision, Invoice, LadderStep, Paise } fro
 import { and, asc, eq, sql } from "drizzle-orm";
 import type { Db } from "./client";
 import { toEngineInvoice } from "./invoices";
+import { countedPromise } from "./promise-filter";
 import {
   buyers,
   drafts,
@@ -100,8 +101,15 @@ function isPendingDraftViolation(error: unknown): boolean {
  * filtered by `invoices.supplier_id = supplierId` (events, promises and Drafts are joined through
  * `invoices`). Pass `invoiceId` to read one invoice. Returns `[]` for an unknown supplier or an
  * invoice that belongs to someone else. Ordered by invoice id, like `listGraveyardInvoices`.
+ * `promises` holds only the rows that count on `today` (`countedPromise`): recorded on or before
+ * `today` and not superseded by `today`.
  */
-export async function listLadderRecords(db: Db, supplierId: string, invoiceId?: string): Promise<LadderRecord[]> {
+export async function listLadderRecords(
+  db: Db,
+  supplierId: string,
+  today: CalendarDate,
+  invoiceId?: string,
+): Promise<LadderRecord[]> {
   const invoiceScope =
     invoiceId === undefined
       ? eq(invoices.supplierId, supplierId)
@@ -137,7 +145,7 @@ export async function listLadderRecords(db: Db, supplierId: string, invoiceId?: 
     })
     .from(promises)
     .innerJoin(invoices, eq(invoices.id, promises.invoiceId))
-    .where(invoiceScope)
+    .where(and(invoiceScope, countedPromise(today)))
     .orderBy(asc(promises.recordedOn), asc(promises.id));
 
   const pendingRows = await db

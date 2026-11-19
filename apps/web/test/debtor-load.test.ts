@@ -106,7 +106,7 @@ describe("loadDebtorData", () => {
   it("returns not_found when getDebtorData returns null (unknown or another supplier's buyer)", async () => {
     mocks.getDebtorData.mockResolvedValue(null);
     expect(await loadDebtorData(DB, SUPPLIER_ID, BUYER_ID, NOW_MS, undefined)).toEqual({ kind: "not_found" });
-    expect(mocks.getDebtorData).toHaveBeenCalledWith(DB, SUPPLIER_ID, BUYER_ID);
+    expect(mocks.getDebtorData).toHaveBeenCalledWith(DB, SUPPLIER_ID, BUYER_ID, "2026-11-12");
     expect(mocks.listPendingDrafts).not.toHaveBeenCalled();
     expect(errorSpy).not.toHaveBeenCalled();
   });
@@ -154,7 +154,7 @@ describe("loadDebtorData", () => {
     expect(result.view.override).toBe("2027-03-10");
     expect(result.view.supplierName).toBe(DEMO.name);
     expect(mocks.getBankRate).toHaveBeenCalledWith(DB, "2027-03-10");
-    expect(mocks.getDebtorData).toHaveBeenCalledWith(DB, SUPPLIER_ID, BUYER_ID);
+    expect(mocks.getDebtorData).toHaveBeenCalledWith(DB, SUPPLIER_ID, BUYER_ID, "2027-03-10");
     expect(mocks.listPendingDrafts).toHaveBeenCalledWith(DB, SUPPLIER_ID);
   });
 

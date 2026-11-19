@@ -60,7 +60,7 @@ export async function loadDebtorData(
       bankRate = null;
     }
 
-    const data = await getDebtorData(db, supplierId, buyerIdRaw);
+    const data = await getDebtorData(db, supplierId, buyerIdRaw, today);
     if (data === null) return { kind: "not_found" };
 
     const drafts = await listPendingDrafts(db, supplierId);

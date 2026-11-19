@@ -107,7 +107,7 @@ beforeAll(async () => {
   const supplierId = await findSupplierIdByUdyam(t.db, DEMO_SUPPLIER.udyamNumber);
   if (supplierId === null) throw new Error("demo supplier missing after seed");
   supplier = await getSupplier(t.db, supplierId);
-  const sharma = (await listLadderRecords(t.db, supplier.id)).find((r) => r.invoiceNumber === SHARMA_NUMBER);
+  const sharma = (await listLadderRecords(t.db, supplier.id, TODAY)).find((r) => r.invoiceNumber === SHARMA_NUMBER);
   if (sharma === undefined) throw new Error("Sharma invoice missing after seed");
   record = sharma;
 });

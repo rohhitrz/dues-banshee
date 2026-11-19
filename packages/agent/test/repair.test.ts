@@ -86,7 +86,7 @@ beforeAll(async () => {
   const supplierId = await findSupplierIdByUdyam(t.db, DEMO_SUPPLIER.udyamNumber);
   if (supplierId === null) throw new Error("demo supplier missing");
   supplier = await getSupplier(t.db, supplierId);
-  const found = (await listLadderRecords(t.db, supplierId)).find((r) => r.buyerName === "Sharma Traders");
+  const found = (await listLadderRecords(t.db, supplierId, TODAY)).find((r) => r.buyerName === "Sharma Traders");
   if (found === undefined) throw new Error("Sharma invoice missing");
   record = found;
   const decision: EscalationDecision = nextEscalationStep(record.invoice, engineHistory(record), TODAY);

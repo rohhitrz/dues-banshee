@@ -152,13 +152,13 @@ function sentRow(w: World, over: Partial<Parameters<typeof recordSent>[1]> = {})
 describe("getSendContext", () => {
   it("returns null for another supplier's Draft and for an unknown id", async () => {
     const w = await world();
-    expect(await getSendContext(w.t.db, w.otherSupplierId, w.draftId)).toBeNull();
-    expect(await getSendContext(w.t.db, w.supplierId, UNKNOWN_ID)).toBeNull();
+    expect(await getSendContext(w.t.db, w.otherSupplierId, w.draftId, "2026-11-12")).toBeNull();
+    expect(await getSendContext(w.t.db, w.supplierId, UNKNOWN_ID, "2026-11-12")).toBeNull();
   });
 
   it("returns the approval day, no Sent_Message, no Pay_Link and the Buyer_Number for the demo Draft", async () => {
     const w = await world();
-    const ctx = await getSendContext(w.t.db, w.supplierId, w.draftId);
+    const ctx = await getSendContext(w.t.db, w.supplierId, w.draftId, "2026-11-12");
     expect(ctx).not.toBeNull();
     expect(ctx?.draft.id).toBe(w.draftId);
     expect(ctx?.draft.status).toBe("approved");
@@ -181,7 +181,7 @@ describe("getSendContext", () => {
       .where(eq(invoices.buyerId, w.guptaBuyerId));
     if (guptaInvoice === undefined) throw new Error("gupta invoice missing");
     const unapproved = await insertDraft(w.t, guptaInvoice.id, { status: "pending" });
-    const ctx = await getSendContext(w.t.db, w.supplierId, unapproved);
+    const ctx = await getSendContext(w.t.db, w.supplierId, unapproved, "2026-11-12");
     expect(ctx?.approvalDay).toBeNull();
     expect(ctx?.buyerNumber).toBeNull();
   });
@@ -196,7 +196,7 @@ describe("getSendContext", () => {
         createdOn: "2026-11-12",
       }),
     ).toBe("ok");
-    const ctx = await getSendContext(w.t.db, w.supplierId, w.draftId);
+    const ctx = await getSendContext(w.t.db, w.supplierId, w.draftId, "2026-11-12");
     expect(ctx?.payLink).toEqual({ ...PAY_LINK, createdOn: "2026-11-12" });
   });
 
@@ -209,9 +209,9 @@ describe("getSendContext", () => {
       errorCode: "63015",
       providerMessageId: null,
     });
-    expect((await getSendContext(w.t.db, w.supplierId, w.draftId))?.hasSentMessage).toBe(false);
+    expect((await getSendContext(w.t.db, w.supplierId, w.draftId, "2026-11-12"))?.hasSentMessage).toBe(false);
     expect(await recordSent(w.t.db, sentRow(w))).toBe("ok");
-    expect((await getSendContext(w.t.db, w.supplierId, w.draftId))?.hasSentMessage).toBe(true);
+    expect((await getSendContext(w.t.db, w.supplierId, w.draftId, "2026-11-12"))?.hasSentMessage).toBe(true);
   });
 });
 

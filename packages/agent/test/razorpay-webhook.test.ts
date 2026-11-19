@@ -214,7 +214,7 @@ async function linkStatus(w: SendWorld): Promise<string> {
 async function sharmaTombstoneState(w: SendWorld): Promise<string | undefined> {
   const view = buildGraveyard(
     await getSupplier(w.db, w.supplierId),
-    await listGraveyardInvoices(w.db, w.supplierId),
+    await listGraveyardInvoices(w.db, w.supplierId, DEMO_TODAY),
     await loadBankRate(w.db, DEMO_TODAY),
     DEMO_TODAY,
   );

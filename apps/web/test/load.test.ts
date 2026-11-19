@@ -73,7 +73,7 @@ describe("loadGraveyardData", () => {
     expect(result.view.rulesAsOf).toBe("2026-10-07");
     expect(result.view.tombstones.map((t) => t.invoiceNumber)).toEqual(["LPC/26-27/0412"]);
     expect(mocks.getBankRate).toHaveBeenCalledWith(DB, TODAY);
-    expect(mocks.listGraveyardInvoices).toHaveBeenCalledWith(DB, SUPPLIER_ID);
+    expect(mocks.listGraveyardInvoices).toHaveBeenCalledWith(DB, SUPPLIER_ID, TODAY);
     expect(errorSpy).not.toHaveBeenCalled();
   });
 

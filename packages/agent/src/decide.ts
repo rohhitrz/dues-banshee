@@ -71,7 +71,7 @@ async function recompute(
   ctx: DraftWithContext,
   today: CalendarDate,
 ): Promise<{ record: LadderRecord; decision: EscalationDecision } | null> {
-  const [record] = await listLadderRecords(db, supplierId, ctx.draft.invoiceId);
+  const [record] = await listLadderRecords(db, supplierId, today, ctx.draft.invoiceId);
   if (record === undefined) return null;
   const history = engineHistory(record);
   const input = { invoice: record.invoice, history, today, config: DEFAULT_LADDER_CONFIG };

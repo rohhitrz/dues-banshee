@@ -7,6 +7,7 @@ import { buyers, drafts, escalationEvents, invoices, promises, suppliers } from 
 import { seed } from "../src/seed";
 import { cloneTestDb, createTestDb, type TestDb } from "../src/testing";
 
+const TODAY = "2026-11-12";
 const SHARMA = "LPC/26-27/0412";
 const KUMAR = "LPC/26-27/0301";
 const UNKNOWN_UUID = "00000000-0000-4000-8000-000000000000";
@@ -165,7 +166,7 @@ describe("getDebtorData", () => {
     const sharmaInvoiceId = need(invoiceIds, SHARMA);
     await insertSharmaHistory(t, sharmaInvoiceId);
 
-    const data = await getDebtorData(t.db, supplierId, sharmaBuyerId);
+    const data = await getDebtorData(t.db, supplierId, sharmaBuyerId, TODAY);
 
     expect(data).toEqual({
       buyer: { id: sharmaBuyerId, name: "Sharma Traders" },
@@ -214,7 +215,7 @@ describe("getDebtorData", () => {
     const { t, supplierId, buyerIds, invoiceIds } = await seeded();
     const kumarBuyerId = need(buyerIds, "Kumar Textiles");
 
-    const data = await getDebtorData(t.db, supplierId, kumarBuyerId);
+    const data = await getDebtorData(t.db, supplierId, kumarBuyerId, TODAY);
 
     expect(data).toEqual({
       buyer: { id: kumarBuyerId, name: "Kumar Textiles" },
@@ -245,9 +246,9 @@ describe("getDebtorData", () => {
     const { t, supplierId } = await seeded();
     const other = await insertOtherSupplier(t);
 
-    expect(await getDebtorData(t.db, supplierId, other.buyer.id)).toBeNull();
-    expect(await getDebtorData(t.db, supplierId, UNKNOWN_UUID)).toBeNull();
-    expect(await getDebtorData(t.db, other.supplier.id, UNKNOWN_UUID)).toBeNull();
+    expect(await getDebtorData(t.db, supplierId, other.buyer.id, TODAY)).toBeNull();
+    expect(await getDebtorData(t.db, supplierId, UNKNOWN_UUID, TODAY)).toBeNull();
+    expect(await getDebtorData(t.db, other.supplier.id, UNKNOWN_UUID, TODAY)).toBeNull();
   });
 
   it("returns none of a second supplier's rows, even for a buyer with the same name", async () => {
@@ -257,10 +258,10 @@ describe("getDebtorData", () => {
     await insertSharmaHistory(t, sharmaInvoiceId);
     const other = await insertOtherSupplier(t);
 
-    const demo = await getDebtorData(t.db, supplierId, sharmaBuyerId);
-    const second = await getDebtorData(t.db, other.supplier.id, other.buyer.id);
+    const demo = await getDebtorData(t.db, supplierId, sharmaBuyerId, TODAY);
+    const second = await getDebtorData(t.db, other.supplier.id, other.buyer.id, TODAY);
     // The demo supplier's own buyer id is not visible to the second supplier either.
-    const crossed = await getDebtorData(t.db, other.supplier.id, sharmaBuyerId);
+    const crossed = await getDebtorData(t.db, other.supplier.id, sharmaBuyerId, TODAY);
 
     expect(other.buyer.id).not.toBe(sharmaBuyerId);
     expect(crossed).toBeNull();
@@ -324,7 +325,7 @@ describe("listGraveyardInvoices buyer fields", () => {
   it("returns buyerId and invoiceDate for each of the six demo records", async () => {
     const { t, supplierId, buyerIds } = await seeded();
 
-    const records = await listGraveyardInvoices(t.db, supplierId);
+    const records = await listGraveyardInvoices(t.db, supplierId, TODAY);
 
     const view = records
       .map((r) => ({ invoiceNumber: r.invoiceNumber, buyerId: r.buyerId, invoiceDate: r.invoiceDate }))

@@ -64,7 +64,7 @@ async function main(): Promise<number> {
       return 1;
     }
     const supplier = await getSupplier(realDb, supplierId);
-    const records = await listLadderRecords(realDb, supplierId);
+    const records = await listLadderRecords(realDb, supplierId, TODAY);
     const record = records.find((r) => r.invoiceNumber === SHARMA_INVOICE_NUMBER);
     if (record === undefined) {
       console.error(`live-check: invoice ${SHARMA_INVOICE_NUMBER} (Sharma Traders) not found for the demo supplier.`);

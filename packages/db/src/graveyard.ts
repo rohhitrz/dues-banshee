@@ -3,6 +3,7 @@ import { and, asc, eq } from "drizzle-orm";
 import type { Db } from "./client";
 import { toEngineInvoice } from "./invoices";
 import type { EscalationAction } from "./ladder";
+import { countedPromise } from "./promise-filter";
 import { buyers, escalationEvents, invoices, promises, suppliers } from "./schema";
 
 /**
@@ -69,11 +70,14 @@ function compareEvents(a: DatedEvent, b: DatedEvent): number {
 /**
  * The three shared read-only queries behind `listGraveyardInvoices` and `getDebtorData`. Each is
  * filtered by `invoices.supplier_id = supplierId`, plus `invoices.buyer_id = buyerId` when given.
- * Returns the records (step events only from `approved` events) and the promise rows.
+ * Returns the records (step events only from `approved` events) and the promise rows. A promise
+ * enters a record's history only if it counts on `today` (`countedPromise`); `promiseRows` still
+ * lists every row for the Debtor_Page timeline.
  */
 async function readRecords(
   db: Db,
   supplierId: string,
+  today: CalendarDate,
   buyerId?: string,
 ): Promise<{ records: GraveyardInvoiceRecord[]; promiseRows: DebtorPromiseRow[] }> {
   const scope = (): ReturnType<typeof and> =>
@@ -109,6 +113,7 @@ async function readRecords(
       promisedDate: promises.promisedDate,
       amountPaise: promises.amountPaise,
       recordedOn: promises.recordedOn,
+      counted: countedPromise(today).as("counted"),
     })
     .from(promises)
     .innerJoin(invoices, eq(invoices.id, promises.invoiceId))
@@ -125,6 +130,7 @@ async function readRecords(
     push(s.invoiceId, { date: s.occurredOn, id: s.id, event: { kind: "step", step: s.step, on: s.occurredOn } });
   }
   for (const p of promiseRows) {
+    if (!p.counted) continue;
     push(p.invoiceId, {
       date: p.recordedOn,
       id: p.id,
@@ -145,7 +151,16 @@ async function readRecords(
     buyerId: r.invoice.buyerId,
     invoiceDate: r.invoice.invoiceDate,
   }));
-  return { records, promiseRows };
+  return {
+    records,
+    promiseRows: promiseRows.map((p) => ({
+      id: p.id,
+      invoiceId: p.invoiceId,
+      promisedDate: p.promisedDate,
+      amountPaise: p.amountPaise,
+      recordedOn: p.recordedOn,
+    })),
+  };
 }
 
 /**
@@ -156,8 +171,12 @@ async function readRecords(
  * rows out. Each history lists step and promise events together, ordered by date then row id, so the
  * result is deterministic. Money stays integer paise. Returns `[]` for an unknown supplier.
  */
-export async function listGraveyardInvoices(db: Db, supplierId: string): Promise<GraveyardInvoiceRecord[]> {
-  return (await readRecords(db, supplierId)).records;
+export async function listGraveyardInvoices(
+  db: Db,
+  supplierId: string,
+  today: CalendarDate,
+): Promise<GraveyardInvoiceRecord[]> {
+  return (await readRecords(db, supplierId, today)).records;
 }
 
 /**
@@ -167,14 +186,19 @@ export async function listGraveyardInvoices(db: Db, supplierId: string): Promise
  * as the Graveyard, narrowed to this buyer; `events` lists every action through a supplier-scoped
  * join on `invoices`.
  */
-export async function getDebtorData(db: Db, supplierId: string, buyerId: string): Promise<DebtorData | null> {
+export async function getDebtorData(
+  db: Db,
+  supplierId: string,
+  buyerId: string,
+  today: CalendarDate,
+): Promise<DebtorData | null> {
   const [buyer] = await db
     .select({ id: buyers.id, name: buyers.name })
     .from(buyers)
     .where(and(eq(buyers.id, buyerId), eq(buyers.supplierId, supplierId)));
   if (!buyer) return null;
 
-  const { records, promiseRows } = await readRecords(db, supplierId, buyerId);
+  const { records, promiseRows } = await readRecords(db, supplierId, today, buyerId);
 
   const events = await db
     .select({

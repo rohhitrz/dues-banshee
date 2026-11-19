@@ -315,7 +315,7 @@ describe("DebtorPage session (Req 1.1, 1.2, 1.4)", () => {
 
     expect(html).toContain("Sharma Traders");
     expect(mocks.getSupplier).toHaveBeenCalledExactlyOnceWith(DB, SUPPLIER_ID);
-    expect(mocks.getDebtorData).toHaveBeenCalledExactlyOnceWith(DB, SUPPLIER_ID, BUYER_ID);
+    expect(mocks.getDebtorData).toHaveBeenCalledExactlyOnceWith(DB, SUPPLIER_ID, BUYER_ID, "2026-11-12");
     expect(mocks.listPendingDrafts).toHaveBeenCalledExactlyOnceWith(DB, SUPPLIER_ID);
     expect(JSON.stringify(mocks.getDebtorData.mock.calls)).not.toContain(OTHER_SUPPLIER_ID);
     expect(mocks.close).toHaveBeenCalledTimes(1);
@@ -342,7 +342,7 @@ describe("DebtorPage not found (Req 1.3)", () => {
     expect(message).toBe("NEXT_NOT_FOUND");
     expect(message).not.toContain("Sharma Traders");
     expect(mocks.notFound).toHaveBeenCalledTimes(1);
-    expect(mocks.getDebtorData).toHaveBeenCalledExactlyOnceWith(DB, SUPPLIER_ID, UNKNOWN_BUYER_ID);
+    expect(mocks.getDebtorData).toHaveBeenCalledExactlyOnceWith(DB, SUPPLIER_ID, UNKNOWN_BUYER_ID, "2026-11-12");
     expect(mocks.redirect).not.toHaveBeenCalled();
   });
 
@@ -362,8 +362,8 @@ describe("DebtorPage not found (Req 1.3)", () => {
     expect(foreign).not.toContain("Sharma Traders");
     expect(mocks.notFound).toHaveBeenCalledTimes(2);
     expect(mocks.getDebtorData.mock.calls).toEqual([
-      [DB, OTHER_SUPPLIER_ID, BUYER_ID],
-      [DB, OTHER_SUPPLIER_ID, UNKNOWN_BUYER_ID],
+      [DB, OTHER_SUPPLIER_ID, BUYER_ID, "2026-11-12"],
+      [DB, OTHER_SUPPLIER_ID, UNKNOWN_BUYER_ID, "2026-11-12"],
     ]);
     expect(mocks.redirect).not.toHaveBeenCalled();
   });
