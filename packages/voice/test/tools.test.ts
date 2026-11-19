@@ -100,6 +100,8 @@ describe("record_promise_to_pay: one Current_Promise", () => {
     expect(rows.filter((p) => p.supersededOn === null)).toHaveLength(1);
   });
 
+  // "Concurrent" in name only: PGlite runs on one connection, so the two requests run one after the other
+  // (c1, then c2). This test is serial-only and does not exercise row locks; a real race needs Postgres.
   it("leaves exactly one Current_Promise when two requests overlap", async () => {
     const w = await world.call();
     await Promise.all([
@@ -108,7 +110,11 @@ describe("record_promise_to_pay: one Current_Promise", () => {
     ]);
     const rows = await w.voicePromises();
     expect(rows).toHaveLength(2);
-    expect(rows.filter((p) => p.supersededOn === null)).toHaveLength(1);
+    const current = rows.filter((p) => p.supersededOn === null);
+    expect(current).toHaveLength(1);
+    // The request that ran second is the Current_Promise; the first is superseded on call_today.
+    expect(current[0]).toMatchObject({ amountPaise: 200, promisedDate: "2026-11-21" });
+    expect(rows.find((p) => p.amountPaise === 100)).toMatchObject({ promisedDate: "2026-11-20", supersededOn: "2026-11-12" });
   });
 });
 

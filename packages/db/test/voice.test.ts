@@ -70,6 +70,8 @@ describe("voice db functions (PGlite sanity)", () => {
     expect(await findJoinableCall(t.db, HASH_A, at(599))).toMatchObject({ supplierName: expect.any(String) });
     expect(await findJoinableCall(t.db, HASH_A, at(600))).toBeNull();
 
+    // PGlite runs on one connection, so these two "concurrent" claims run one after the other. This is a
+    // serial-only check of the one-winner claim; it does not exercise row locks.
     const [first, second] = await Promise.all([claimJoin(t.db, HASH_A, at(5)), claimJoin(t.db, HASH_A, at(5))]);
     expect([first, second].filter((r) => r !== null)).toHaveLength(1);
     expect(await claimJoin(t.db, HASH_A, at(6))).toBeNull();

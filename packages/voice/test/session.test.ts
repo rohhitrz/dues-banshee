@@ -121,6 +121,8 @@ describe("handleSession: successful join", () => {
 });
 
 describe("handleSession: concurrent joins", () => {
+  // PGlite runs on one connection, so the joins below run one after the other. Both tests are serial-only
+  // and do not exercise row locks; the single winner comes from the atomic claim, not from a real race.
   it("mints exactly one key and sets live once when two joins race on the same token", async () => {
     const w = await world([OK, OK]);
     const later = new Date(NOW.getTime() + 5_000);
@@ -140,6 +142,7 @@ describe("handleSession: concurrent joins", () => {
     expect(row.startedAt?.getTime()).toBe(winnerStart);
   });
 
+  // Serial-only, like the test above: one PGlite connection, no real race and no row locks.
   it("mints exactly one key when five joins race", async () => {
     const w = await world([OK, OK, OK, OK, OK]);
     const responses = await Promise.all([0, 1, 2, 3, 4].map((i) => w.join(new Date(NOW.getTime() + i))));
