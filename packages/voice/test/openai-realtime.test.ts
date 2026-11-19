@@ -66,7 +66,11 @@ describe("createOpenAiRealtime", () => {
         instructions: SPEC.instructions,
         audio: {
           input: {
-            transcription: { model: "gpt-live-transcribe" },
+            transcription: {
+              model: "gpt-live-transcribe",
+              languages: ["hi", "en"],
+              keywords: ["haan", "nahi", "ji", "agle", "lakh", "hazaar", "rupaye", "paisa", "Friday", "Sharma ji"],
+            },
             turn_detection: { type: "semantic_vad" },
           },
           output: { voice: "marin" },

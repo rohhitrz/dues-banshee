@@ -7,6 +7,21 @@ const CONNECT_URL = "https://api.openai.com/v1/realtime/calls";
 const KEY_LIFETIME_SECONDS = 60;
 const MINT_TIMEOUT_MS = 10_000;
 
+/** Input languages and literal terms the transcriber is told to expect on a Hinglish collections call. */
+const TRANSCRIPTION_LANGUAGES = ["hi", "en"];
+const TRANSCRIPTION_KEYWORDS = [
+  "haan",
+  "nahi",
+  "ji",
+  "agle",
+  "lakh",
+  "hazaar",
+  "rupaye",
+  "paisa",
+  "Friday",
+  "Sharma ji",
+];
+
 const MintResponse = z.object({ value: z.string(), expires_at: z.number() });
 
 export interface OpenAiRealtimeDeps {
@@ -29,7 +44,11 @@ export function sessionConfigBody(model: string, spec: VoiceSessionSpec): unknow
       instructions: spec.instructions,
       audio: {
         input: {
-          transcription: { model: VOICE_MODEL_IDS.transcribe },
+          transcription: {
+            model: VOICE_MODEL_IDS.transcribe,
+            languages: TRANSCRIPTION_LANGUAGES,
+            keywords: TRANSCRIPTION_KEYWORDS,
+          },
           turn_detection: { type: "semantic_vad" },
         },
         output: { voice: VOICE_MODEL_IDS.voice },

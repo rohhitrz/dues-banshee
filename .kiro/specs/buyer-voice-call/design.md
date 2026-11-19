@@ -45,7 +45,7 @@ Checked 2026-11-19 against the official docs. Every name the requirements use ma
 | Mint call | `POST https://api.openai.com/v1/realtime/client_secrets`, body `{ expires_after, session }`, Bearer standard key | [client_secrets create](https://developers.openai.com/api/reference/resources/realtime/subresources/client_secrets/methods/create) |
 | `expires_after` | `{ anchor: "created_at", seconds }`; only `created_at`; `seconds` 10–7200, default 600. Req's "60 seconds" = `seconds: 60` | same |
 | Response | `{ value: "ek_…", expires_at: <unix seconds>, session }` | same |
-| Session shape | `session.type: "realtime"`, `model`, `instructions`, `audio.input.transcription.model`, `audio.input.turn_detection.type: "semantic_vad"`, `audio.output.voice`, `tools[] { type: "function", name, description, parameters }`, `tool_choice` | same |
+| Session shape | `session.type: "realtime"`, `model`, `instructions`, `audio.input.transcription.{model, languages, keywords}`, `audio.input.turn_detection.type: "semantic_vad"`, `audio.output.voice`, `tools[] { type: "function", name, description, parameters }`, `tool_choice` | same |
 | Models | `gpt-realtime-2.1`, `gpt-realtime-2.1-mini` in the session `model` enum; `gpt-live-transcribe` in the transcription enum; `marin` is a listed voice | same |
 | Connect | `POST https://api.openai.com/v1/realtime/calls`, `Content-Type: application/sdp`, Bearer ephemeral key; answer SDP is the text body; data channel `oai-events` | [Realtime WebRTC guide](https://developers.openai.com/api/docs/guides/realtime-webrtc) |
 | Buyer transcript | `conversation.item.input_audio_transcription.completed { item_id, transcript }` | [server events](https://developers.openai.com/api/reference/resources/realtime/server-events) |
@@ -155,7 +155,11 @@ export function sessionConfigBody(model: string, spec: VoiceSessionSpec): unknow
     "instructions": "<Persona_Instructions>",
     "audio": {
       "input": {
-        "transcription": { "model": "gpt-live-transcribe" },
+        "transcription": {
+          "model": "gpt-live-transcribe",
+          "languages": ["hi", "en"],
+          "keywords": ["haan", "nahi", "ji", "agle", "lakh", "hazaar", "rupaye", "paisa", "Friday", "Sharma ji"]
+        },
         "turn_detection": { "type": "semantic_vad" }
       },
       "output": { "voice": "marin" }
@@ -322,5 +326,5 @@ Vitest; fast-check with `numRuns >= 100`, one test per property, tagged `// Feat
 ## Open Items
 
 1. **Wisp vs. "Promise due today" (not designed).** The Graveyard wisp uses `hasActivePromise` (`promisedDate >= today`), so on the promised date the tombstone still glows while the Debtor_Page shows "Promise due today" and the ladder no longer pauses. Left unchanged pending the owner's decision.
-2. **Transcription language.** `audio.input.transcription.language` is left unset because Hinglish mixes languages. The live check decides whether to set it or add a `prompt`.
+2. **Transcription language.** Hinglish mixes languages, so the transcription config sets `languages: ["hi", "en"]` (no single `language`) plus `keywords` for the words the call depends on (confirmations, number words, the weekday, the buyer address). The live check decides whether the list needs more terms.
 3. **`call_id` length.** The docs give 32 characters; the table allows 64 so a future format change doesn't break inserts. `runCallTool` checks the same regex first and returns `invalid_arguments`.
