@@ -10,9 +10,15 @@
  * is one bare `response.create`, so the agent speaks first.
  */
 
+import { routeRealtimeEvent } from "./realtime-events";
+
 export const SESSION_URL = "/api/voice/session";
 export const END_URL = "/api/voice/end";
+export const TOOL_URL = "/api/voice/tool";
+export const TRANSCRIPT_URL = "/api/voice/transcript";
 export const DATA_CHANNEL_LABEL = "oai-events";
+/** After a successful `end_call` output, the call ends on the next `response.done` or after this long. */
+export const END_CALL_FALLBACK_MS = 10_000;
 
 export const MIC_ERROR_TEXT = "Microphone access is needed for the call";
 export const EXPIRED_TEXT = "This call link has expired or was already used";
@@ -83,8 +89,8 @@ export interface CallView {
 }
 
 /**
- * What a data-channel message handler may do. Task 5.2 plugs the tool loop, the transcript routing and
- * the `end_call` arming in here through `CallSessionDeps.onMessage`.
+ * What an extra data-channel message observer may do (`CallSessionDeps.onMessage`). The tool loop, the
+ * transcript routing and the `end_call` arming are built into the session and do not need it.
  */
 export interface CallContext {
   voiceCallId: string;
@@ -107,7 +113,10 @@ export interface CallSessionDeps {
   /** Wall clock in ms. Used for the countdown only. */
   now(): number;
   onChange(view: CallView): void;
-  /** Hook point for the tool loop (task 5.2). Called for every data-channel message. */
+  /** Optional one-shot timer for the `end_call` fallback. Defaults to the global `setTimeout`. */
+  setTimeout?(callback: () => void, ms: number): unknown;
+  clearTimeout?(handle: unknown): void;
+  /** Optional observer, called for every data-channel message before the built-in routing. */
   onMessage?: (raw: string, context: CallContext) => void;
 }
 
@@ -116,6 +125,10 @@ export interface CallSession {
   hangUp(): void;
   /** Settles when the connect sequence is over (live, failed or ended). Never rejects. */
   settled: Promise<void>;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 /** `m:ss` for a number of seconds, never negative. */
@@ -172,6 +185,9 @@ export function startCallSession(deps: CallSessionDeps): CallSession {
   let pc: PeerConnectionLike | null = null;
   let channel: DataChannelLike | null = null;
   let timer: unknown = null;
+  /** Set once a successful `end_call` output went out: the next `response.done` ends the call. */
+  let endArmed = false;
+  let armedTimer: unknown = null;
 
   // --- Synchronous part of the tap: audio unlock and mic request, before any await. ---
   deps.onChange({ phase: "connecting" });
@@ -202,11 +218,17 @@ export function startCallSession(deps: CallSessionDeps): CallSession {
     timer = null;
   };
 
+  const clearArmedTimer = (): void => {
+    if (armedTimer !== null) (deps.clearTimeout ?? globalThis.clearTimeout)(armedTimer as never);
+    armedTimer = null;
+  };
+
   /** The one guarded end. Runs once, whatever triggers it. The client never sends an outcome. */
   const end = (finalPhase: "ended" | "start_error" = "ended"): void => {
     if (ended) return;
     ended = true;
     stopTimer();
+    clearArmedTimer();
     try {
       pc?.close();
     } catch {
@@ -242,6 +264,93 @@ export function startCallSession(deps: CallSessionDeps): CallSession {
       return;
     }
     deps.onChange({ phase: "live", countdown: formatCountdown(left) });
+  };
+
+  const postJson = (url: string, body: unknown): Promise<FetchResponseLike> =>
+    deps.fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+  /** A successful `end_call` output went out: end on the next `response.done`, or after 10 s. */
+  const armEnd = (): void => {
+    if (ended || endArmed) return;
+    endArmed = true;
+    armedTimer = (deps.setTimeout ?? globalThis.setTimeout)(() => end(), END_CALL_FALLBACK_MS);
+  };
+
+  /**
+   * Forwards one function call to the server, which takes the invoice from its own Voice_Call row.
+   * 200: send the result back as a `function_call_output` item, then `response.create` so the model
+   * continues. 404 or `call_time_up`: the call is over, end it. Any other failure sends nothing (the
+   * server rolled back, so the model may retry the call).
+   */
+  const forwardToolCall = async (call: { callId: string; name: string; arguments: string }): Promise<void> => {
+    const id = voiceCallId;
+    if (id === null) return;
+    try {
+      const response = await postJson(TOOL_URL, {
+        voiceCallId: id,
+        token,
+        callId: call.callId,
+        name: call.name,
+        arguments: call.arguments,
+      });
+      if (ended) return;
+      if (response.status === 404) {
+        end();
+        return;
+      }
+      if (response.status !== 200) return;
+      const result: unknown = await response.json();
+      if (ended) return;
+      if (isRecord(result) && result.error === "call_time_up") {
+        end();
+        return;
+      }
+      send({
+        type: "conversation.item.create",
+        item: { type: "function_call_output", call_id: call.callId, output: JSON.stringify(result) },
+      });
+      send({ type: "response.create" });
+      if (call.name === "end_call" && isRecord(result) && result.ok === true) armEnd();
+    } catch {
+      // Network or parse failure: nothing is sent; the cap and the buyer's hang-up still end the call.
+    }
+  };
+
+  const postTranscript = (line: { speaker: "buyer" | "agent"; itemId: string; text: string }): void => {
+    const id = voiceCallId;
+    if (id === null) return;
+    postJson(TRANSCRIPT_URL, { voiceCallId: id, token, ...line }).catch(() => {});
+  };
+
+  /** Built-in routing of one data-channel message (the table in the design's Call_Client section). */
+  const handleRealtimeMessage = (raw: string): void => {
+    let event: unknown;
+    try {
+      event = JSON.parse(raw);
+    } catch {
+      return;
+    }
+    const action = routeRealtimeEvent(event);
+    switch (action.kind) {
+      case "tool_call":
+        void forwardToolCall(action);
+        break;
+      case "transcript":
+        postTranscript(action);
+        break;
+      case "response_done":
+        if (endArmed) end();
+        break;
+      case "error":
+        end();
+        break;
+      case "ignore":
+        break;
+    }
   };
 
   const fail = (phase: "mic_error" | "expired" | "start_error"): void => {
@@ -327,6 +436,7 @@ export function startCallSession(deps: CallSessionDeps): CallSession {
           send,
           end: () => end(),
         });
+        if (!ended) handleRealtimeMessage(event.data);
       };
 
       const offer = await connection.createOffer();

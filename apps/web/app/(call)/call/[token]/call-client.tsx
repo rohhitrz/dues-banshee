@@ -56,6 +56,8 @@ export function CallClient({ token }: CallClientProps) {
       fetch: (url, init) => fetch(url, init),
       setInterval: (callback, ms) => window.setInterval(callback, ms),
       clearInterval: (handle) => window.clearInterval(handle as number),
+      setTimeout: (callback, ms) => window.setTimeout(callback, ms),
+      clearTimeout: (handle) => window.clearTimeout(handle as number),
       now: () => Date.now(),
       onChange: (next) => {
         if (IDLE_PHASES.has(next.phase)) sessionRef.current = null;
