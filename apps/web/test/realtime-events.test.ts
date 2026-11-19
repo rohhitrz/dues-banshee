@@ -36,9 +36,17 @@ describe("routeRealtimeEvent", () => {
     ).toEqual({ kind: "ignore" });
   });
 
-  it("maps response.done and error", () => {
+  it("maps response.done", () => {
     expect(routeRealtimeEvent({ type: "response.done" })).toEqual({ kind: "response_done" });
+  });
+  it("maps error to its type and code only, dropping the message", () => {
+    expect(
+      routeRealtimeEvent({ type: "error", error: { type: "server_error", code: "boom", message: "x", param: "p" } }),
+    ).toEqual({ kind: "error", errorType: "server_error", errorCode: "boom" });
     expect(routeRealtimeEvent({ type: "error", error: { message: "x" } })).toEqual({ kind: "error" });
+    expect(routeRealtimeEvent({ type: "error", error: { type: 1, code: null } })).toEqual({ kind: "error" });
+    expect(routeRealtimeEvent({ type: "error", error: "text" })).toEqual({ kind: "error" });
+    expect(routeRealtimeEvent({ type: "error" })).toEqual({ kind: "error" });
   });
 
   it("ignores unknown and malformed input without throwing", () => {

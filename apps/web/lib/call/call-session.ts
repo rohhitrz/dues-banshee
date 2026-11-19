@@ -355,7 +355,9 @@ export function startCallSession(deps: CallSessionDeps): CallSession {
       case "response_done":
         break;
       case "error":
-        end();
+        // A Realtime error is not a reason to hang up (a rejected event is not a dead session). Log
+        // only the error's type and code: the message can echo what was said.
+        console.warn("realtime error", { type: action.errorType, code: action.errorCode });
         break;
       case "ignore":
         break;

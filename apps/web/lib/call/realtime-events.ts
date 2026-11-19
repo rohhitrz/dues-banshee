@@ -14,8 +14,11 @@ export type RealtimeAction =
   | { kind: "response_done" }
   /** WebRTC only: the output audio has fully drained (sent after `response.done`). Fires the armed end. */
   | { kind: "output_audio_stopped" }
-  /** The Realtime session reported an error: end the call. */
-  | { kind: "error" }
+  /**
+   * The Realtime session reported an error. The call goes on; only the error's `type` and `code` (when
+   * they are strings) are carried, for one warning. The message is dropped: it can echo user content.
+   */
+  | { kind: "error"; errorType?: string; errorCode?: string }
   | { kind: "ignore" };
 
 const IGNORE: RealtimeAction = { kind: "ignore" };
@@ -57,8 +60,16 @@ export function routeRealtimeEvent(event: unknown): RealtimeAction {
       return { kind: "response_done" };
     case "output_audio_buffer.stopped":
       return { kind: "output_audio_stopped" };
-    case "error":
-      return { kind: "error" };
+    case "error": {
+      const detail = asRecord(e.error);
+      const errorType = detail?.type;
+      const errorCode = detail?.code;
+      return {
+        kind: "error",
+        ...(typeof errorType === "string" ? { errorType } : {}),
+        ...(typeof errorCode === "string" ? { errorCode } : {}),
+      };
+    }
     default:
       return IGNORE;
   }

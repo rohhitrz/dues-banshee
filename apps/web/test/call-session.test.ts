@@ -865,19 +865,63 @@ describe("end_call: ends on the next output_audio_buffer.stopped or after 10 sec
 });
 
 describe("ending on errors", () => {
-  it("a Realtime error event ends the call with one End_Report", async () => {
-    const { h } = await liveCall();
-    deliver(h, { type: "error", error: { type: "server_error", message: "boom" } });
-    expect(endReports(h)).toHaveLength(1);
-    expect(h.pc.closed).toBe(1);
-    expect(h.track.stop).toHaveBeenCalledTimes(1);
-    expect(lastView(h)).toEqual({ phase: "ended" });
-    // Nothing else is sent to the model and a second error changes nothing.
-    deliver(h, { type: "error" });
-    expect(endReports(h)).toHaveLength(1);
-    expect(h.dc.sentEvents()).toEqual([{ type: "response.create" }]);
+  it("a Realtime error event does not end the call and logs only its type and code", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const { h } = await liveCall();
+      deliver(h, {
+        type: "error",
+        event_id: "event_1",
+        error: { type: "invalid_request_error", code: "unknown_parameter", message: "secret transcript text", param: "x" },
+      });
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0]).toEqual(["realtime error", { type: "invalid_request_error", code: "unknown_parameter" }]);
+      expect(JSON.stringify(warn.mock.calls)).not.toContain("secret transcript text");
+      expect(endReports(h)).toHaveLength(0);
+      expect(h.pc.closed).toBe(0);
+      expect(h.track.stop).not.toHaveBeenCalled();
+      expect(lastView(h).phase).toBe("live");
+      expect(h.dc.sentEvents()).toEqual([{ type: "response.create" }]);
+    } finally {
+      warn.mockRestore();
+    }
   });
-
+  it("logs an error event without an error object or with non-string fields as an empty type and code", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const { h } = await liveCall();
+      deliver(h, { type: "error" });
+      deliver(h, { type: "error", error: { type: 5, code: null, message: "x" } });
+      expect(warn.mock.calls).toEqual([
+        ["realtime error", { type: undefined, code: undefined }],
+        ["realtime error", { type: undefined, code: undefined }],
+      ]);
+      expect(endReports(h)).toHaveLength(0);
+      expect(lastView(h).phase).toBe("live");
+    } finally {
+      warn.mockRestore();
+    }
+  });
+  it("keeps running tool calls after a Realtime error", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const { h } = await liveCall({ tool: () => ({ json: FACTS_RESULT }) });
+      deliver(h, { type: "error", error: { type: "server_error", code: "x" } });
+      deliver(h, functionCall("call_abc", "get_invoice_facts"));
+      await flush();
+      expect(h.dc.sentEvents()).toEqual([
+        { type: "response.create" },
+        {
+          type: "conversation.item.create",
+          item: { type: "function_call_output", call_id: "call_abc", output: JSON.stringify(FACTS_RESULT) },
+        },
+        { type: "response.create" },
+      ]);
+      expect(endReports(h)).toHaveLength(0);
+    } finally {
+      warn.mockRestore();
+    }
+  });
   it("a call_time_up result ends the call and sends no output item", async () => {
     const result = { ok: false, error: "call_time_up", message: "The call time is over." };
     const { h } = await liveCall({ tool: () => ({ json: result }) });
@@ -903,7 +947,6 @@ describe("ending on errors", () => {
     deliver(h, functionCall("call_1", "get_invoice_facts"));
     deliver(h, functionCall("call_2", "get_invoice_facts"));
     await flush();
-    deliver(h, { type: "error" });
     h.setNow(CAP_MS);
     h.tickCallback()!();
     h.dc.onclose?.();

@@ -29,7 +29,7 @@ The owner clicks "Start call" on an Invoice_Panel. The server creates a `voice_c
 | Engine_History filter (Req 9 C1) | SQL predicate `countedPromise(today)` used by `listLadderRecords` and `readRecords`; both gain a required `today` | Every caller already has Today. `engineHistory` and Engine `PromiseEvent` stay unchanged. |
 | Tool schemas | Zod in `tool-schemas.ts`; JSON Schema for OpenAI via `z.toJSONSchema` (zod 4.6.7 installed) | One source for validation and session config. |
 | First agent turn | After the data channel opens the client sends one bare `{ "type": "response.create" }` | Agent speaks first (disclosure, Req 6 C1); no session settings, so Req 3 C4 holds. |
-| `error` event | Ends the call (Req 7 C4) | The client sends only two event kinds; an error breaks the tool loop anyway. |
+| `error` event | Logged with `console.warn` (only `error.type` and `error.code`); the call goes on | A Realtime `error` is often one rejected event, not a dead session. Connection failure, channel close, the Call_Cap and the armed `end_call` still end the call (Req 7 C4). |
 | Call_Client testability | Thin tap handler; `startCallSession(deps)` in `apps/web/lib/call/call-session.ts` takes `getUserMedia`, `createPeerConnection`, `fetch`, `setTimeout` | Node tests with fakes, no jsdom or WebRTC. |
 | Placeholder | `StartCallControls` replaces `PlaceholderActions`, which is deleted | Req 1 C1. |
 | proxy.ts | Matcher unchanged | It lists explicit prefixes; `/call/*` and `/api/voice/*` are already outside. A test pins this (Req 10 C3, Req 11 C10). |
@@ -203,10 +203,10 @@ States: `ready` → `connecting` → `live` → `ended`, plus `mic_error` (back 
 | `conversation.item.input_audio_transcription.completed` | POST transcript, `speaker: "buyer"`, if non-empty |
 | `response.output_audio_transcript.done` | same, `speaker: "agent"` |
 | `response.done` | fire the armed end, if any |
-| `error` | end |
+| `error` | `console.warn` with `error.type` and `error.code` only; no end |
 | anything else | ignore |
 
-6. **End** (hang-up, countdown 0:00, armed end, `error`, `pc.connectionState === "failed"`, or an unexpected `dc`/`pc` close): `pc.close()`, stop the mic, `fetch("/api/voice/end", { keepalive: true })`, show "The call has ended". A guard flag makes it run once.
+6. **End** (hang-up, countdown 0:00, armed end, `pc.connectionState === "failed"`, or an unexpected `dc`/`pc` close): `pc.close()`, stop the mic, `fetch("/api/voice/end", { keepalive: true })`, show "The call has ended". A guard flag makes it run once.
 
 `<audio autoPlay playsInline>`; "Hang up" and countdown ≥ 44 × 44 px; the client never sends `session.update`.
 
@@ -300,7 +300,7 @@ For any name and raw string, `parseToolArgs` never throws, returns `unknown_tool
 | No session / Stale_Session; bad or foreign invoice | redirect; "Invoice not found", no row, no log (Req 1 C8, C11) |
 | Invalid / used / expired token | one expired markup; `session` 404 (Req 2) |
 | `OPENAI_API_KEY` unset | button disabled; `session` 503, row unchanged (Req 1 C3, Req 10 C2) |
-| Mint failure; client SDP / `pc` / channel / `error` failure | call `ended`/`incomplete`, 502; End_Report (Req 3 C5, Req 7 C4) |
+| Mint failure; client SDP / `pc` / channel failure | call `ended`/`incomplete`, 502; End_Report (Req 3 C5, Req 7 C4) |
 | Tool, transcript or end errors | see Routes and handlers (Req 5 C3–C11, Req 7 C5, Req 8 C3) |
 | Unexpected DB error | 500 `{"error":"internal"}`, `console.error` server-side (Req 10 C4) |
 
