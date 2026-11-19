@@ -21,6 +21,7 @@ import { agentDate, inPromiseWindow, promiseWindow } from "./dates";
 import { buildInvoiceFacts, checkPromiseAmount } from "./invoice-facts";
 import { buildPersonaInstructions } from "./persona";
 import type { VoiceProvider } from "./provider";
+import { paiseToWords } from "./rupee-words";
 import { CALL_TOOLS, parseToolArgs } from "./tool-schemas";
 import { hashToken } from "./token";
 
@@ -267,6 +268,7 @@ export async function runCallTool(deps: ToolDeps, req: ToolRequest): Promise<Too
               error: "amount_out_of_range",
               message: "The amount must be more than zero and at most the total due.",
               total_due: built.facts.total_due,
+              total_due_words: built.facts.total_due_words,
             };
           } else if (!inPromiseWindow(date_iso, live.callToday)) {
             const window = promiseWindow(live.callToday);
@@ -291,6 +293,7 @@ export async function runCallTool(deps: ToolDeps, req: ToolRequest): Promise<Too
             result = {
               ok: true,
               amount: formatINR(amount_paise, "full"),
+              amount_words: paiseToWords(amount_paise),
               date: agentDate(date_iso),
               is_partial: amount.isPartial,
             };

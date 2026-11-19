@@ -37,12 +37,15 @@ describe("buildInvoiceFacts for Sharma Traders at 2026-11-12", () => {
         supplier_name: "Laxmi Precision Components (Demo)",
         invoice_number: "LPC/26-27/0412",
         principal: "₹4,12,000",
+        principal_words: "four lakh twelve thousand rupees",
         due_date: "17 Oct 2026",
         due_rule_ids: ["MSMED-15"],
         days_overdue: 26,
         interest: "₹5,127.94",
+        interest_words: "five thousand one hundred twenty-seven rupees and ninety-four paise",
         interest_rule_ids: ["MSMED-16"],
         total_due: "₹4,17,127.94",
+        total_due_words: "four lakh seventeen thousand one hundred twenty-seven rupees and ninety-four paise",
         tax_bomb_date: "31 Mar 2027",
         tax_bomb_days_left: 139,
         tax_bomb_rule_ids: ["IT-43BH"],
@@ -60,6 +63,7 @@ describe("buildInvoiceFacts for Sharma Traders at 2026-11-12", () => {
         supplier_name: "Laxmi Precision Components (Demo)",
         invoice_number: "LPC/26-27/0412",
         principal: "₹4,12,000",
+        principal_words: "four lakh twelve thousand rupees",
         due_date: "17 Oct 2026",
         due_rule_ids: ["MSMED-15"],
         days_overdue: 26,
@@ -69,7 +73,9 @@ describe("buildInvoiceFacts for Sharma Traders at 2026-11-12", () => {
       },
     });
     expect(result.facts).not.toHaveProperty("interest");
+    expect(result.facts).not.toHaveProperty("interest_words");
     expect(result.facts).not.toHaveProperty("total_due");
+    expect(result.facts).not.toHaveProperty("total_due_words");
     expect(result).not.toHaveProperty("totalDuePaise");
   });
 

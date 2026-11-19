@@ -1,22 +1,27 @@
 import { dueDate, formatDisplayDate, formatINR, statutoryInterest, taxBomb } from "@dues-banshee/engine";
 import type { BankRate, CalendarDate, Caveat, Invoice, Paise, RuleId } from "@dues-banshee/engine";
+import { paiseToWords } from "./rupee-words";
 
 /**
  * What `get_invoice_facts` returns to the agent. Every amount is a `formatINR(..., "full")` string and
- * every date a `formatDisplayDate` string; the figures come only from Engine results.
+ * every date a `formatDisplayDate` string; the figures come only from Engine results. Each amount has a
+ * `*_words` twin (`paiseToWords`) that the agent speaks instead of the symbol string.
  */
 export interface InvoiceFacts {
   buyer_name: string;
   supplier_name: string;
   invoice_number: string;
   principal: string;
+  principal_words: string;
   due_date: string;
   due_rule_ids: RuleId[];
   days_overdue: number;
   /** Absent when no Bank_Rate is effective. */
   interest?: string;
+  interest_words?: string;
   interest_rule_ids?: RuleId[];
   total_due?: string;
+  total_due_words?: string;
   tax_bomb_date: string;
   tax_bomb_days_left: number;
   tax_bomb_rule_ids: RuleId[];
@@ -60,6 +65,7 @@ export function buildInvoiceFacts(i: {
     supplier_name: i.supplierName,
     invoice_number: i.invoiceNumber,
     principal: formatINR(invoice.amountPaise, "full"),
+    principal_words: paiseToWords(invoice.amountPaise),
     due_date: formatDisplayDate(due.dueDate),
     due_rule_ids: due.ruleIds,
     days_overdue: accrual.accrualDays,
@@ -80,8 +86,10 @@ export function buildInvoiceFacts(i: {
     facts: {
       ...base,
       interest: formatINR(accrual.interestPaise, "full"),
+      interest_words: paiseToWords(accrual.interestPaise),
       interest_rule_ids: accrual.ruleIds,
       total_due: formatINR(totalDuePaise, "full"),
+      total_due_words: paiseToWords(totalDuePaise),
     },
   };
 }

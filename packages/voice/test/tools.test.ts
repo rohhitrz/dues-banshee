@@ -18,7 +18,7 @@ describe("record_promise_to_pay: amount", () => {
     const r = await w.tool("record_promise_to_pay", promiseArgs(41712794, "2026-11-20", "Friday tak pura de dunga"), "c1");
     expect(r).toEqual({
       status: 200,
-      body: { ok: true, amount: "₹4,17,127.94", date: "Friday, 20 Nov 2026", is_partial: false },
+      body: { ok: true, amount: "₹4,17,127.94", amount_words: "four lakh seventeen thousand one hundred twenty-seven rupees and ninety-four paise", date: "Friday, 20 Nov 2026", is_partial: false },
       revalidateBuyerId: w.buyerId,
     });
     const rows = await w.voicePromises();
@@ -39,7 +39,7 @@ describe("record_promise_to_pay: amount", () => {
   it("accepts 20000000 paise for 2026-11-20 as a partial promise", async () => {
     const w = await world.call();
     const r = await w.tool("record_promise_to_pay", promiseArgs(20000000, "2026-11-20"), "c1");
-    expect(r.body).toEqual({ ok: true, amount: "₹2,00,000", date: "Friday, 20 Nov 2026", is_partial: true });
+    expect(r.body).toEqual({ ok: true, amount: "₹2,00,000", amount_words: "two lakh rupees", date: "Friday, 20 Nov 2026", is_partial: true });
     expect((await w.voicePromises())[0]).toMatchObject({ amountPaise: 20000000, isPartial: true });
   });
 
@@ -49,7 +49,7 @@ describe("record_promise_to_pay: amount", () => {
     const r = await w.tool("record_promise_to_pay", promiseArgs(amount, "2026-11-20"), "c1");
     expect(r).toEqual({
       status: 200,
-      body: { ok: false, error: "amount_out_of_range", message: AMOUNT_MESSAGE, total_due: "₹4,17,127.94" },
+      body: { ok: false, error: "amount_out_of_range", message: AMOUNT_MESSAGE, total_due: "₹4,17,127.94", total_due_words: "four lakh seventeen thousand one hundred twenty-seven rupees and ninety-four paise" },
     });
     expect(await w.promiseRows()).toHaveLength(before);
     expect(await w.voicePromises()).toEqual([]);
@@ -83,7 +83,7 @@ describe("record_promise_to_pay: date", () => {
   ])("accepts the window edge %s", async (date, agentDate) => {
     const w = await world.call();
     const r = await w.tool("record_promise_to_pay", promiseArgs(100, date), "c1");
-    expect(r.body).toEqual({ ok: true, amount: "₹1", date: agentDate, is_partial: true });
+    expect(r.body).toEqual({ ok: true, amount: "₹1", amount_words: "one rupee", date: agentDate, is_partial: true });
     expect((await w.voicePromises())[0]).toMatchObject({ promisedDate: date });
   });
 });
@@ -120,7 +120,7 @@ describe("a repeated call_id", () => {
     // The repeat changes nothing, so it asks for no revalidation.
     expect(again).toEqual({
       status: 200,
-      body: { ok: true, amount: "₹4,17,127.94", date: "Friday, 20 Nov 2026", is_partial: false },
+      body: { ok: true, amount: "₹4,17,127.94", amount_words: "four lakh seventeen thousand one hundred twenty-seven rupees and ninety-four paise", date: "Friday, 20 Nov 2026", is_partial: false },
     });
     expect(again.body).toEqual(first.body);
     expect(await w.voicePromises()).toHaveLength(1);
@@ -132,7 +132,7 @@ describe("a repeated call_id", () => {
     const first = await w.tool("record_promise_to_pay", promiseArgs(0, "2026-11-20"), "c1");
     const again = await w.tool("record_promise_to_pay", promiseArgs(100, "2026-11-20"), "c1");
     expect(again.body).toEqual(first.body);
-    expect(again.body).toEqual({ ok: false, error: "amount_out_of_range", message: AMOUNT_MESSAGE, total_due: "₹4,17,127.94" });
+    expect(again.body).toEqual({ ok: false, error: "amount_out_of_range", message: AMOUNT_MESSAGE, total_due: "₹4,17,127.94", total_due_words: "four lakh seventeen thousand one hundred twenty-seven rupees and ninety-four paise" });
     expect(await w.voicePromises()).toEqual([]);
     expect(await w.toolCallRows()).toHaveLength(1);
   });
@@ -373,6 +373,7 @@ describe("bank_rate_missing", () => {
         supplier_name: "Laxmi Precision Components (Demo)",
         invoice_number: "LPC/26-27/0412",
         principal: "₹4,12,000",
+        principal_words: "four lakh twelve thousand rupees",
         due_date: "17 Oct 2026",
         due_rule_ids: ["MSMED-15"],
         days_overdue: 26,

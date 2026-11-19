@@ -46,3 +46,4 @@ export type {
 } from "./handlers";
 export { buildInvoiceFacts, checkPromiseAmount } from "./invoice-facts";
 export type { BuildInvoiceFactsResult, InvoiceFacts } from "./invoice-facts";
+export { paiseToWords } from "./rupee-words";
