@@ -77,6 +77,7 @@ describe("Property 6: Data block round trip", () => {
         expect(json).not.toMatch(/[<>\u2028\u2029]/);
 
         expect(JSON.parse(json)).toEqual({
+          opening_line: `Namaste ${buyerAddress(input.buyerName)}, main ${input.supplierName} ki taraf se ek AI assistant bol rahi hoon. Yeh call record aur transcribe ho rahi hai.`,
           supplier_name: input.supplierName,
           buyer_name: input.buyerName,
           address_as: buyerAddress(input.buyerName),
