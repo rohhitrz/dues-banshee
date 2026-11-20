@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { signInDemo } from "./actions";
 import { signInErrorMessage } from "./messages";
 import styles from "./signin.module.css";
@@ -19,6 +20,9 @@ export default async function SignInPage({
             Enter the graveyard (demo)
           </button>
         </form>
+        <Link href="/landing" className={styles.about}>
+          What is Dues Banshee?
+        </Link>
         {message === null ? null : (
           <p role="alert" className={styles.error}>
             {message}

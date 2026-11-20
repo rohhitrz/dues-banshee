@@ -69,6 +69,12 @@ function alertText(html: string): string | null {
   return match === null ? null : (match[1] ?? null);
 }
 
+describe("sign-in page landing link", () => {
+  it('links "What is Dues Banshee?" to /landing', async () => {
+    expect(await renderPage()).toMatch(/<a [^>]*href="\/landing"[^>]*>What is Dues Banshee\?<\/a>/);
+  });
+});
+
 describe("sign-in page error message", () => {
   it("shows no message without an error", async () => {
     expect(alertText(await renderPage())).toBeNull();
