@@ -452,6 +452,12 @@ describe("crew-api agent and voice import scan (Req 5.2)", () => {
       .map((file) => file.slice(WEB_ROOT.length));
     expect(offenders).toEqual([]);
   });
+
+  // Feature: crew-api, Req 5.2: the scan above cannot pass with zero files.
+  it("scans app/api/crew/summary/route.ts", () => {
+    const scanned = CREW_DIRS.flatMap(listWebSources).map((file) => file.slice(WEB_ROOT.length));
+    expect(scanned).toContain("app/api/crew/summary/route.ts");
+  });
 });
 
 describe("whatsapp-channel secrets and phone numbers in tracked files (Reqs 8.2, 8.3)", () => {

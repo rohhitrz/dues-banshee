@@ -8,6 +8,7 @@ import {
   type SupplierRow,
 } from "@dues-banshee/db";
 import type { BankRate, CalendarDate } from "@dues-banshee/engine";
+import fc from "fast-check";
 import { inspect } from "node:util";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -383,5 +384,68 @@ describe("GET /api/crew/summary: secret hygiene", () => {
     expect(logged).toContain("crew summary failed");
     expect(logged).not.toContain(CREW_SECRET);
     expect(logged).not.toContain(message);
+  });
+});
+
+// --- Property test ----------------------------------------------------------------------------------------------
+
+/** Printable ASCII only: Headers.set rejects line breaks and non-Latin-1 characters. */
+const asciiText = fc.string({ unit: "grapheme-ascii", maxLength: 80 });
+
+/** The Crew_Secret with one edit: a char inserted, dropped or replaced, a case flip, or a truncation. */
+const secretMutation = fc
+  .tuple(fc.nat({ max: CREW_SECRET.length }), fc.string({ unit: "grapheme-ascii", minLength: 1, maxLength: 1 }), fc.constantFrom("insert", "drop", "replace", "case", "truncate"))
+  .map(([at, ch, kind]) => {
+    const i = Math.min(at, CREW_SECRET.length - 1);
+    switch (kind) {
+      case "insert":
+        return CREW_SECRET.slice(0, at) + ch + CREW_SECRET.slice(at);
+      case "drop":
+        return CREW_SECRET.slice(0, i) + CREW_SECRET.slice(i + 1);
+      case "replace":
+        return CREW_SECRET.slice(0, i) + ch + CREW_SECRET.slice(i + 1);
+      case "case":
+        return CREW_SECRET.toUpperCase();
+      case "truncate":
+        return CREW_SECRET.slice(0, i);
+    }
+  });
+
+/** An Authorization header value (or none) that is not the Crew_Secret's bearer header. */
+const rejectedAuthorization: fc.Arbitrary<string | undefined> = fc.oneof(
+  fc.constant(undefined),
+  asciiText.filter((token) => token !== CREW_SECRET).map((token) => `Bearer ${token}`),
+  asciiText,
+  secretMutation.map((token) => `Bearer ${token}`),
+  secretMutation,
+  fc.constant(`Bearer ${LADDER_SECRET}`),
+  fc.constant(LADDER_SECRET),
+  fc.constant(CREW_SECRET),
+  fc.constant(`bearer ${CREW_SECRET}`),
+  fc.constant(`Basic ${CREW_SECRET}`),
+  fc.constant("Bearer "),
+).filter((value) => value === undefined || value.trim() !== `Bearer ${CREW_SECRET}`);
+
+describe("GET /api/crew/summary: auth gate property", () => {
+  // Feature: crew-api, Property 2: Only the Crew_Secret opens the route
+  // Validates: Requirements 2.4, 2.5, 5.2
+  it("answers 401 and never opens the database for any Authorization value other than the Crew_Secret's", async () => {
+    await fc.assert(
+      fc.asyncProperty(rejectedAuthorization, async (auth) => {
+        mocks.getDb.mockClear();
+        mocks.findSupplierIdByUdyam.mockClear();
+        mocks.loadGraveyardData.mockClear();
+
+        const res = await GET(request(auth === undefined ? {} : { auth }));
+
+        expect(res.status).toBe(401);
+        expect(await res.json()).toEqual({ error: "Unauthorized" });
+        expect(res.headers.get("cache-control")).toBe("no-store");
+        expect(mocks.getDb).not.toHaveBeenCalled();
+        expect(mocks.findSupplierIdByUdyam).not.toHaveBeenCalled();
+        expect(mocks.loadGraveyardData).not.toHaveBeenCalled();
+      }),
+      { numRuns: 200 },
+    );
   });
 });
