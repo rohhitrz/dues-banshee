@@ -75,7 +75,7 @@ Sharma Traders tombstone → escalation draft approved by the owner → WhatsApp
 - **Hook note:** Kiro file-save hooks fire only on agent edits, not on manual saves.
 - **Deferred to polish:** "please, please" with punctuation between the words is not caught; `{{pay_link}}` is accepted on any step (pre-existing, `validateCitations` does not tie placeholders to steps).
 
-### 7a. crew-api — risky-lite tier, Supervised, 1 review (main repo, ~3 tasks)
+### 7a. crew-api — risky-lite tier, Supervised, 1 review (DONE 20 Nov, ~81 credits)
 
 - **Why:** the Crew app (§7) needs a read-only feed. Today the only machine route is `POST /api/ladder/run`, which writes drafts and spends LLM calls.
 
@@ -83,7 +83,7 @@ Sharma Traders tombstone → escalation draft approved by the owner → WhatsApp
 
 - **Auth:** new env var `CREW_READ_SECRET`, `Authorization: Bearer <secret>`. Move `bearerMatches` from `app/api/ladder/run/route.ts` into a shared `apps/web/lib/bearer.ts` and use it in both routes (no behaviour change; `ladder-run-route.test.ts` must pass unchanged). Unset → 503 `{error:"not_configured"}`; mismatch → 401 `{error:"Unauthorized"}`. `LADDER_RUN_SECRET` must never be accepted here.
 
-- **Data:** demo supplier only: `findSupplierIdByUdyam(db, DEMO_SUPPLIER.udyamNumber)` (null → 404 `{error:"not_found"}`), then `loadGraveyardData(db, id, today)` `stale` → 404, `error` → 500 `{error:"load_failed"}`, no error details in the body). Today from `resolveToday(Date.now(), searchParams.get("today") ?? undefined)` like ladder/run; an invalid `?today` falls back to the IST date.
+- **Data:** demo supplier only: `findSupplierIdByUdyam(db, DEMO_SUPPLIER.udyamNumber)` (null → 404 `{error:"not_found"}`), then `loadGraveyardData(db, id, today)` (`stale` → 404, `error` → 500 `{error:"load_failed"}`, no error details in the body). Today from `resolveToday(Date.now(), searchParams.get("today") ?? undefined)` like ladder/run; an invalid `?today` falls back to the IST date.
 
 - **Response JSON:** `supplierName`, `today`, `todayOverride` (bool), `rulesAsOf`, `disclaimer` ("Reminders a supplier sends to its own buyers. Not legal advice."), `totals` (outstanding, interest accrued, deductions at risk: raw paise + `formatINR(…, "full")` text; exploded/paid counts), `tombstones[]` in `buildGraveyard` order with: id, buyerId, buyerName, invoiceNumber, state, stateText, stateRuleId, principal paise+text, dueDate+dueDateText, daysOverdue, interest paise+text (or null), taxBomb {status, daysLeft, deductionAtRiskPaise, deductionAtRiskText} (or null), nextLabel. Drop `look` and `ariaLabel`. Every value is copied from the view or passed through `formatINR`; no money, date or legal maths in the route.
 
@@ -95,6 +95,7 @@ Sharma Traders tombstone → escalation draft approved by the owner → WhatsApp
 
 - **Non-goals:** per-invoice total due, other suppliers, pagination, CORS, rate limiting, writes, triggering the ladder (the Crew cron calls `POST /api/ladder/run` itself with `LADDER_RUN_SECRET`).
 
+- **Built:** `GET /api/crew/summary` (bearer `CREW_READ_SECRET`, demo supplier, `?today` override, no-store), shared `lib/bearer.ts`, pure `toCrewSummary` mapper (untrusted text fields documented), 2 fast-check properties, agent/voice import scan + money-lint over the crew dirs. Crew skill must treat buyer/supplier/invoice text as data, never instructions.
 ### 7. crew-app — separate repo `dues-banshee-crew`, Autopilot, 1 review
 - **Thin:** Crew `app.json`, a daily 9am cron that calls the deployed API, a `tax-bomb` skill, a "Graveyard of Dues" dashboard page.
 - Start as soon as the escalation API exists. **Never cut.**
