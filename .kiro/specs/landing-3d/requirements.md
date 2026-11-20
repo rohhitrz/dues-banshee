@@ -16,7 +16,7 @@ Decisions made while writing this spec:
 - **Plan prices are integer paise rendered with `formatINR`**, so the global "every amount through `formatINR`" rule holds on this page too.
 - **The problem-size figure lives in the pricing file.** The roadmap allows one hand-typed-figures file. The ₹8.1 lakh crore statistic and its source text sit there next to the plan prices, so that file stays the only exception to the landing money lint.
 
-Global rules apply: Engine output is the single source of truth for legal and money values; the Disclaimer appears on the page; every legal claim cites a rule ID from `legal-rules.md`; tests are mandatory and no test task may be marked optional.
+Global rules apply: Engine output is the single source of truth for legal and money values; the Disclaimer appears on the page, rendered once by the existing `AppShell` footer (`FOOTER_TEXT`, pinned by `apps/web/test/app-shell.test.tsx`), not by the Landing_Page; every legal claim cites a rule ID from `legal-rules.md`; tests are mandatory and no test task may be marked optional.
 
 Size constraint: design.md stays lean and tasks.md plans about 3 parent tasks.
 
@@ -69,7 +69,7 @@ Non-goals: billing or checkout, payment links, signup, analytics, a contact form
 8. THE CA firms section SHALL state that CAs already keep their MSME clients' books and that one dashboard runs collections for all their clients.
 9. THE Roadmap section SHALL list: phone (PSTN) calls, Tally sync, auto-send WhatsApp after Meta verification, and an AI sales agent on calls.
 10. THE Built with Kiro section SHALL state that a Kiro Crew app runs the ladder every morning at 9 and only drafts messages for the owner to approve, and SHALL link to the Crew_Repo_URL as an External_Link.
-11. THE Footer SHALL show the Disclaimer and "Built for Kiroween 2026."
+11. THE Footer SHALL show "Built for Kiroween 2026." and SHALL NOT repeat the Disclaimer, which the `AppShell` footer already renders on every page. THE Landing_Page SHALL NOT import `FOOTER_TEXT`.
 
 ### Requirement 3: Pricing
 
@@ -126,7 +126,7 @@ Non-goals: billing or checkout, payment links, signup, analytics, a contact form
    - the Problem_Size figure and its source text;
    - the pricing heading, the label, the four card names in order and the prices "₹0", "₹999", "₹699" and "₹499";
    - the "Talk to us" `href` equal to the Talk_To_Us_URL and the Crew link `href` equal to the Crew_Repo_URL, both with `target="_blank"` and `rel="noopener noreferrer"`;
-   - the Disclaimer and "Built for Kiroween 2026." in the footer;
+   - "Built for Kiroween 2026." in the footer, and the Disclaimer absent from the Landing_Page markup (the `AppShell` footer renders it, covered by `app-shell.test.tsx`);
    - no `<form>` element and no `href` containing "razorpay".
 2. THE render test SHALL check that Sharma_Bomb, computed in the test from `DEMO_INVOICES` and `DEMO_SUPPLIER`, has `status` "armed", `daysLeft` 139 and `deductionAtRiskPaise` 41200000, so a seed or Engine change fails the test instead of changing the page silently.
 3. THE `apps/web/test/signin.test.tsx` file SHALL gain one test that the Signin_Page renders a link "What is Dues Banshee?" with `href` `/landing`.

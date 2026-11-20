@@ -16,7 +16,7 @@ Design decisions:
 - **Engine call, not `buildGraveyard`.** `buildGraveyard` needs a bank rate, which lives in the database. `taxBomb(invoice, today)` needs only the invoice, so the page stays free of database reads (Requirement 1.7). The interest line states the MSMED-16 rule with no amount.
 - **The example fails loudly.** `sharmaExample()` throws if the `DEMO_INVOICES` entry is missing or `taxBomb` does not return `status: "armed"`. A seed change then breaks the render test and `next build` instead of quietly showing a "not applicable" example.
 - **Copy outside the page.** Keeping text in `lib/landing/copy.ts` and prices in `pricing.ts` keeps `page.tsx` to markup, so the money lint has little to scan and the copy can be tested without rendering.
-- **The root layout stays as it is.** Every page renders inside `AppShell`, which already shows a footer with `FOOTER_TEXT` (the Disclaimer) and calls `auth()`. The landing Footer section imports `FOOTER_TEXT` rather than repeating the string. Signed-out visitors see the brand header and no nav. Requirement 1.7 ("no database, env var, cookie or search parameter") applies to the page module and `lib/landing`. The shared layout's `auth()` call is unchanged and outside this spec. Accepted trade-off: the Disclaimer appears twice at the bottom of `/landing` (the landing Footer, then the shell footer). Removing the shell footer for one route would need a pathname check in the root layout or a second root layout, and both change `/`.
+- **The Disclaimer comes from `AppShell`.** Every page renders inside `AppShell`, whose footer shows `FOOTER_TEXT` (the Disclaimer, pinned by `app-shell.test.tsx`). The landing Footer shows only "Built for Kiroween 2026." and does not import `FOOTER_TEXT`, so the Disclaimer appears once. Signed-out visitors see the brand header and no nav. Requirement 1.7 ("no database, env var, cookie or search parameter") applies to the page module and `lib/landing`; the shared layout's `auth()` call is unchanged and outside this spec.
 - **No three.js, GSAP or client JavaScript.** The page has no `"use client"` module. Motion is CSS keyframes only (fog drift, candle flicker, ember fuse from `design/Landing.dc.html`).
 
 ## Architecture
@@ -29,7 +29,6 @@ flowchart LR
   copy["lib/landing/copy.ts"] --> page
   pricing["lib/landing/pricing.ts"] --> page
   eng --> page
-  shell["components/app-shell.tsx<br/>FOOTER_TEXT"] --> page
   signin["app/(site)/signin/page.tsx"] -- "What is Dues Banshee?" --> page
   page -- "Enter the demo" --> signin
 ```
@@ -156,7 +155,7 @@ export default function LandingPage() {
       <section aria-label="Pricing">… {PLANS.map(…formatINR(price.paise, "full")…)}</section>
       <section aria-label="Roadmap">…</section>
       <section aria-label="Built with Kiro">… <a href={CREW_COPY.href} target="_blank" rel="noopener noreferrer">…</a></section>
-      <footer aria-label="Footer"><p>{FOOTER_TEXT}</p><p>{KIROWEEN_LINE}</p></footer>
+      <footer aria-label="Footer"><p>{KIROWEEN_LINE}</p></footer>
     </main>
   );
 }
@@ -222,7 +221,7 @@ Vitest via `pnpm --filter web test`; Playwright via `pnpm --filter web e2e` (nee
 **`apps/web/test/landing-page.test.tsx`** renders `LandingPage()` inside `<>…</>` with `renderToStaticMarkup`. The page has no `auth`, `next/navigation` or database imports, so it needs no mocks. Checks (Requirement 6.1):
 - `metadata.title` equals the exact title. `metadata.openGraph?.images` and `metadata.twitter?.images` are undefined.
 - Section order: the index of each `aria-label="<name>"` in the markup is strictly increasing for the nine names.
-- Within each section's slice of markup: the Hero `<h1>` and the `/signin` CTA; the five step names in `LADDER_STEPS` order and the full "Voice call" line text; "₹4,12,000", "139", "12 Nov 2026", `IT-43BH`, `MSMED-16`; the Problem_Size figure and source; the pricing heading, label, card names in order and the four price texts; the two External_Link `href`s with `target="_blank"` and `rel="noopener noreferrer"`; the Disclaimer and "Built for Kiroween 2026." in the footer.
+- Within each section's slice of markup: the Hero `<h1>` and the `/signin` CTA; the five step names in `LADDER_STEPS` order and the full "Voice call" line text; "₹4,12,000", "139", "12 Nov 2026", `IT-43BH`, `MSMED-16`; the Problem_Size figure and source; the pricing heading, label, card names in order and the four price texts; the two External_Link `href`s with `target="_blank"` and `rel="noopener noreferrer"`; "Built for Kiroween 2026." in the footer, and the Disclaimer text absent from the page markup (it belongs to `AppShell`).
 - No `<form` in the markup and no `href` containing "razorpay" (case-insensitive).
 - Requirement 6.2: `taxBomb(sharmaInvoice(), "2026-11-12")` has `status` "armed", `daysLeft` 139 and `deductionAtRiskPaise` 41_200_000. The test calls the Engine itself; it does not read these values from `sharmaExample()`.
 
