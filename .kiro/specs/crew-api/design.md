@@ -99,7 +99,7 @@ export async function GET(request: Request): Promise<Response> {
     if (result.kind === "error") return json({ error: "load_failed" }, 500);
     return json(toCrewSummary(result.view, resolved.override !== null), 200);
   } catch {
-    console.error("crew summary failed", { stage: "lookup" });
+    console.error("crew summary failed", { stage: "load" });
     return json({ error: "load_failed" }, 500);
   } finally {
     await handle.close();
