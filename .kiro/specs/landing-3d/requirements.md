@@ -50,7 +50,8 @@ Non-goals: billing or checkout, payment links, signup, analytics, a contact form
 3. WHEN a signed-out visitor requests `/landing`, THE app SHALL respond 200 with the Landing_Page, without a redirect to `/signin`.
 4. THE `/` route SHALL stay the graveyard dashboard, with no change to its files.
 5. THE Signin_Page SHALL show one link with the text "What is Dues Banshee?" whose `href` is `/landing`, and the existing `apps/web/test/signin.test.tsx` assertions SHALL pass without edits.
-6. THE Landing_Page SHALL read no database, no environment variable, no cookie and no search parameter, and SHALL make no network call.
+6. THE Landing_Page SHALL export Next.js `metadata` with `title` "Dues Banshee — They forgot your invoice. The taxman won't." and a one-sentence `description` saying it is AI collections for Udyam micro and small suppliers: reminders, legal notices and tax-bomb countdowns. THE `metadata` SHALL set no image (no `openGraph.images`, no `twitter.images`).
+7. THE Landing_Page SHALL read no database, no environment variable, no cookie and no search parameter, and SHALL make no network call.
 
 ### Requirement 2: Sections and copy
 
@@ -60,7 +61,7 @@ Non-goals: billing or checkout, payment links, signup, analytics, a contact form
 
 1. THE Landing_Page SHALL render these nine sections in this order, each as a `<section>` (the footer as a `<footer>`) with an `aria-label`: Hero, Ladder, Tax bomb, Problem size, CA firms, Pricing, Roadmap, Built with Kiro, Footer.
 2. THE Hero section SHALL show the `<h1>` "They forgot your invoice. The taxman won't.", one sub-line, and a link "Enter the demo" whose `href` is `/signin`.
-3. THE Ladder section SHALL list the five steps in `LADDER_STEPS` order, one line each, named "WhatsApp nudge", "WhatsApp pay link", "Voice call", "Legal notice" and "Samadhaan pack", and SHALL state that the owner approves every step. The step copy SHALL be keyed by `LadderStep` so a step added to or removed from `LADDER_STEPS` fails type-checking.
+3. THE Ladder section SHALL list the five steps in `LADDER_STEPS` order, one line each, named "WhatsApp nudge", "WhatsApp pay link", "Voice call", "Legal notice" and "Samadhaan pack", and SHALL state that the owner approves every step. The "Voice call" line SHALL say it is an AI call over the internet and that phone (PSTN) calls are on the roadmap. The step copy SHALL be keyed by `LadderStep` so a step added to or removed from `LADDER_STEPS` fails type-checking.
 4. THE Tax bomb section SHALL show the Sharma Traders example with `formatINR(Sharma_Bomb.deductionAtRiskPaise, "full")` ("₹4,12,000") as the deduction at risk and `Sharma_Bomb.daysLeft` (139) as the days left, labelled with `formatDisplayDate(Example_Date)` ("12 Nov 2026") as the example date.
 5. THE Tax bomb section SHALL state that an invoice already past its MSMED s.15 time limit and still unpaid on 31 March costs the buyer that year's deduction, and that the return-filing grace period does not apply, citing `IT-43BH` (Income-tax Act 1961 s.43B(h); Income-tax Act 2025 s.37(2)(g)).
 6. THE Tax bomb section SHALL include one line stating that late payment carries compound interest with monthly rests at 3× the RBI bank rate, citing `MSMED-16`, with no interest amount.
@@ -117,8 +118,9 @@ Non-goals: billing or checkout, payment links, signup, analytics, a contact form
 
 1. A new render test `apps/web/test/landing-page.test.tsx`, in the style of the existing page tests, SHALL check:
    - the nine sections of Requirement 2 criterion 1 appear in that order;
+   - the exported `metadata.title` equal to "Dues Banshee — They forgot your invoice. The taxman won't.";
    - the Hero `<h1>` text and the "Enter the demo" `href` `/signin`;
-   - the five ladder step names in `LADDER_STEPS` order;
+   - the five ladder step names in `LADDER_STEPS` order, and the "Voice call" line's text that it is an AI call over the internet and that phone (PSTN) calls are on the roadmap;
    - the exact Sharma values "₹4,12,000", "139" and "12 Nov 2026" in the Tax bomb section;
    - the rule IDs `IT-43BH` and `MSMED-16` in the Tax bomb section;
    - the Problem_Size figure and its source text;
