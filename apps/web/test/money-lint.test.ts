@@ -149,7 +149,7 @@ describe("landing sources contain no hand-typed money", () => {
   const rel = (file: string) => relative(WEB_ROOT, file);
 
   it("scans the landing directories, so the check is not vacuous", () => {
-    // app/(site)/landing/page.tsx is asserted in task 2.3, once the page exists.
+    expect(files.map(rel)).toContain("app/(site)/landing/page.tsx");
     expect(files.map(rel)).toContain("lib/landing/pricing.ts");
   });
 
