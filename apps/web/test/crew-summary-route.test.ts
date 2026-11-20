@@ -273,9 +273,11 @@ describe("GET /api/crew/summary: 404 and 500", () => {
 
 describe("GET /api/crew/summary: 200", () => {
   it("returns the Sharma Traders tombstone and the top-level fields at ?today=2026-11-12", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
     const res = await GET(authed(`?today=${DEMO_TODAY}`));
 
     expect(res.status).toBe(200);
+    expect(fetchSpy).not.toHaveBeenCalled();
     expectNoStore(res);
     const body = await res.json();
 
