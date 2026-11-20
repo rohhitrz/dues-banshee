@@ -74,6 +74,27 @@ Sharma Traders tombstone → escalation draft approved by the owner → WhatsApp
 - **Built:** guardDraft (citations → tone → tense) in the draft repair path; 19 offline eval fixtures in `evals/draft-step/` run by `pnpm --filter @dues-banshee/agent eval` (fails outside 15–20 fixtures); call-hours table in `start-call-refusal.property.test.ts`; 3 source-lint rules; hook `.kiro/hooks/guardrails-evals-on-save.json`.
 - **Hook note:** Kiro file-save hooks fire only on agent edits, not on manual saves.
 - **Deferred to polish:** "please, please" with punctuation between the words is not caught; `{{pay_link}}` is accepted on any step (pre-existing, `validateCitations` does not tie placeholders to steps).
+
+### 7a. crew-api — risky-lite tier, Supervised, 1 review (main repo, ~3 tasks)
+
+- **Why:** the Crew app (§7) needs a read-only feed. Today the only machine route is `POST /api/ladder/run`, which writes drafts and spends LLM calls.
+
+- **Route:** `GET /api/crew/summary` in `apps/web/app/api/crew/summary/route.ts`, `runtime = "nodejs"`, response header `Cache-Control: no-store`. Not in the proxy matcher (the bearer secret is its only credential; `proxy.test.ts` already pins the matcher list, keep it unchanged and mention the route in the matcher comment).
+
+- **Auth:** new env var `CREW_READ_SECRET`, `Authorization: Bearer <secret>`. Move `bearerMatches` from `app/api/ladder/run/route.ts` into a shared `apps/web/lib/bearer.ts` and use it in both routes (no behaviour change; `ladder-run-route.test.ts` must pass unchanged). Unset → 503 `{error:"not_configured"}`; mismatch → 401 `{error:"Unauthorized"}`. `LADDER_RUN_SECRET` must never be accepted here.
+
+- **Data:** demo supplier only: `findSupplierIdByUdyam(db, DEMO_SUPPLIER.udyamNumber)` (null → 404 `{error:"not_found"}`), then `loadGraveyardData(db, id, today)` `stale` → 404, `error` → 500 `{error:"load_failed"}`, no error details in the body). Today from `resolveToday(Date.now(), searchParams.get("today") ?? undefined)` like ladder/run; an invalid `?today` falls back to the IST date.
+
+- **Response JSON:** `supplierName`, `today`, `todayOverride` (bool), `rulesAsOf`, `disclaimer` ("Reminders a supplier sends to its own buyers. Not legal advice."), `totals` (outstanding, interest accrued, deductions at risk: raw paise + `formatINR(…, "full")` text; exploded/paid counts), `tombstones[]` in `buildGraveyard` order with: id, buyerId, buyerName, invoiceNumber, state, stateText, stateRuleId, principal paise+text, dueDate+dueDateText, daysOverdue, interest paise+text (or null), taxBomb {status, daysLeft, deductionAtRiskPaise, deductionAtRiskText} (or null), nextLabel. Drop `look` and `ariaLabel`. Every value is copied from the view or passed through `formatINR`; no money, date or legal maths in the route.
+
+- **Read-only:** no DB writes, no LLM calls; the route must not import `@dues-banshee/agent` or `@dues-banshee/voice` (source-lint test). Add `app/api/crew` to the money-lint scanned dirs.
+
+- **Env:** add `CREW_READ_SECRET=` to `apps/web/.env.example`. Rohit adds the value to `.env.local` and Vercel Production before push.
+
+- **Tests:** route test in the style of `ladder-run-route.test.ts` (mock `@/lib/db` and the db lookups; build the view from the `DEMO_INVOICES` seed like `build-graveyard.test.ts`): 503 unset; 401 missing, wrong, and the `LADDER_RUN_SECRET` value; 404 / 500 paths; 200 with exact Sharma Traders values at `?today=2026-11-12` (41,200,000 paise principal, 26 days overdue, interest 512794 paise "₹5,127.94", tax bomb 139 days); invalid `?today` uses the IST date; the secret never appears in the body or in console output.
+
+- **Non-goals:** per-invoice total due, other suppliers, pagination, CORS, rate limiting, writes, triggering the ladder (the Crew cron calls `POST /api/ladder/run` itself with `LADDER_RUN_SECRET`).
+
 ### 7. crew-app — separate repo `dues-banshee-crew`, Autopilot, 1 review
 - **Thin:** Crew `app.json`, a daily 9am cron that calls the deployed API, a `tax-bomb` skill, a "Graveyard of Dues" dashboard page.
 - Start as soon as the escalation API exists. **Never cut.**
