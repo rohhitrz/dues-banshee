@@ -373,11 +373,12 @@ describe("GET /api/crew/summary: secret hygiene", () => {
     const res = await GET(authed());
 
     expect(res.status).toBe(500);
-    expect(await res.json()).toEqual({ error: "load_failed" });
+    const body = await res.json();
+    expect(body).toEqual({ error: "load_failed" });
     expectNoStore(res);
     expect(mocks.close).toHaveBeenCalledTimes(1);
 
-    const bodyText = JSON.stringify(await GET(authed()).then((r) => r.json()));
+    const bodyText = JSON.stringify(body);
     expect(bodyText).not.toContain(CREW_SECRET);
     expect(bodyText).not.toContain(message);
     expect(bodyText).not.toContain("select");
