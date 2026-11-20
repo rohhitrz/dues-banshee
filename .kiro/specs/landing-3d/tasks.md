@@ -19,6 +19,7 @@ Lite only: no three.js, GSAP, new dependency or `"use client"` module. All test 
     - No `₹`, `toFixed`, `parseFloat`, `Number(` or division.
     - _Requirements: 1.7, 2.4_
   - [ ] 1.2 Implement `apps/web/lib/landing/copy.ts` and `apps/web/lib/landing/pricing.ts`
+    - Notes: HERO.subline is exactly "AI collections for Udyam micro and small suppliers: a polite WhatsApp nudge, a Hinglish call, then a legal notice. The owner approves every step."
     - `copy.ts`: `HERO`, `LADDER_COPY` (`as const satisfies Record<LadderStep, { name: string; line: string }>`, names per Requirement 2.3, the "Voice call" line saying it is an AI call over the internet and that phone (PSTN) calls are on the roadmap), `LADDER_APPROVAL`, `TAX_BOMB_COPY` (rule IDs typed as `RuleId`), `CA_COPY`, `ROADMAP_ITEMS`, `CREW_COPY` (href `https://github.com/rohhitrz/dues-banshee-crew`), `TALK_TO_US_URL`, `KIROWEEN_LINE`. No `₹` character and no import from `pricing.ts`.
     - `pricing.ts`: the header comment naming it the one landing money-lint exception, `PlanPrice`, `Plan`, `PRICING_HEADING`, `PRICING_LABEL`, `PLANS` (four plans in order, prices 0, 99_900 + 69_900, 49_900 paise, Custom with no price and the "Talk to us" CTA to `TALK_TO_US_URL`), and `PROBLEM_SIZE` (figure "about ₹8.1 lakh crore" and the source text of Requirement 2.7).
     - _Requirements: 2.2, 2.3, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10, 2.11, 3.1, 3.2, 3.3, 3.4_
