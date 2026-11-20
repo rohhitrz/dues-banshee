@@ -111,12 +111,7 @@ export default function LandingPage() {
                 ))}
               </ul>
               {plan.cta === null ? null : (
-                <a
-                  className={styles.planCta}
-                  href={plan.cta.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+                <a className={styles.planCta} href={plan.cta.href}>
                   {plan.cta.label}
                 </a>
               )}

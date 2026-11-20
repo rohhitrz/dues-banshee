@@ -120,7 +120,7 @@ Sharma Traders tombstone → escalation draft approved by the owner → WhatsApp
 
     5. CA-firm channel: CAs already keep their MSME clients' books; one dashboard runs collections for all clients.
 
-    6. Pricing. Heading "Cheaper than one legal notice." Label "Launch pricing (planned). The demo is free." Four cards: Free ₹0 (10 open invoices, interest and 31 March countdowns, WhatsApp nudges); Banshee ₹999/mo or ₹699/mo billed yearly (150 open invoices, full ladder, pay links, Hinglish voice calls ~60 min/mo, legal notice + Samadhaan pack, daily Kiro Crew run); CA firms ₹499 per client/mo, min 10 clients (all MSME clients in one dashboard); Custom "Talk to us" (high volume, more voice minutes, Tally sync, custom terms) → https://www.linkedin.com/in/rohitraaj in a new tab (rel="noopener noreferrer"). No checkout, no payment links.
+    6. Pricing. Heading "Cheaper than one legal notice." Label "Launch pricing (planned). The demo is free." Four cards: Free ₹0 (10 open invoices, interest and 31 March countdowns, WhatsApp nudges); Banshee ₹999/mo or ₹699/mo billed yearly (150 open invoices, full ladder, pay links, Hinglish voice calls ~60 min/mo, legal notice + Samadhaan pack, daily Kiro Crew run); CA firms ₹499 per client/mo, min 10 clients (all MSME clients in one dashboard); Custom "Talk to us" (high volume, more voice minutes, Tally sync, custom terms) → a plain mailto link to rohhit.rz@gmail.com with subject "Dues Banshee: Custom plan" (no new tab). No checkout, no payment links.
 
     7. Roadmap: phone (PSTN) calls, Tally sync, auto-send WhatsApp after Meta verification, an AI sales agent on calls.
 

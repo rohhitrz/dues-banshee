@@ -33,7 +33,7 @@ Non-goals: billing or checkout, payment links, signup, analytics, a contact form
 - **Sharma_Bomb**: `taxBomb(Sharma_Invoice, Example_Date)`. Its expected values are `status` "armed", `daysLeft` 139, `deductionAtRiskPaise` 41200000.
 - **Disclaimer**: the exact text "Reminders a supplier sends to its own buyers. Not legal advice."
 - **Proxy_Matcher**: `config.matcher` in `apps/web/proxy.ts`.
-- **Talk_To_Us_URL**: `https://www.linkedin.com/in/rohitraaj`.
+- **Talk_To_Us_URL**: `mailto:rohhit.rz@gmail.com?subject=Dues%20Banshee%3A%20Custom%20plan`.
 - **Crew_Repo_URL**: `https://github.com/rohhitrz/dues-banshee-crew`.
 - **External_Link**: an `<a>` with `target="_blank"` and `rel="noopener noreferrer"`.
 
@@ -83,7 +83,7 @@ Non-goals: billing or checkout, payment links, signup, analytics, a contact form
    - **Banshee**, `formatINR(99900, "full")` per month or `formatINR(69900, "full")` per month billed yearly: 150 open invoices, full ladder, pay links, Hinglish voice calls about 60 min per month, legal notice and Samadhaan pack, daily Kiro Crew run.
    - **CA firms**, `formatINR(49900, "full")` per client per month, minimum 10 clients: all MSME clients in one dashboard.
    - **Custom**, "Talk to us": high volume, more voice minutes, Tally sync, custom terms.
-3. THE Custom card SHALL link "Talk to us" to the Talk_To_Us_URL as an External_Link.
+3. THE Custom card SHALL link "Talk to us" to the Talk_To_Us_URL as a plain `<a href>` with no `target` and no `rel` (a mailto link is not an External_Link).
 4. THE Pricing_File SHALL hold every plan price as an integer number of paise and every plan's name and feature lines, and THE Pricing section SHALL render prices only through `formatINR`.
 5. THE Landing_Page SHALL contain no form, no checkout button, no payment link and no link to Razorpay.
 
@@ -125,7 +125,7 @@ Non-goals: billing or checkout, payment links, signup, analytics, a contact form
    - the rule IDs `IT-43BH` and `MSMED-16` in the Tax bomb section;
    - the Problem_Size figure and its source text;
    - the pricing heading, the label, the four card names in order and the prices "₹0", "₹999", "₹699" and "₹499";
-   - the "Talk to us" `href` equal to the Talk_To_Us_URL and the Crew link `href` equal to the Crew_Repo_URL, both with `target="_blank"` and `rel="noopener noreferrer"`;
+   - the "Talk to us" `href` equal to the Talk_To_Us_URL with no `target` attribute, and the Crew link `href` equal to the Crew_Repo_URL with `target="_blank"` and `rel="noopener noreferrer"`;
    - "Built for Kiroween 2026." in the footer, and the Disclaimer absent from the Landing_Page markup (the `AppShell` footer renders it, covered by `app-shell.test.tsx`);
    - no `<form>` element and no `href` containing "razorpay".
 2. THE render test SHALL check that Sharma_Bomb, computed in the test from `DEMO_INVOICES` and `DEMO_SUPPLIER`, has `status` "armed", `daysLeft` 139 and `deductionAtRiskPaise` 41200000, so a seed or Engine change fails the test instead of changing the page silently.

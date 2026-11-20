@@ -62,11 +62,11 @@ describe("landing data", () => {
       expect(texts).toEqual(["₹0", "₹999", "₹699", "₹499"]);
     });
 
-    it("points the Custom card's Talk to us CTA at the LinkedIn profile (Req 3.3)", () => {
+    it("points the Custom card's Talk to us CTA at the mailto link (Req 3.3)", () => {
       const custom = PLANS.find((plan) => plan.id === "custom");
       expect(custom?.cta?.label).toBe("Talk to us");
-      expect(custom?.cta?.href).toBe("https://www.linkedin.com/in/rohitraaj");
-      expect(TALK_TO_US_URL).toBe("https://www.linkedin.com/in/rohitraaj");
+      expect(custom?.cta?.href).toBe("mailto:rohhit.rz@gmail.com?subject=Dues%20Banshee%3A%20Custom%20plan");
+      expect(TALK_TO_US_URL).toBe("mailto:rohhit.rz@gmail.com?subject=Dues%20Banshee%3A%20Custom%20plan");
     });
   });
 });
@@ -180,10 +180,11 @@ describe("LandingPage render", () => {
     expect(pricing).toContain("per client/mo");
     expect(pricing).toContain("Minimum 10 clients");
 
-    const talk = anchorTag(pricing, "https://www.linkedin.com/in/rohitraaj");
-    expect(talk).toBeDefined();
-    expect(talk).toContain('target="_blank"');
-    expect(talk).toContain('rel="noopener noreferrer"');
+    // mailto is not an External_Link: a plain <a href>, no target and no rel.
+    const talk = anchorTag(pricing, TALK_TO_US_URL);
+    expect(talk).toContain('href="mailto:rohhit.rz@gmail.com?subject=Dues%20Banshee%3A%20Custom%20plan"');
+    expect(talk).not.toContain("target=");
+    expect(talk).not.toContain("rel=");
     expect(pricing).toMatch(/<a [^>]*>Talk to us<\/a>/);
   });
 

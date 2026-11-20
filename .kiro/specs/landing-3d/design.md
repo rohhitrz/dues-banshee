@@ -44,7 +44,7 @@ flowchart LR
 | `apps/web/app/(site)/landing/page.tsx` | New. `export const metadata`, default export `LandingPage()` (synchronous, no props). |
 | `apps/web/app/(site)/landing/landing.module.css` | New. Layout, theme, keyframes and the reduced-motion block. |
 | `apps/web/lib/landing/sharma-example.ts` | New. `EXAMPLE_DATE`, `sharmaExample()`. |
-| `apps/web/lib/landing/copy.ts` | New. Text constants, `LADDER_COPY`, the two External_Link URLs. |
+| `apps/web/lib/landing/copy.ts` | New. Text constants, `LADDER_COPY`, the Crew External_Link URL and the Talk to us mailto URL. |
 | `apps/web/lib/landing/pricing.ts` | New. `PLANS`, `PRICING_HEADING`, `PRICING_LABEL`, `PROBLEM_SIZE`. |
 | `apps/web/app/(site)/signin/page.tsx` | Add `<Link href="/landing" className={styles.about}>What is Dues Banshee?</Link>` below the form. |
 | `apps/web/app/(site)/signin/signin.module.css` | Add `.about` (secondary text colour, 44 px min height). |
@@ -107,7 +107,7 @@ export const TAX_BOMB_COPY = { rule: "…s.15 time limit… 31 March… grace pe
 export const CA_COPY = "…";
 export const ROADMAP_ITEMS = ["Phone (PSTN) calls", "Tally sync", "Auto-send WhatsApp after Meta verification", "An AI sales agent on calls"] as const;
 export const CREW_COPY = { text: "A Kiro Crew app runs the ladder every morning at 9. It only drafts; the owner approves.", href: "https://github.com/rohhitrz/dues-banshee-crew" };
-export const TALK_TO_US_URL = "https://www.linkedin.com/in/rohitraaj";
+export const TALK_TO_US_URL = "mailto:rohhit.rz@gmail.com?subject=Dues%20Banshee%3A%20Custom%20plan";
 export const KIROWEEN_LINE = "Built for Kiroween 2026.";
 ```
 
@@ -221,7 +221,7 @@ Vitest via `pnpm --filter web test`; Playwright via `pnpm --filter web e2e` (nee
 **`apps/web/test/landing-page.test.tsx`** renders `LandingPage()` inside `<>…</>` with `renderToStaticMarkup`. The page has no `auth`, `next/navigation` or database imports, so it needs no mocks. Checks (Requirement 6.1):
 - `metadata.title` equals the exact title. `metadata.openGraph?.images` and `metadata.twitter?.images` are undefined.
 - Section order: the index of each `aria-label="<name>"` in the markup is strictly increasing for the nine names.
-- Within each section's slice of markup: the Hero `<h1>` and the `/signin` CTA; the five step names in `LADDER_STEPS` order and the full "Voice call" line text; "₹4,12,000", "139", "12 Nov 2026", `IT-43BH`, `MSMED-16`; the Problem_Size figure and source; the pricing heading, label, card names in order and the four price texts; the two External_Link `href`s with `target="_blank"` and `rel="noopener noreferrer"`; "Built for Kiroween 2026." in the footer, and the Disclaimer text absent from the page markup (it belongs to `AppShell`).
+- Within each section's slice of markup: the Hero `<h1>` and the `/signin` CTA; the five step names in `LADDER_STEPS` order and the full "Voice call" line text; "₹4,12,000", "139", "12 Nov 2026", `IT-43BH`, `MSMED-16`; the Problem_Size figure and source; the pricing heading, label, card names in order and the four price texts; the Talk to us mailto `href` with no `target` or `rel`, and the Crew External_Link `href` with `target="_blank"` and `rel="noopener noreferrer"`; "Built for Kiroween 2026." in the footer, and the Disclaimer text absent from the page markup (it belongs to `AppShell`).
 - No `<form` in the markup and no `href` containing "razorpay" (case-insensitive).
 - Requirement 6.2: `taxBomb(sharmaInvoice(), "2026-11-12")` has `status` "armed", `daysLeft` 139 and `deductionAtRiskPaise` 41_200_000. The test calls the Engine itself; it does not read these values from `sharmaExample()`.
 

@@ -62,6 +62,6 @@ export const CREW_COPY = {
   href: "https://github.com/rohhitrz/dues-banshee-crew",
 } as const;
 
-export const TALK_TO_US_URL = "https://www.linkedin.com/in/rohitraaj";
+export const TALK_TO_US_URL = "mailto:rohhit.rz@gmail.com?subject=Dues%20Banshee%3A%20Custom%20plan";
 
 export const KIROWEEN_LINE = "Built for Kiroween 2026.";
