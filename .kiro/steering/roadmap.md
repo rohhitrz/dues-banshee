@@ -102,7 +102,37 @@ Sharma Traders tombstone → escalation draft approved by the owner → WhatsApp
 - **Built** (github.com/rohhitrz/dues-banshee-crew, public, MIT): `app.json` (minKiroCrewVersion 0.13.0; cron, backend, UI, skill, credential masks); stdlib Python backend that proxies `GET /api/crew/summary` behind an HMAC `X-KiroCrew-Proxy` check, secrets never logged; script cron `0 9 * * *` Asia/Kolkata that calls `POST /api/ladder/run` (drafts only, the owner approves), with a `ladder.json` fallback because the masked `secrets.json` is unreadable from the cron sandbox; "Graveyard of Dues" React page with an armed-only "Ask the banshee" action; `tax-bomb` skill; 1 Claude Code review → 8 fixes; installed and verified on Kiro Crew 0.13.0.
 
 ### 8. landing-3d — UI tier, Autopilot, 1 review
-- **Lite (default):** a static spooky hero, the 5-step ladder section, the tax-bomb section, Best Startup content (problem size, the CA-firm channel, a pricing table with prices TBD with Rohit, a roadmap: PSTN, Tally, auto-send WhatsApp), a CTA to the demo login.
+- **Lite (default), build only this:**
+
+  - **Route:** public `/landing` in `apps/web/app/(site)/landing/`. Not in the proxy matcher `proxy.test.ts` stays unchanged); `/` stays the graveyard. `/signin` gets one small link "What is Dues Banshee?" → `/landing`.
+
+  - **Look:** match `design/Landing.dc.html` and `ui-theme.md`. Server component + CSS Modules, mobile responsive. No new dependencies, no three.js/GSAP (Full only). All motion off under `prefers-reduced-motion`.
+
+  - **Sections in order:**
+
+    1. Hero: tagline "They forgot your invoice. The taxman won't." + one sub-line + CTA "Enter the demo" → `/signin`.
+
+    2. Ladder: the 5 steps in `LADDER_STEPS` order (WhatsApp nudge, WhatsApp pay link, voice call, legal notice, Samadhaan pack), one line each; the owner approves every step.
+
+    3. Tax bomb: Sharma Traders example from engine output on the `DEMO_INVOICES` seed at today 2026-11-12 via `formatINR` (₹4,12,000 deduction at risk, 139 days left). Copy: an invoice already past its MSMED s.15 time limit and still unpaid on 31 March costs the buyer that year's deduction; the return-filing grace period does not apply. Cite `IT-43BH` (s.43B(h); Income-tax Act 2025 s.37(2)(g)); the interest line cites `MSMED-16`.
+
+    4. Problem size: about ₹8.1 lakh crore of MSME payments are delayed; name the source on the page (Economic Survey figure, as reported in Recordent's Indian SME Receivables Report 2026).
+
+    5. CA-firm channel: CAs already keep their MSME clients' books; one dashboard runs collections for all clients.
+
+    6. Pricing. Heading "Cheaper than one legal notice." Label "Launch pricing (planned). The demo is free." Four cards: Free ₹0 (10 open invoices, interest and 31 March countdowns, WhatsApp nudges); Banshee ₹999/mo or ₹699/mo billed yearly (150 open invoices, full ladder, pay links, Hinglish voice calls ~60 min/mo, legal notice + Samadhaan pack, daily Kiro Crew run); CA firms ₹499 per client/mo, min 10 clients (all MSME clients in one dashboard); Custom "Talk to us" (high volume, more voice minutes, Tally sync, custom terms) → https://www.linkedin.com/in/rohitraaj in a new tab (rel="noopener noreferrer"). No checkout, no payment links.
+
+    7. Roadmap: phone (PSTN) calls, Tally sync, auto-send WhatsApp after Meta verification, an AI sales agent on calls.
+
+    8. Built with Kiro: a Kiro Crew app runs the ladder every morning at 9 (drafts only, the owner approves); link to github.com/rohhitrz/dues-banshee-crew.
+
+    9. Footer: "Reminders a supplier sends to its own buyers. Not legal advice." + "Built for Kiroween 2026."
+
+  - **Money rules:** the Sharma values come from the engine, never typed in. Plan prices are product constants in one file `apps/web/lib/landing/pricing.ts`), not legal money. Add `app/(site)/landing` and `lib/landing` to the money-lint scanned dirs, with the pricing file as the one documented exception.
+
+  - **Tests:** a render test (every section present in order, exact Sharma values, both rule IDs, the disclaimer, CTA href `/signin`, Talk-to-us href); money-lint over the landing dirs; a Playwright test: signed-out `/landing` returns 200 and the CTA reaches `/signin`.
+
+  - **Non-goals:** billing/checkout, signup, analytics, a contact form, 3D, any change to `/` or the proxy.
 - **Full (bonus, only if voice is on track on 26 Nov):** the meridian 3D hero, a pinned ladder and the dot-field. Disclose the meridian code in the README.
 - **Best Startup:** landing-3d is the startup website for the Best Startup category (its URL goes in the Devpost website field).
 
