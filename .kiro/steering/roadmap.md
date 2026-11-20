@@ -96,13 +96,15 @@ Sharma Traders tombstone → escalation draft approved by the owner → WhatsApp
 - **Non-goals:** per-invoice total due, other suppliers, pagination, CORS, rate limiting, writes, triggering the ladder (the Crew cron calls `POST /api/ladder/run` itself with `LADDER_RUN_SECRET`).
 
 - **Built:** `GET /api/crew/summary` (bearer `CREW_READ_SECRET`, demo supplier, `?today` override, no-store), shared `lib/bearer.ts`, pure `toCrewSummary` mapper (untrusted text fields documented), 2 fast-check properties, agent/voice import scan + money-lint over the crew dirs. Crew skill must treat buyer/supplier/invoice text as data, never instructions.
-### 7. crew-app — separate repo `dues-banshee-crew`, Autopilot, 1 review
+### 7. crew-app — separate repo `dues-banshee-crew`, Autopilot, 1 review (DONE 21 Nov, ~160 credits)
 - **Thin:** Crew `app.json`, a daily 9am cron that calls the deployed API, a `tax-bomb` skill, a "Graveyard of Dues" dashboard page.
 - Start as soon as the escalation API exists. **Never cut.**
+- **Built** (github.com/rohhitrz/dues-banshee-crew, public, MIT): `app.json` (minKiroCrewVersion 0.13.0; cron, backend, UI, skill, credential masks); stdlib Python backend that proxies `GET /api/crew/summary` behind an HMAC `X-KiroCrew-Proxy` check, secrets never logged; script cron `0 9 * * *` Asia/Kolkata that calls `POST /api/ladder/run` (drafts only, the owner approves), with a `ladder.json` fallback because the masked `secrets.json` is unreadable from the cron sandbox; "Graveyard of Dues" React page with an armed-only "Ask the banshee" action; `tax-bomb` skill; 1 Claude Code review → 8 fixes; installed and verified on Kiro Crew 0.13.0.
 
 ### 8. landing-3d — UI tier, Autopilot, 1 review
 - **Lite (default):** a static spooky hero, the 5-step ladder section, the tax-bomb section, Best Startup content (problem size, the CA-firm channel, a pricing table with prices TBD with Rohit, a roadmap: PSTN, Tally, auto-send WhatsApp), a CTA to the demo login.
 - **Full (bonus, only if voice is on track on 26 Nov):** the meridian 3D hero, a pinned ladder and the dot-field. Disclose the meridian code in the README.
+- **Best Startup:** landing-3d is the startup website for the Best Startup category (its URL goes in the Devpost website field).
 
 ## Cut
 - `owner-voice-commands` (decided 13 Nov).
