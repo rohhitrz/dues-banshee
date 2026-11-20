@@ -1,7 +1,7 @@
-import { createHash, timingSafeEqual } from "node:crypto";
 import { productionModels, runLadder, type LadderRunResult } from "@dues-banshee/agent";
 import { DEMO_SUPPLIER, listRunSuppliers } from "@dues-banshee/db";
 import type { CalendarDate } from "@dues-banshee/engine";
+import { bearerMatches } from "@/lib/bearer";
 import { getDb } from "@/lib/db";
 import { istDate, resolveToday } from "@/lib/graveyard/today";
 
@@ -10,17 +10,6 @@ export const runtime = "nodejs";
 export const maxDuration = 300;
 
 type RunEntry = LadderRunResult | { supplierId: string; today: CalendarDate; error: "run_failed" };
-
-function sha256(value: string): Buffer {
-  return createHash("sha256").update(value).digest();
-}
-
-/** Compares SHA-256 digests, so both buffers have equal length and the comparison is constant-time. */
-function bearerMatches(header: string | null, secret: string): boolean {
-  const match = header === null ? null : /^Bearer (.+)$/.exec(header);
-  const presented = match?.[1] ?? "";
-  return timingSafeEqual(sha256(presented), sha256(secret)) && presented.length > 0;
-}
 
 /**
  * Runs one Ladder_Run per supplier. Called by the daily cron with `Authorization: Bearer <secret>`.

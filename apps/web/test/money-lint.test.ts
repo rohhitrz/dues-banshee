@@ -43,7 +43,8 @@ function listSourceFiles(dir: string): string[] {
 
 // apps/web/test -> apps/web
 const WEB_ROOT = fileURLToPath(new URL("..", import.meta.url));
-const SCANNED_DIRS = ["lib/graveyard", "components/graveyard"].map((d) => join(WEB_ROOT, d));
+// Feature: crew-api, Req 5.3: the crew route and mapper are scanned too (missing dirs yield no files).
+const SCANNED_DIRS = ["lib/graveyard", "components/graveyard", "app/api/crew", "lib/crew"].map((d) => join(WEB_ROOT, d));
 // Feature: debtor-ui, Req 4.5: the same ban, plus float division, on the debtor screen.
 const DEBTOR_DIRS = ["lib/debtor", "components/debtor", "app/(debtor)"].map((d) => join(WEB_ROOT, d));
 
@@ -105,8 +106,8 @@ describe("money lint scanner", () => {
   });
 });
 
-describe("graveyard sources contain no float money handling", () => {
-  it("has no toFixed, parseFloat or Number( in lib/graveyard or components/graveyard", () => {
+describe("graveyard and crew sources contain no float money handling", () => {
+  it("has no toFixed, parseFloat or Number( in lib/graveyard, components/graveyard, app/api/crew or lib/crew", () => {
     const report: string[] = [];
     for (const file of SCANNED_DIRS.flatMap(listSourceFiles)) {
       for (const { line, token } of findOffences(readFileSync(file, "utf8"))) {

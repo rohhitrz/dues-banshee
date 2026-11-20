@@ -407,6 +407,51 @@ describe("whatsapp-channel .env.example (Reqs 8.1, 8.2)", () => {
   it("detects a non-empty or misspelled entry", () => {
     expect(emptyEnvNames("TWILIO_AUTH_TOKEN=\nPUBLIC_BASE_URL=https://x.example\nTWILIO_AUTH_TOKEN =\n")).toEqual(["TWILIO_AUTH_TOKEN"]);
   });
+
+  // Feature: crew-api, Req 6.3: the crew route's secret is listed with an empty value.
+  it("lists CREW_READ_SECRET with an empty value", () => {
+    expect(emptyEnvNames(example)).toContain("CREW_READ_SECRET");
+  });
+});
+
+// Feature: crew-api, Req 5.2: the crew route and mapper must not import the agent or voice packages.
+
+/** True when the code (comments removed) of `source` statically imports, dynamically imports or re-exports `@dues-banshee/agent` or `@dues-banshee/voice`, with or without a subpath. */
+function importsAgentOrVoice(source: string): boolean {
+  return /(?:\bfrom\s*|\bimport\s*\(?\s*)["'`]@dues-banshee\/(?:agent|voice)(?:\/[^"'`]*)?["'`]/.test(stripComments(source));
+}
+
+const CREW_DIRS = ["app/api/crew", "lib/crew"].map((d) => join(WEB_ROOT, d));
+
+describe("crew-api agent and voice import scan (Req 5.2)", () => {
+  it.each([
+    ["a static import", 'import { draftStep } from "@dues-banshee/agent";'],
+    ["a static import with a subpath", "import { x } from '@dues-banshee/agent/prompts';"],
+    ["a type-only import", 'import type { T } from "@dues-banshee/voice";'],
+    ["a side-effect import", 'import "@dues-banshee/voice";'],
+    ["a multi-line import", 'import {\n  a,\n  b,\n} from\n  "@dues-banshee/voice/persona";'],
+    ["a dynamic import", 'const m = await import("@dues-banshee/agent");'],
+    ["a dynamic import with a subpath", "const m = import('@dues-banshee/voice/dates');"],
+    ["a named re-export", 'export { x } from "@dues-banshee/agent";'],
+    ["an export-all", 'export * from "@dues-banshee/voice";'],
+  ])("flags %s", (_name, code) => {
+    expect(importsAgentOrVoice(code)).toBe(true);
+  });
+
+  it("does not flag the package name in a comment, an @dues-banshee/db import or a similar package", () => {
+    expect(importsAgentOrVoice('// import { x } from "@dues-banshee/agent";\nconst a = 1;')).toBe(false);
+    expect(importsAgentOrVoice('/* import("@dues-banshee/voice") */ const a = 1;')).toBe(false);
+    expect(importsAgentOrVoice('import { findSupplierIdByUdyam } from "@dues-banshee/db";')).toBe(false);
+    expect(importsAgentOrVoice('import { formatINR } from "@dues-banshee/engine";')).toBe(false);
+    expect(importsAgentOrVoice('import { x } from "@dues-banshee/agentic";')).toBe(false);
+  });
+
+  it("imports @dues-banshee/agent or @dues-banshee/voice in no app/api/crew or lib/crew source", () => {
+    const offenders = CREW_DIRS.flatMap(listWebSources)
+      .filter((file) => importsAgentOrVoice(readFileSync(file, "utf8")))
+      .map((file) => file.slice(WEB_ROOT.length));
+    expect(offenders).toEqual([]);
+  });
 });
 
 describe("whatsapp-channel secrets and phone numbers in tracked files (Reqs 8.2, 8.3)", () => {

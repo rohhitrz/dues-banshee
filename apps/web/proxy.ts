@@ -89,8 +89,8 @@ export function proxy(req: NextRequest, event: NextFetchEvent): ReturnType<typeo
 }
 
 export const config = {
-  // `:path*` also matches the bare prefix (`/approvals`). `/api/ladder/run` is deliberately absent:
-  // it authenticates with its own bearer secret, not a session.
+  // `:path*` also matches the bare prefix (`/approvals`). `/api/ladder/run` and `/api/crew/summary`
+  // are deliberately absent: each authenticates with its own bearer secret, not a session.
   matcher: [
     "/",
     "/signin",
