@@ -384,6 +384,7 @@
 }
 
 .planPrice {
+  margin: 0;
   font-family: var(--font-figures, "JetBrains Mono", ui-monospace, monospace);
   font-size: clamp(1.5rem, 1.1rem + 1.6vw, 1.75rem);
   line-height: 1.2;
