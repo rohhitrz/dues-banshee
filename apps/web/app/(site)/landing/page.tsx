@@ -20,8 +20,10 @@ export const metadata: Metadata = {
     "AI collections for Udyam micro and small suppliers: reminders, legal notices and tax-bomb countdowns.",
 };
 
+/** Computed once at module load, so a seed drift fails `next build` and not a visitor's request. */
+const SHARMA = sharmaExample();
+
 export default function LandingPage() {
-  const sharma = sharmaExample();
   return (
     <main className={styles.page}>
       <section aria-label="Hero" className={`${styles.section} ${styles.hero}`}>
@@ -59,10 +61,10 @@ export default function LandingPage() {
         <h2 className={styles.heading}>The 31 March deadline works for you</h2>
         <div className={styles.bombCard}>
           <p className={styles.bombLabel}>
-            {sharma.buyerName}: deduction at risk as of {sharma.exampleDateText}
+            {SHARMA.buyerName}: deduction at risk as of {SHARMA.exampleDateText}
           </p>
-          <p className={styles.bombFigure}>{sharma.deductionAtRiskText}</p>
-          <p className={styles.bombMeta}>{sharma.daysLeft} days left until 31 March</p>
+          <p className={styles.bombFigure}>{SHARMA.deductionAtRiskText}</p>
+          <p className={styles.bombMeta}>{SHARMA.daysLeft} days left until 31 March</p>
         </div>
         <p className={styles.lede}>
           {TAX_BOMB_COPY.rule} <span className={styles.ruleTag}>{TAX_BOMB_COPY.ruleId}</span>
