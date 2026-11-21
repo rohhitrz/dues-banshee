@@ -12,12 +12,27 @@ import {
 } from "@/lib/landing/copy";
 import { PLANS, PRICING_HEADING, PRICING_LABEL, PROBLEM_SIZE } from "@/lib/landing/pricing";
 import { sharmaExample } from "@/lib/landing/sharma-example";
+import { SITE_URL } from "@/lib/seo/site";
 import styles from "./landing.module.css";
 
+const TITLE = "Dues Banshee — They forgot your invoice. The taxman won't.";
+const DESCRIPTION =
+  "AI collections for Udyam micro and small suppliers: reminders, legal notices and tax-bomb countdowns.";
+
 export const metadata: Metadata = {
-  title: "Dues Banshee — They forgot your invoice. The taxman won't.",
-  description:
-    "AI collections for Udyam micro and small suppliers: reminders, legal notices and tax-bomb countdowns.",
+  metadataBase: new URL(SITE_URL),
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: { canonical: "/landing" },
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    url: "/landing",
+    siteName: "Dues Banshee",
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
 };
 
 /** Computed once at module load, so a seed drift fails `next build` and not a visitor's request. */
