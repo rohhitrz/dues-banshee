@@ -27,7 +27,7 @@ Lite only: no three.js, GSAP, new dependency or `"use client"` module. All test 
     - Requirement 6.2: `taxBomb(sharmaInvoice(), "2026-11-12")` has `status` "armed", `daysLeft` 139 and `deductionAtRiskPaise` 41_200_000, computed by calling the Engine in the test.
     - `sharmaExample()` returns `buyerName` "Sharma Traders", `deductionAtRiskText` "₹4,12,000", `daysLeft` 139, `exampleDateText` "12 Nov 2026".
     - `Object.keys(LADDER_COPY)` sorted equals `[...LADDER_STEPS]` sorted, and the step names in `LADDER_STEPS` order equal the five names of Requirement 2.3.
-    - `PLANS` names are Free, Banshee, CA firms, Custom in order; every price `paise` is a non-negative safe integer; their `formatINR(…, "full")` texts are "₹0", "₹999", "₹699", "₹499"; the Custom CTA href equals `https://www.linkedin.com/in/rohitraaj`.
+    - `PLANS` names are Free, Banshee, CA firms, Custom in order; every price `paise` is a non-negative safe integer; their `formatINR(…, "full")` texts are "₹0", "₹999", "₹699", "₹499"; the Custom CTA href equals `TALK_TO_US_URL` (the mailto link).
     - _Requirements: 2.3, 2.4, 3.2, 3.3, 3.4, 6.2_
   - [x] 1.4 Add the landing scan to `apps/web/test/money-lint.test.ts`
     - Add `LANDING_DIRS` (`app/(site)/landing`, `lib/landing`), `RUPEE_EXCEPTION` ("lib/landing/pricing.ts") with the comment of design.md, and `findRupeeSigns(relPath, source)`.
@@ -62,7 +62,7 @@ Lite only: no three.js, GSAP, new dependency or `"use client"` module. All test 
     - `apps/web/test/proxy.test.ts` and `graveyard-page.test.tsx` pass without edits.
     - _Requirements: 1.2, 1.3, 1.4, 1.5, 6.3, 6.4, 6.5_
 
-- [~] 4. Final checkpoint
+- [x] 4. Final checkpoint
   - Run `pnpm --filter web test` and the web typecheck. Ensure all tests pass, ask the user if questions arise.
   - Manual: `/landing` at 375 px with no horizontal scroll, and with OS reduced motion on, nothing moves (Requirements 4.3, 4.4).
 

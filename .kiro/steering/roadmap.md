@@ -27,7 +27,7 @@ Sharma Traders tombstone → escalation draft approved by the owner → WhatsApp
 - **LLM drafts** (Vercel AI SDK: Haiku by default, Sonnet for legal wording, `gpt-6-luna` fallback; model IDs only in `models.ts`) in Hinglish or English. They must cite rule IDs from `legal-rules.md`, validated against the real rule list; a draft is blocked if one is missing or invalid.
 - Money and dates in drafts come from engine output via `formatINR`, never from the LLM. Buyer names and invoice numbers are untrusted text inside prompts.
 - **Owner approval queue:** approve, edit or reject. Every action goes into `escalation_events`, scoped by the session supplierId only.
-- **Steps 4–5** (legal notice, Samadhaan pack) produce downloadable drafts for the owner.
+- **Steps 4–5** (legal notice, MSME ODR pack) produce downloadable drafts for the owner.
 
 ### 3. debtor-ui — UI tier, Autopilot, 1 review (DONE)
 - `/debtors/[id]` (buyer id): candle timeline, pending approvals, action buttons. Dashboard tombstones link to `/debtors/<buyerId>#invoice-<invoiceId>`.
@@ -101,7 +101,7 @@ Sharma Traders tombstone → escalation draft approved by the owner → WhatsApp
 - Start as soon as the escalation API exists. **Never cut.**
 - **Built** (github.com/rohhitrz/dues-banshee-crew, public, MIT): `app.json` (minKiroCrewVersion 0.13.0; cron, backend, UI, skill, credential masks); stdlib Python backend that proxies `GET /api/crew/summary` behind an HMAC `X-KiroCrew-Proxy` check, secrets never logged; script cron `0 9 * * *` Asia/Kolkata that calls `POST /api/ladder/run` (drafts only, the owner approves), with a `ladder.json` fallback because the masked `secrets.json` is unreadable from the cron sandbox; "Graveyard of Dues" React page with an armed-only "Ask the banshee" action; `tax-bomb` skill; 1 Claude Code review → 8 fixes; installed and verified on Kiro Crew 0.13.0.
 
-### 8. landing-3d — UI tier, Autopilot, 1 review
+### 8. landing-3d — UI tier, Autopilot, 1 review (DONE 21 Nov, ~64 credits)
 - **Lite (default), build only this:**
 
   - **Route:** public `/landing` in `apps/web/app/(site)/landing/`. Not in the proxy matcher `proxy.test.ts` stays unchanged); `/` stays the graveyard. `/signin` gets one small link "What is Dues Banshee?" → `/landing`.
@@ -133,6 +133,7 @@ Sharma Traders tombstone → escalation draft approved by the owner → WhatsApp
   - **Tests:** a render test (every section present in order, exact Sharma values, both rule IDs, the disclaimer, CTA href `/signin`, Talk-to-us href); money-lint over the landing dirs; a Playwright test: signed-out `/landing` returns 200 and the CTA reaches `/signin`.
 
   - **Non-goals:** billing/checkout, signup, analytics, a contact form, 3D, any change to `/` or the proxy.
+- **Built:** public `/landing` (server component, CSS Modules, no new dependencies): tagline hero, 5-step ladder, Sharma tax-bomb example from `taxBomb` at a fixed date (computed at module scope, so a seed drift fails `next build`), problem size with its source, CA-firm channel, planned pricing (Free / Banshee ₹999 or ₹699 yearly / CA firms ₹499 per client / Custom mailto), roadmap, Kiro Crew link; "What is Dues Banshee?" link on `/signin`; render, money-lint (₹ only in pricing.ts, CSS included) and isolation tests; Playwright smoke test. 1 Claude Code review → 8 fixes.
 - **Full (bonus, only if voice is on track on 26 Nov):** the meridian 3D hero, a pinned ladder and the dot-field. Disclose the meridian code in the README.
 - **Best Startup:** landing-3d is the startup website for the Best Startup category (its URL goes in the Devpost website field).
 
