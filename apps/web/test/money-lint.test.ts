@@ -29,16 +29,26 @@ function findOffences(source: string): Offence[] {
   return offences;
 }
 
-/** All .ts/.tsx files under `dir`, recursively. A missing directory yields no files. */
-function listSourceFiles(dir: string): string[] {
+/** All files under `dir` whose name matches `extension`, recursively. A missing directory yields no files. */
+function listFiles(dir: string, extension: RegExp): string[] {
   if (!existsSync(dir)) return [];
   const files: string[] = [];
   for (const entry of readdirSync(dir)) {
     const full = join(dir, entry);
-    if (statSync(full).isDirectory()) files.push(...listSourceFiles(full));
-    else if (/\.tsx?$/.test(entry)) files.push(full);
+    if (statSync(full).isDirectory()) files.push(...listFiles(full, extension));
+    else if (extension.test(entry)) files.push(full);
   }
   return files.sort();
+}
+
+/** All .ts/.tsx files under `dir`, recursively. A missing directory yields no files. */
+function listSourceFiles(dir: string): string[] {
+  return listFiles(dir, /\.tsx?$/);
+}
+
+/** All .css files under `dir`, recursively. A missing directory yields no files. */
+function listCssFiles(dir: string): string[] {
+  return listFiles(dir, /\.css$/);
 }
 
 // apps/web/test -> apps/web
@@ -141,6 +151,9 @@ describe("rupee sign detector", () => {
     expect(findRupeeSigns("lib/landing/copy.ts", source)).toEqual([1]);
     expect(findRupeeSigns("lib/landing/pricing.ts", source)).toEqual([]);
   });
+  it("flags a ₹ sign in CSS content", () => {
+    expect(findRupeeSigns("app/(site)/landing/landing.module.css", '.a::after {\n  content: "₹1";\n}')).toEqual([2]);
+  });
 });
 
 describe("landing sources contain no hand-typed money", () => {
@@ -171,6 +184,16 @@ describe("landing sources contain no hand-typed money", () => {
   it("has no ₹ sign outside lib/landing/pricing.ts", () => {
     const report = files.flatMap((file) => findRupeeSigns(rel(file), readFileSync(file, "utf8")).map((line) => `${rel(file)}:${line}`));
     expect(report, `₹ sign found:\n${report.join("\n")}`).toEqual([]);
+  });
+
+  // CSS can carry a ₹ in a `content:` string, so the rupee check covers .css too. The other detectors stay .ts/.tsx.
+  const cssFiles = LANDING_DIRS.flatMap(listCssFiles);
+  it("scans the landing stylesheet, so the CSS check is not vacuous", () => {
+    expect(cssFiles.map(rel)).toContain("app/(site)/landing/landing.module.css");
+  });
+  it("has no ₹ sign in the landing .css files", () => {
+    const report = cssFiles.flatMap((file) => findRupeeSigns(rel(file), readFileSync(file, "utf8")).map((line) => `${rel(file)}:${line}`));
+    expect(report, `₹ sign found in CSS:\n${report.join("\n")}`).toEqual([]);
   });
 });
 
