@@ -146,7 +146,7 @@ describe("LandingPage render", () => {
   it("Tax bomb shows the Sharma values and both rule IDs, with no interest amount (Req 2.4-2.6)", () => {
     const bomb = slice("Tax bomb");
     expect(bomb).toContain("₹4,12,000");
-    expect(bomb).toContain("139");
+    expect(bomb).toContain("139 days left until 31 March");
     expect(bomb).toContain("12 Nov 2026");
     expect(bomb).toContain("IT-43BH");
     expect(bomb).toContain("MSMED-16");
