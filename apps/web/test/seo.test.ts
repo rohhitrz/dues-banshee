@@ -20,7 +20,13 @@ describe("robots.txt", () => {
   });
 
   it("allows the landing and sign-in pages", () => {
-    expect(rules[0]?.allow).toEqual(["/landing", "/signin"]);
+    expect(rules[0]?.allow).toEqual(expect.arrayContaining(["/landing", "/signin"]));
+  });
+
+  it("also allows home, build assets and icons", () => {
+    expect(rules[0]?.allow).toEqual(
+      expect.arrayContaining(["/$", "/_next/", "/icon", "/apple-icon", "/favicon.ico"]),
+    );
   });
 
   it("disallows /api/ and everything else (the signed-in routes)", () => {
@@ -40,7 +46,18 @@ describe("sitemap.xml", () => {
 
 // Next runs the proxy only on matcher paths, so "matches nothing" means "answers 200 signed out".
 describe("proxy: SEO routes are not guarded", () => {
-  it.each(["/robots.txt", "/sitemap.xml", "/landing", "/landing/opengraph-image", "/landing/opengraph-image-1a2b3c"])(
+  it.each([
+    "/robots.txt",
+    "/sitemap.xml",
+    "/landing",
+    "/landing/opengraph-image",
+    "/landing/opengraph-image-1a2b3c",
+    "/icon",
+    "/icon-1a2b3c",
+    "/apple-icon",
+    "/apple-icon-1a2b3c",
+    "/favicon.ico",
+  ])(
     "matches no pattern for %s",
     (path) => {
       expect(matchedBy(path)).toEqual([]);
