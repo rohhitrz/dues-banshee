@@ -43,7 +43,7 @@ export const PLANS: readonly Plan[] = [
       "Full ladder",
       "Pay links",
       "Hinglish voice calls, about 60 min per month",
-      "Legal notice and Samadhaan pack",
+      "Legal notice and MSME ODR pack",
       "Daily Kiro Crew run",
     ],
     cta: null,

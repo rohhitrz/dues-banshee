@@ -28,8 +28,8 @@ export const LADDER_COPY = {
     line: "A drafted notice that cites the MSMED Act, ready for the owner to download and send.",
   },
   odr_pack: {
-    name: "Samadhaan pack",
-    line: "The papers for a Samadhaan filing, drafted for the owner to review and file.",
+    name: "MSME ODR pack",
+    line: "The papers for a claim on the MSME ODR portal, drafted for the owner to review and file.",
   },
 } as const satisfies Record<LadderStep, { name: string; line: string }>;
 

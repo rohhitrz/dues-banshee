@@ -38,7 +38,7 @@ describe("landing data", () => {
         "WhatsApp pay link",
         "Voice call",
         "Legal notice",
-        "Samadhaan pack",
+        "MSME ODR pack",
       ]);
     });
   });
@@ -138,7 +138,7 @@ describe("LandingPage render", () => {
 
   it("Ladder lists the five steps in order and the full Voice call line (Req 2.3)", () => {
     const ladder = slice("Ladder");
-    expectInOrder(ladder, ["WhatsApp nudge", "WhatsApp pay link", "Voice call", "Legal notice", "Samadhaan pack"]);
+    expectInOrder(ladder, ["WhatsApp nudge", "WhatsApp pay link", "Voice call", "Legal notice", "MSME ODR pack"]);
     expect(ladder).toContain("An AI call over the internet, in Hinglish. Phone (PSTN) calls are on the roadmap.");
     expect(ladder).toContain("The owner approves every step before anything is sent.");
   });

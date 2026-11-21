@@ -98,7 +98,7 @@ export const LADDER_COPY = {
   whatsapp_paylink: { name: "WhatsApp pay link", line: "…" },
   voice_call:       { name: "Voice call",        line: "An AI call over the internet, in Hinglish. Phone (PSTN) calls are on the roadmap." },
   legal_notice:     { name: "Legal notice",      line: "…" },
-  odr_pack:         { name: "Samadhaan pack",    line: "…" },
+  odr_pack:         { name: "MSME ODR pack",     line: "…" },
 } as const satisfies Record<LadderStep, { name: string; line: string }>;
 export const LADDER_APPROVAL = "The owner approves every step before anything is sent.";
 export const TAX_BOMB_COPY = { rule: "…s.15 time limit… 31 March… grace period does not apply.", ruleId: "IT-43BH",

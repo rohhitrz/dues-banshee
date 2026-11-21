@@ -112,7 +112,7 @@ Sharma Traders tombstone → escalation draft approved by the owner → WhatsApp
 
     1. Hero: tagline "They forgot your invoice. The taxman won't." + one sub-line + CTA "Enter the demo" → `/signin`.
 
-    2. Ladder: the 5 steps in `LADDER_STEPS` order (WhatsApp nudge, WhatsApp pay link, voice call, legal notice, Samadhaan pack), one line each; the owner approves every step.
+    2. Ladder: the 5 steps in `LADDER_STEPS` order (WhatsApp nudge, WhatsApp pay link, voice call, legal notice, MSME ODR pack), one line each; the owner approves every step.
 
     3. Tax bomb: Sharma Traders example from engine output on the `DEMO_INVOICES` seed at today 2026-11-12 via `formatINR` (₹4,12,000 deduction at risk, 139 days left). Copy: an invoice already past its MSMED s.15 time limit and still unpaid on 31 March costs the buyer that year's deduction; the return-filing grace period does not apply. Cite `IT-43BH` (s.43B(h); Income-tax Act 2025 s.37(2)(g)); the interest line cites `MSMED-16`.
 
@@ -120,7 +120,7 @@ Sharma Traders tombstone → escalation draft approved by the owner → WhatsApp
 
     5. CA-firm channel: CAs already keep their MSME clients' books; one dashboard runs collections for all clients.
 
-    6. Pricing. Heading "Cheaper than one legal notice." Label "Launch pricing (planned). The demo is free." Four cards: Free ₹0 (10 open invoices, interest and 31 March countdowns, WhatsApp nudges); Banshee ₹999/mo or ₹699/mo billed yearly (150 open invoices, full ladder, pay links, Hinglish voice calls ~60 min/mo, legal notice + Samadhaan pack, daily Kiro Crew run); CA firms ₹499 per client/mo, min 10 clients (all MSME clients in one dashboard); Custom "Talk to us" (high volume, more voice minutes, Tally sync, custom terms) → a plain mailto link to rohhit.rz@gmail.com with subject "Dues Banshee: Custom plan" (no new tab). No checkout, no payment links.
+    6. Pricing. Heading "Cheaper than one legal notice." Label "Launch pricing (planned). The demo is free." Four cards: Free ₹0 (10 open invoices, interest and 31 March countdowns, WhatsApp nudges); Banshee ₹999/mo or ₹699/mo billed yearly (150 open invoices, full ladder, pay links, Hinglish voice calls ~60 min/mo, legal notice + MSME ODR pack, daily Kiro Crew run); CA firms ₹499 per client/mo, min 10 clients (all MSME clients in one dashboard); Custom "Talk to us" (high volume, more voice minutes, Tally sync, custom terms) → a plain mailto link to rohhit.rz@gmail.com with subject "Dues Banshee: Custom plan" (no new tab). No checkout, no payment links.
 
     7. Roadmap: phone (PSTN) calls, Tally sync, auto-send WhatsApp after Meta verification, an AI sales agent on calls.
 

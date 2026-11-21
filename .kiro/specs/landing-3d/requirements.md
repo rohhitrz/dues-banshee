@@ -12,7 +12,7 @@ The page reuses what exists and computes nothing itself:
 Decisions made while writing this spec:
 - **Copy follows the roadmap, look follows the design.** `design/Landing.dc.html` has a different hero headline and pricing heading. The roadmap copy wins; the design file sets layout, colours and type, together with `ui-theme.md`.
 - **The interest line states the MSMED-16 rule without an amount.** An interest amount needs the bank rate, which lives in the database `config` table. Reading it would make the public page depend on the database.
-- **Step names follow the roadmap** ("WhatsApp pay link", "Samadhaan pack"), not the dashboard's `STEP_TEXT` ("WhatsApp + UPI link", "MSME ODR pack"). `STEP_TEXT` stays unchanged.
+- **Step names follow the roadmap** ("WhatsApp pay link", "MSME ODR pack"), not the dashboard's `STEP_TEXT` ("WhatsApp + UPI link"). `STEP_TEXT` stays unchanged.
 - **Plan prices are integer paise rendered with `formatINR`**, so the global "every amount through `formatINR`" rule holds on this page too.
 - **The problem-size figure lives in the pricing file.** The roadmap allows one hand-typed-figures file. The ₹8.1 lakh crore statistic and its source text sit there next to the plan prices, so that file stays the only exception to the landing money lint.
 
@@ -61,7 +61,7 @@ Non-goals: billing or checkout, payment links, signup, analytics, a contact form
 
 1. THE Landing_Page SHALL render these nine sections in this order, each as a `<section>` (the footer as a `<footer>`) with an `aria-label`: Hero, Ladder, Tax bomb, Problem size, CA firms, Pricing, Roadmap, Built with Kiro, Footer.
 2. THE Hero section SHALL show the `<h1>` "They forgot your invoice. The taxman won't.", one sub-line, and a link "Enter the demo" whose `href` is `/signin`.
-3. THE Ladder section SHALL list the five steps in `LADDER_STEPS` order, one line each, named "WhatsApp nudge", "WhatsApp pay link", "Voice call", "Legal notice" and "Samadhaan pack", and SHALL state that the owner approves every step. The "Voice call" line SHALL say it is an AI call over the internet and that phone (PSTN) calls are on the roadmap. The step copy SHALL be keyed by `LadderStep` so a step added to or removed from `LADDER_STEPS` fails type-checking.
+3. THE Ladder section SHALL list the five steps in `LADDER_STEPS` order, one line each, named "WhatsApp nudge", "WhatsApp pay link", "Voice call", "Legal notice" and "MSME ODR pack", and SHALL state that the owner approves every step. The "Voice call" line SHALL say it is an AI call over the internet and that phone (PSTN) calls are on the roadmap. The step copy SHALL be keyed by `LadderStep` so a step added to or removed from `LADDER_STEPS` fails type-checking.
 4. THE Tax bomb section SHALL show the Sharma Traders example with `formatINR(Sharma_Bomb.deductionAtRiskPaise, "full")` ("₹4,12,000") as the deduction at risk and `Sharma_Bomb.daysLeft` (139) as the days left, labelled with `formatDisplayDate(Example_Date)` ("12 Nov 2026") as the example date.
 5. THE Tax bomb section SHALL state that an invoice already past its MSMED s.15 time limit and still unpaid on 31 March costs the buyer that year's deduction, and that the return-filing grace period does not apply, citing `IT-43BH` (Income-tax Act 1961 s.43B(h); Income-tax Act 2025 s.37(2)(g)).
 6. THE Tax bomb section SHALL include one line stating that late payment carries compound interest with monthly rests at 3× the RBI bank rate, citing `MSMED-16`, with no interest amount.
@@ -80,7 +80,7 @@ Non-goals: billing or checkout, payment links, signup, analytics, a contact form
 1. THE Pricing section SHALL show the heading "Cheaper than one legal notice." and the label "Launch pricing (planned). The demo is free."
 2. THE Pricing section SHALL show four plan cards in this order, with these contents:
    - **Free**, `formatINR(0, "full")`: 10 open invoices, interest and 31 March countdowns, WhatsApp nudges.
-   - **Banshee**, `formatINR(99900, "full")` per month or `formatINR(69900, "full")` per month billed yearly: 150 open invoices, full ladder, pay links, Hinglish voice calls about 60 min per month, legal notice and Samadhaan pack, daily Kiro Crew run.
+   - **Banshee**, `formatINR(99900, "full")` per month or `formatINR(69900, "full")` per month billed yearly: 150 open invoices, full ladder, pay links, Hinglish voice calls about 60 min per month, legal notice and MSME ODR pack, daily Kiro Crew run.
    - **CA firms**, `formatINR(49900, "full")` per client per month, minimum 10 clients: all MSME clients in one dashboard.
    - **Custom**, "Talk to us": high volume, more voice minutes, Tally sync, custom terms.
 3. THE Custom card SHALL link "Talk to us" to the Talk_To_Us_URL as a plain `<a href>` with no `target` and no `rel` (a mailto link is not an External_Link).
